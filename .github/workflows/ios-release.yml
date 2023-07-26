@@ -30,10 +30,7 @@ jobs:
         run: flutter build ios --release --no-codesign
       - name: Build xArchive
         run: |
-          mkdir Payload && mv Runner.app Payload && zip -r Payload.zip Payload && mv Payload.zip build-output/ios/Payload.ipa
-
-      - name: Export ipa
-        run: xcodebuild -exportArchive -archivePath build-output/app.xcarchive -exportPath build-output/ios -exportOptionsPlist ios/ExportOptions.plist
+          mkdir Payload && mv build/ios/iphoneos/Runner.app Payload && zip -r Payload.zip Payload && mv Payload.zip build-output/ios/Payload.ipa
 
       - name: Publish iOS Artefacts
         uses: actions/upload-artifact@v1
