@@ -1,0 +1,41 @@
+name: Flutter_iOS
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build_ios:
+    runs-on: macos-latest
+    env:
+      SHEME: Runner
+      BUILD_CONFIGURATION: Release
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Install and set Flutter version
+        uses: subosito/flutter-action@v1.4.0
+        with:
+          flutter-version: '3.10.5'
+
+      - name: Restore packages
+        run: flutter pub get
+
+      - name: Build Flutter
+        run: flutter build ios --release --no-codesign
+      - name: Build xArchive
+        run: |
+          mkdir Payload && mv Runner.app Payload && zip -r Payload.zip Payload && mv Payload.zip build-output/ios/Payload.ipa
+
+      - name: Export ipa
+        run: xcodebuild -exportArchive -archivePath build-output/app.xcarchive -exportPath build-output/ios -exportOptionsPlist ios/ExportOptions.plist
+
+      - name: Publish iOS Artefacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: release-ios
+          path: build-output/ios
