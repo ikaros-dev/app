@@ -2,9 +2,10 @@ name: Flutter_iOS
 
 on:
   push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+    branches:
+      - release-*
+    tags:
+      - '*'
 
 jobs:
   build_ios:
@@ -35,5 +36,5 @@ jobs:
       - name: Publish iOS Artefacts
         uses: actions/upload-artifact@v1
         with:
-          name: release-ios
+          name: release-ios-${{  github.ref_name }}
           path: output

@@ -2,9 +2,10 @@ name: Flutter_Android
 
 on:
   push:
-    branches: [master]
-  pull_request:
-    branches: [master]
+    branches:
+      - release-*
+    tags:
+      - '*'
 
 jobs:
   build_android:
@@ -34,5 +35,5 @@ jobs:
       - name: Publish Android Artefacts
         uses: actions/upload-artifact@v1
         with:
-          name: release-android
-          path: build\app\outputs\flutter-apk\app-release.apk
+          name: release-android-${{  github.ref_name }}
+          path: build/app/outputs/flutter-apk/app-release.apk
