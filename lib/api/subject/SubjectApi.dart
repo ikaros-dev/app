@@ -1,0 +1,49 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+import 'package:ikaros/api/auth/AuthApi.dart';
+import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/common/PagingWrap.dart';
+import 'package:ikaros/api/subject/enums/SubjectType.dart';
+
+class SubjectApi {
+
+
+  Future<PagingWrap> listSubjectsByCondition(int page, int size, String name, String nameCn,
+      bool nsfw, SubjectType type) async {
+    AuthParams authParams = await AuthApi().getAuthParams();
+    if(authParams.baseUrl == '' || authParams.username == ''
+    || authParams.basicAuth == '') {
+      return Future(() => PagingWrap(page: page, size: size, total: 0, items: List.empty()));
+    }
+    String baseUrl = authParams.baseUrl;
+    String basicAuth = authParams.basicAuth;
+    String apiUrl = "$baseUrl/api/v1alpha1/subjects/condition";
+    try {
+      final queryParams = {
+        'page': page,
+        'size': size,
+        'name': base64Encode(utf8.encode(name)),
+        'nameCn': base64Encode(utf8.encode(nameCn)),
+        'nsfw': nsfw,
+        'type': type.name,
+        // 在这里添加更多查询参数
+      };
+
+      BaseOptions options = BaseOptions();
+      options.headers.putIfAbsent("Authorization", () => basicAuth);
+
+      // print("queryParams: $queryParams");
+      var response = await Dio(options)
+          .get(apiUrl, queryParameters: queryParams);
+      // print(response);
+      return PagingWrap.fromJson(response.data);
+    } catch (e) {
+      print(e);
+      return PagingWrap(page: page, size: size, total: 0, items: List.empty());
+    }
+  }
+}
+
+
+
