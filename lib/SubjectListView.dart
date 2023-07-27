@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:ikaros/SubjectDetailsView.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
@@ -133,14 +134,10 @@ class SubjectListState extends State<SubjectListView> {
           children: [
             GestureDetector(
               onTap: () {
-                Fluttertoast.showToast(
-                    msg: "This is Center Short Toast",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.CENTER,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const SubjectDetailsView(),
+                  settings: RouteSettings(arguments: subjectList[index]))
+                );
               },
               child: AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例
