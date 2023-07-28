@@ -28,7 +28,7 @@ jobs:
         run: flutter pub get
 
       - name: Install dependencies
-        run: cd ios && pod install --verbose && cd ..
+        run: pod install --verbose
 
       - name: Build Flutter
         run: flutter build ios --release --no-codesign
