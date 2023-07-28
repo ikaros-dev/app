@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 
-import 'VideoPlayerScreen.dart';
+import 'FijkPlayerScreen.dart';
 
 class SubjectDetailsView extends StatefulWidget {
   const SubjectDetailsView({super.key});
@@ -19,7 +19,7 @@ class SubjectDetailsState extends State<SubjectDetailsView> {
   Widget build(BuildContext context) {
     _subject = ModalRoute.of(context)?.settings.arguments as Subject;
     return const Scaffold(
-        body: VideoPlayerScreen()
+        body: FijkPlayerScreen(title: "test video",)
         );
   }
 
