@@ -36,7 +36,6 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _getFirstEpisodeResource()
     .then((firstEpisodeResource) => {
@@ -135,21 +134,23 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
     return _baseUrl;
   }
 
+  Future<Episode> _getFirstEpisode() async {
+    return Future(() => widget.subject.episodes![0]);
+  }
+
 
   Future<EpisodeResource> _getFirstEpisodeResource() async {
-    if (widget.subject.episodes!.isNotEmpty &&
-        widget.subject.episodes![0].resources!.isNotEmpty) {
-      Episode episode = widget.subject.episodes![0];
-      EpisodeResource episodeResource = episode.resources![0];
-      String baseUrl = await getBaseUrl();
-      episodeResource = EpisodeResource(
-          fileId: episodeResource.fileId,
-          episodeId: episodeResource.episodeId,
-          url: baseUrl + episodeResource.url,
-          name: episodeResource.name);
-      return episodeResource;
-    }
-    return EpisodeResource(fileId: 0, episodeId: 0, url: '', name: '');
+    Episode episode = await _getFirstEpisode();
+    String baseUrl = await getBaseUrl();
+    EpisodeResource episodeResource = episode.resources![0];
+    episodeResource = EpisodeResource(
+        fileId: episodeResource.fileId,
+        episodeId: episodeResource.episodeId,
+        url: baseUrl + episodeResource.url,
+        // name: "${episode.sequence}: ${((episode.nameCn != null && episode.nameCn != '') ? episode.nameCn : episode.name)}"
+      name: episodeResource.name
+    );
+    return episodeResource;
   }
 
   // void _changeVideo(){
