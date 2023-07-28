@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:ikaros/LoginView.dart';
 import 'package:ikaros/SubjectDetailsView.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
@@ -10,7 +10,6 @@ import 'package:ikaros/api/subject/model/Subject.dart';
 
 const cover =
     "http://nas:9999/files/2023/7/6/b17a4329e4c148bca28602dbae9f9727.jpg";
-// const cover = "https://lain.bgm.tv/r/400/pic/cover/l/5a/24/441233_nJ7Do.jpg";
 
 class SubjectListView extends StatefulWidget {
   const SubjectListView({super.key});
@@ -55,7 +54,7 @@ class SubjectListState extends State<SubjectListView> {
     AuthParams authParams = await AuthApi().getAuthParams();
     if(authParams.baseUrl == '') {
       Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const SubjectListView()));
+          MaterialPageRoute(builder: (context) => const LoginView()));
     } else {
       _baseUrl = authParams.baseUrl;
     }

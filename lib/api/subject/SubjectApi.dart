@@ -36,7 +36,10 @@ class SubjectApi {
       // print("queryParams: $queryParams");
       var response = await Dio(options)
           .get(apiUrl, queryParameters: queryParams);
-      // print(response);
+      print("response status code: ${response.statusCode}");
+      if(response.statusCode != 200) {
+        return PagingWrap(page: page, size: size, total: 0, items: List.empty());
+      }
       return PagingWrap.fromJson(response.data);
     } catch (e) {
       print(e);

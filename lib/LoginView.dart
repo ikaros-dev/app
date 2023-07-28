@@ -162,17 +162,32 @@ class LoginState extends State<LoginView> {
   }
 
   void login() {
-    Fluttertoast.showToast(
-        msg: "exec login username: $_username, password: $_password",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.red,
-        textColor: Colors.white,
-        fontSize: 16.0);
-    AuthApi().login(_baseUrl, _username, _password).then((value) => {
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const SubjectListView()))
-        });
+    // Fluttertoast.showToast(
+    //     msg: "exec login username: $_username, password: $_password",
+    //     toastLength: Toast.LENGTH_SHORT,
+    //     gravity: ToastGravity.CENTER,
+    //     timeInSecForIosWeb: 1,
+    //     backgroundColor: Colors.blue,
+    //     textColor: Colors.white,
+    //     fontSize: 16.0);
+    AuthApi()
+        .login(_baseUrl, _username, _password)
+        .then((value) => {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const SubjectListView()))
+            })
+        .onError((error, stackTrace) => {
+              Fluttertoast.showToast(
+                  msg:
+                      "exec login error by username: $_username, password: $_password, error: $error",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.CENTER,
+                  timeInSecForIosWeb: 5,
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                  fontSize: 16.0)
+            });
   }
 }
