@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ikaros/FijkPlayerScreen.dart';
 import 'package:ikaros/VideoPlayerScreen.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
@@ -64,7 +65,8 @@ class SubjectDetailsState extends State<SubjectDetailsView> {
                 "get first episode resource list fail: ${snapshot.error}");
           } else {
             // return VideoPlayerScreen(episodeResource: _episodeResource);
-            return VideoPlayerPage(subject: _subject);
+            // return VideoPlayerPage(subject: _subject);
+            return FijkPlayerScreen(subject: _subject);
           }
         } else {
           return const Center(

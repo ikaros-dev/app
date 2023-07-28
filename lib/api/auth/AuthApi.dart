@@ -28,7 +28,6 @@ class AuthApi {
     authParams.basicAuth = auth;
     return Future(() => authParams);
   }
-
   Future login(String baseUrl, String username, String password) async {
     String url = "$baseUrl/login";
     await Dio().post(url, data: {

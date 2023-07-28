@@ -135,9 +135,10 @@ class _VideoPlayerPageState extends State<VideoPlayerPage> {
   }
 
   Future<Episode> _getFirstEpisode() async {
-    return Future(() => widget.subject.episodes![0]);
+    return Future(() => Stream.fromIterable(widget.subject.episodes!)
+        .where((e) => 1.0 == e.sequence)
+        .first);
   }
-
 
   Future<EpisodeResource> _getFirstEpisodeResource() async {
     Episode episode = await _getFirstEpisode();
