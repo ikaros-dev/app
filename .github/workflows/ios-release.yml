@@ -27,6 +27,9 @@ jobs:
       - name: Restore packages
         run: flutter pub get
 
+      - name: Install dependencies
+        run: cd ios && pod install --verbose && cd ..
+
       - name: Build Flutter
         run: flutter build ios --release --no-codesign
       - name: Build xArchive
