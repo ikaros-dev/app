@@ -42,6 +42,7 @@ dependencies:
   json_annotation: ^4.8.1
   shared_preferences: ^2.2.0
   fijkplayer: ^0.11.0
+  getwidget: ^3.1.1
 
 dev_dependencies:
   flutter_test:

@@ -134,8 +134,7 @@ class SubjectListState extends State<SubjectListView> {
             GestureDetector(
               onTap: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const SubjectDetailsView(),
-                  settings: RouteSettings(arguments: subjectList[index]))
+                  MaterialPageRoute(builder: (context) => SubjectDetailsView(subject: subjectList[index]))
                 );
               },
               child: AspectRatio(
