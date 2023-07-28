@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
-  const VideoPlayerScreen({super.key});
+  final EpisodeResource episodeResource;
+  const VideoPlayerScreen({super.key, required this.episodeResource});
 
   @override
   State<VideoPlayerScreen> createState() => _VideoPlayerScreenState();
@@ -19,9 +21,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     // Create and store the VideoPlayerController. The VideoPlayerController
     // offers several different constructors to play videos from assets, files,
     // or the internet.
+    Uri uri;
+    if(widget.episodeResource.url != '') {
+      uri = Uri.parse(widget.episodeResource.url);
+    } else {
+      uri = Uri.parse('http://nas:9999/files/2023/7/6/fa5e4ccd4e1d4d93866d073cbebfb9ff.mp4');
+    }
     _controller = VideoPlayerController.networkUrl(
       // 'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
-      Uri.parse('http://nas:9999/files/2023/7/6/fa5e4ccd4e1d4d93866d073cbebfb9ff.mp4')
+      uri
     );
 
     // Initialize the controller and store the Future for later use.
@@ -43,7 +51,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Test Butterfly Video'),
+        title: Text(widget.episodeResource.name),
       ),
       // Use a FutureBuilder to display a loading spinner while waiting for the
       // VideoPlayerController to finish initializing.
