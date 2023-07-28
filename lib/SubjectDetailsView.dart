@@ -5,6 +5,7 @@ import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/video/widget/video_player_page.dart';
 
 class SubjectDetailsView extends StatefulWidget {
   const SubjectDetailsView({super.key});
@@ -62,7 +63,8 @@ class SubjectDetailsState extends State<SubjectDetailsView> {
             return Text(
                 "get first episode resource list fail: ${snapshot.error}");
           } else {
-            return VideoPlayerScreen(episodeResource: _episodeResource);
+            // return VideoPlayerScreen(episodeResource: _episodeResource);
+            return VideoPlayerPage(subject: _subject);
           }
         } else {
           return const Center(
