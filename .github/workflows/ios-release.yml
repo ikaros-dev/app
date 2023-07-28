@@ -27,11 +27,12 @@ jobs:
       - name: Restore packages
         run: flutter pub get
 
+      - name: Build Flutter
+        run: flutter build ios --release --no-codesign
+
       - name: Install dependencies
         run: pod install --verbose
 
-      - name: Build Flutter
-        run: flutter build ios --release --no-codesign
       - name: Build xArchive
         run: |
           mkdir Payload && mv build/ios/iphoneos/Runner.app Payload && zip -r Payload.zip Payload && mkdir output && mv Payload.zip output/ikaros.ipa
