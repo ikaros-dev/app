@@ -70,7 +70,7 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
     _getFirstEpisodeResource().then((firstEpisodeResource) => {
           if (firstEpisodeResource.url != '')
             {
-              player.setDataSource(firstEpisodeResource.url, autoPlay: true),
+              player.setDataSource(firstEpisodeResource.url, autoPlay: false),
               _videoTitle = firstEpisodeResource.name
             }
           else

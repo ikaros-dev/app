@@ -333,7 +333,7 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
   Widget buildTimeText(BuildContext context, double height) {
     String text =
         "${_duration2String(_currentPos)}" + "/${_duration2String(_duration)}";
-    return Text(text, style: TextStyle(fontSize: 12, color: Color(0xFFFFFFFF)));
+    return Text(text, style: const TextStyle(fontSize: 12, color: Color(0xFFFFFFFF)));
   }
 
   Widget buildSlider(BuildContext context) {
@@ -373,24 +373,20 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
   }
 
   Widget buildBottom(BuildContext context, double height) {
-    if (_duration.inMilliseconds > 0) {
-      return Row(
-        children: <Widget>[
-          buildPlayButton(context, height),
-          buildTimeText(context, height),
-          Expanded(child: buildSlider(context)),
-          buildFullScreenButton(context, height),
-        ],
-      );
-    } else {
-      return Row(
-        children: <Widget>[
-          buildPlayButton(context, height),
-          Expanded(child: Container()),
-          buildFullScreenButton(context, height),
-        ],
-      );
-    }
+    return Row(
+      children: _duration.inMilliseconds > 0
+          ? <Widget>[
+              buildPlayButton(context, height),
+              buildTimeText(context, height),
+              Expanded(child: buildSlider(context)),
+              buildFullScreenButton(context, height),
+            ]
+          : <Widget>[
+              buildPlayButton(context, height),
+              Expanded(child: Container()),
+              buildFullScreenButton(context, height),
+            ],
+    );
   }
 
   void takeSnapshot() {
@@ -529,22 +525,17 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
   }
 
   Widget buildTitle(BuildContext context) {
-    // return Container(
-    //   padding: const EdgeInsets.only(left: 5),
-    //   child: Text(
-    //     (widget.title != null && widget.title != '')
-    //         ? widget.title! : "Default Video Title",
-    //     style: const TextStyle(color: Colors.white70, fontSize: 16, overflow: TextOverflow.ellipsis),
-    //   ),
-    // );
     return Expanded(
-        child: Text(
-      (widget.title != null && widget.title != '')
-          ? widget.title!
-          : "Default Video Title",
-      style: const TextStyle(
-          color: Colors.white70, fontSize: 16, overflow: TextOverflow.ellipsis),
-    ));
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          reverse: false,
+          child: Text(
+            (widget.title != null && widget.title != '')
+                ? widget.title!
+                : "Default Video Title",
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
+          ),
+        ));
   }
 
   Widget buildBackWithFullScreenTitle(BuildContext context) {
@@ -559,22 +550,6 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
             : [],
       ),
     );
-    // return player.value.fullScreen
-    //     ? Container(
-    //         alignment: Alignment.centerLeft,
-    //         child: Row(
-    //           children: [
-    //             buildBack(context),
-    //             buildTitle(context),
-    //           ],
-    //         ),
-    //       )
-    //     : Container(
-    //         alignment: Alignment.centerLeft,
-    //         child: const Row(
-    //           children: [SizedBox()],
-    //         ),
-    //       );
   }
 
   Widget buildBack(BuildContext context) {
