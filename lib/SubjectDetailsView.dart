@@ -111,7 +111,7 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
         child: Column(
           children: [
             SizedBox(
-              height: 250,
+              height: 200,
               child: FijkView(
                 player: player,
                 color: Colors.black87,
