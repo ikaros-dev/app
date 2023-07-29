@@ -23,14 +23,14 @@ class SubjectListView extends StatefulWidget {
 class SubjectListState extends State<SubjectListView> {
   List<Subject> subjectList = [];
   int _page = 1;
-  int _size = 12;
+  int _size = 15;
   int _total = 0;
 
   bool _nsfw = false;
   String _keyword = "";
   String _baseUrl = '';
 
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   bool _hasMore = true;
 
   List<Subject> _convertItems(List<Map<String, dynamic>> items) {
