@@ -157,7 +157,7 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
       }
     });
 
-    player.addListener(_playerValueChanged);
+    _initFlutterIjkPlayer();
   }
 
   @override
@@ -170,6 +170,16 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
     _currentPosSubs?.cancel();
     _bufferPosSubs?.cancel();
     player.removeListener(_playerValueChanged);
+  }
+
+  void _initFlutterIjkPlayer() {
+    int mCurrentDecode = 1;
+    player.setOption(FijkOption.playerCategory, "mediacodec", mCurrentDecode);
+    player.setOption(FijkOption.playerCategory, "mediacodec-hevc", mCurrentDecode);
+    player.setOption(FijkOption.playerCategory, "mediacodec-all-videos", mCurrentDecode);
+    player.setOption(FijkOption.playerCategory, "mediacodec-auto-rotate", mCurrentDecode);
+    player.setOption(FijkOption.playerCategory, "mediacodec-handle-resolution-change", mCurrentDecode);
+    player.addListener(_playerValueChanged);
   }
 
   double dura2double(Duration d) {
