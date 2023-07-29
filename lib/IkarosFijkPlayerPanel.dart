@@ -114,6 +114,9 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
       baselineColor: Color.fromARGB(100, 20, 20, 20),
       bufferedColor: Color.fromARGB(180, 200, 200, 200));
 
+  // horizontal seek controller
+  double _horizontalDragSeekChange = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -298,6 +301,22 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
     _brightness = null;
   }
 
+  void onHorizontalDragStartFun(DragStartDetails d) {}
+
+  void onHorizontalDragUpdateFun(DragUpdateDetails d) {
+    double delta = d.primaryDelta! / panelWidth();
+    delta = delta.clamp(-1.0, 1.0);
+    delta = _duration.inMilliseconds.toDouble() * delta;
+    setState(() {
+      double tmp = _currentPos.inMilliseconds.toDouble() + delta;
+      _currentPos = Duration(milliseconds: tmp.toInt());
+    });
+  }
+
+  void onHorizontalDragEndFun(DragEndDetails e) {
+    player.seekTo(_currentPos.inMilliseconds);
+  }
+
   Widget buildPlayButton(BuildContext context, double height) {
     Icon icon = (player.state == FijkState.started)
         ? const Icon(Icons.pause)
@@ -333,7 +352,8 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
   Widget buildTimeText(BuildContext context, double height) {
     String text =
         "${_duration2String(_currentPos)}" + "/${_duration2String(_duration)}";
-    return Text(text, style: const TextStyle(fontSize: 12, color: Color(0xFFFFFFFF)));
+    return Text(text,
+        style: const TextStyle(fontSize: 12, color: Color(0xFFFFFFFF)));
   }
 
   Widget buildSlider(BuildContext context) {
@@ -483,7 +503,11 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
       onVerticalDragUpdate: onVerticalDragUpdateFun,
       onVerticalDragStart: onVerticalDragStartFun,
       onVerticalDragEnd: onVerticalDragEndFun,
-      onHorizontalDragUpdate: (d) {},
+      // onLongPressStart: (e) {},
+      // onLongPressEnd: (e) {},
+      // onHorizontalDragStart: onHorizontalDragStartFun,
+      // onHorizontalDragUpdate: onHorizontalDragUpdateFun,
+      // onHorizontalDragEnd: onHorizontalDragEndFun,
       child: AbsorbPointer(
         absorbing: _hideStuff,
         child: AnimatedOpacity(
@@ -527,15 +551,15 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
   Widget buildTitle(BuildContext context) {
     return Expanded(
         child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          reverse: false,
-          child: Text(
-            (widget.title != null && widget.title != '')
-                ? widget.title!
-                : "Default Video Title",
-            style: const TextStyle(color: Colors.white70, fontSize: 16),
-          ),
-        ));
+      scrollDirection: Axis.horizontal,
+      reverse: false,
+      child: Text(
+        (widget.title != null && widget.title != '')
+            ? widget.title!
+            : "Default Video Title",
+        style: const TextStyle(color: Colors.white70, fontSize: 16),
+      ),
+    ));
   }
 
   Widget buildPanelTop(BuildContext context) {
