@@ -23,18 +23,30 @@ class SubjectListView extends StatefulWidget {
 class SubjectListState extends State<SubjectListView> {
   List<Subject> subjectList = [];
   int _page = 1;
-  int _size = 12;
+  int _size = 9;
   int _total = 0;
 
   bool _nsfw = false;
   String _keyword = "";
   String _baseUrl = '';
 
+  ScrollController _scrollController = ScrollController();
+  bool _hasMore = true;
+
   List<Subject> _convertItems(List<Map<String, dynamic>> items) {
     return items.map((e) => Subject.fromJson(e)).toList();
   }
 
   _loadSubjects() async {
+    if (_baseUrl == '') {
+      AuthParams authParams = await AuthApi().getAuthParams();
+      if (authParams.baseUrl == '') {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const LoginView()));
+      } else {
+        _baseUrl = authParams.baseUrl;
+      }
+    }
     // Fluttertoast.showToast(
     //     msg: "Load data action! keyword: $keyword , nsfw: $nsfw",
     //     toastLength: Toast.LENGTH_SHORT,
@@ -44,20 +56,97 @@ class SubjectListState extends State<SubjectListView> {
     //     textColor: Colors.white,
     //     fontSize: 16.0);
 
-    print("load data for page=$_page size=$_size nameCn=$_keyword, nsfw=$_nsfw");
+    print(
+        "load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
+    PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
+        1, _size, '', _keyword, _nsfw, SubjectType.ANIME);
+    _page = pagingWrap.page;
+    _size = pagingWrap.size;
+    _total = pagingWrap.total;
+    setState(() {
+      subjectList = _convertItems(pagingWrap.items);
+      _page = 2;
+    });
+  }
+
+  _loadMoreSubjects() async {
+    if (_baseUrl == '') {
+      AuthParams authParams = await AuthApi().getAuthParams();
+      if (authParams.baseUrl == '') {
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const LoginView()));
+      } else {
+        _baseUrl = authParams.baseUrl;
+      }
+    }
+    if (!_hasMore) {
+      return;
+    }
+    print(
+        "load more data for page=$_page size=$_size nameCn=$_keyword, nsfw=$_nsfw");
     PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
         _page, _size, '', _keyword, _nsfw, SubjectType.ANIME);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
-    subjectList = _convertItems(pagingWrap.items);
-    AuthParams authParams = await AuthApi().getAuthParams();
-    if(authParams.baseUrl == '') {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const LoginView()));
-    } else {
-      _baseUrl = authParams.baseUrl;
+    setState(() {
+      subjectList.addAll(_convertItems(pagingWrap.items));
+      _page++;
+      print("update page: $_page");
+    });
+    print("length: ${subjectList.length} total: $_total");
+    if (subjectList.length >= _total) {
+      setState(() {
+        _hasMore = false;
+      });
     }
+  }
+
+  Widget _getMoreWidget() {
+    // 如果还有数据
+    if (_hasMore) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(10.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                '加载中',
+                style: TextStyle(fontSize: 16.0),
+              ),
+              // 加载图标
+              CircularProgressIndicator(
+                strokeWidth: 1.0,
+              )
+            ],
+          ),
+        ),
+      );
+    } else {
+      return const Center(
+        child: Text("...没有更多了..."),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMoreSubjects();
+    // 监听滚动事件
+    _scrollController.addListener(() {
+      // 获取滚动条下拉的距离
+      // print(_scrollController.position.pixels);
+      // 获取整个页面的高度
+      // print(_scrollController.position.maxScrollExtent);
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent) {
+        print("exec scroll load more subjects");
+        _loadMoreSubjects();
+      }
+    });
   }
 
   @override
@@ -99,27 +188,40 @@ class SubjectListState extends State<SubjectListView> {
           )
         ],
       ),
-      body: FutureBuilder(
-        future: Future.delayed(Duration.zero, _loadSubjects),
-        builder: (BuildContext context, AsyncSnapshot snapshot){
-          if(snapshot.connectionState == ConnectionState.done) {
-            if(snapshot.hasError) {
-              return Text("Load subject list fail: ${snapshot.error}");
-            } else {
-              return buildSubjectsGridView();
-            }
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        },
-      )
+      // body: FutureBuilder(
+      //   future: Future.delayed(Duration.zero, _loadSubjects),
+      //   builder: (BuildContext context, AsyncSnapshot snapshot){
+      //     if(snapshot.connectionState == ConnectionState.done) {
+      //       if(snapshot.hasError) {
+      //         return Text("Load subject list fail: ${snapshot.error}");
+      //       } else {
+      //         return buildSubjectsGridView();
+      //       }
+      //     } else {
+      //       return const Center(
+      //         child: CircularProgressIndicator(),
+      //       );
+      //     }
+      //   },
+      // )
+      body: subjectList.isEmpty
+          ? _getMoreWidget()
+          : RefreshIndicator(
+              onRefresh: () async {
+                print("下拉刷新");
+                // 持续一秒
+                await Future.delayed(const Duration(seconds: 1), () {
+                  _loadSubjects();
+                });
+              },
+              child: buildSubjectsGridView(),
+            ),
     );
   }
 
   Widget buildSubjectsGridView() {
     return GridView.builder(
+      controller: _scrollController,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 2.0,
@@ -133,9 +235,9 @@ class SubjectListState extends State<SubjectListView> {
           children: [
             GestureDetector(
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => SubjectDetailsView(subject: subjectList[index]))
-                );
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) =>
+                        SubjectDetailsView(subject: subjectList[index])));
               },
               child: AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例
@@ -149,7 +251,7 @@ class SubjectListState extends State<SubjectListView> {
               padding: const EdgeInsets.all(4.0),
               child: Text(
                 ((subjectList[index].nameCn == null ||
-                    subjectList[index].nameCn == '')
+                        subjectList[index].nameCn == '')
                     ? subjectList[index].name
                     : subjectList[index].nameCn)!,
                 style: const TextStyle(
