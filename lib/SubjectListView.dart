@@ -155,10 +155,16 @@ class SubjectListState extends State<SubjectListView> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: TextField(
-          onChanged: (v) => {
+          // onChanged: (v) => {
+          //   setState(() {
+          //     _keyword = v;
+          //     // _loadSubjects();
+          //   })
+          // },
+          onSubmitted: (v) => {
             setState(() {
               _keyword = v;
-              // _loadSubjects();
+              _loadSubjects();
             })
           },
           decoration: const InputDecoration(
@@ -175,7 +181,7 @@ class SubjectListState extends State<SubjectListView> {
                   onChanged: (v) => {
                         setState(() {
                           _nsfw = v; // 更新开关状态的变量
-                          // _loadSubjects();
+                          _loadSubjects();
                         })
                       }),
               // IconButton(

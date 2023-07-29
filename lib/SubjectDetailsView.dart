@@ -133,7 +133,9 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
                           height: 50,
                           margin: const EdgeInsets.all(5.0),
                           child: GFButton(
-                            color: episode.id == _currentEpisodeId ? Colors.blueGrey : Colors.grey,
+                            color: episode.id == _currentEpisodeId
+                                ? Colors.blueGrey
+                                : Colors.grey,
                             onPressed: () async {
                               if (episode.resources!.isNotEmpty) {
                                 await player.reset();
@@ -145,7 +147,9 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
                                 });
                               }
                             },
-                            text: '${episode.sequence}: ${episode.nameCn!}',
+                            // text: episode == null ? "空" :
+                            //     '${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}',
+                            text: '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
                           )),
                     )
                     .toList()),
