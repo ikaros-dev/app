@@ -1,9 +1,12 @@
+import 'dart:math';
+
 import 'package:fijkplayer/fijkplayer.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 
+import 'IkarosFijkPlayerPanel.dart';
 import 'api/auth/AuthApi.dart';
 import 'api/auth/AuthParams.dart';
 import 'api/subject/model/Episode.dart';
@@ -24,6 +27,7 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
   final FijkPlayer player = FijkPlayer();
   late String _baseUrl = '';
   late int _currentEpisodeId = 0;
+  String _videoTitle = '';
 
   Future<Episode> _getFirstEpisode() async {
     return Future(() => Stream.fromIterable(widget.subject.episodes!)
@@ -65,7 +69,10 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
     super.initState();
     _getFirstEpisodeResource().then((firstEpisodeResource) => {
           if (firstEpisodeResource.url != '')
-            {player.setDataSource(firstEpisodeResource.url, autoPlay: true)}
+            {
+              player.setDataSource(firstEpisodeResource.url, autoPlay: true),
+              _videoTitle = firstEpisodeResource.name
+            }
           else
             {
               Fluttertoast.showToast(
@@ -114,7 +121,12 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
               height: 200,
               child: FijkView(
                 player: player,
-                color: Colors.black87,
+                color: Colors.black,
+                panelBuilder: ikarosFijkPanelBuilder(
+                    snapShot: false,
+                    doubleTap: true,
+                    fill: true,
+                    title: _videoTitle),
               ),
             ),
             const Align(
@@ -149,7 +161,8 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
                             },
                             // text: episode == null ? "空" :
                             //     '${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}',
-                            text: '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
+                            text:
+                                '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
                           )),
                     )
                     .toList()),
@@ -259,4 +272,30 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
       ),
     );
   }
+}
+
+Widget simplestUI(
+    FijkPlayer player, BuildContext context, Size viewSize, Rect texturePos) {
+  // texturePos 可能超出 viewSize 大小，所以先进行大小约束。
+  Rect rect = Rect.fromLTRB(
+      max(0.0, texturePos.left),
+      max(0.0, texturePos.top),
+      min(viewSize.width, texturePos.right),
+      min(viewSize.height, texturePos.bottom));
+  bool isPlaying = player.state == FijkState.started;
+  return Positioned.fromRect(
+    rect: rect,
+    child: Container(
+      alignment: Alignment.bottomLeft,
+      child: IconButton(
+        icon: Icon(
+          isPlaying ? Icons.pause : Icons.play_arrow,
+          color: Colors.white,
+        ),
+        onPressed: () {
+          isPlaying ? player.pause() : player.start();
+        },
+      ),
+    ),
+  );
 }

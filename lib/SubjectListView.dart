@@ -23,7 +23,7 @@ class SubjectListView extends StatefulWidget {
 class SubjectListState extends State<SubjectListView> {
   List<Subject> subjectList = [];
   int _page = 1;
-  int _size = 9;
+  int _size = 12;
   int _total = 0;
 
   bool _nsfw = false;
