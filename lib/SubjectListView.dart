@@ -92,7 +92,7 @@ class SubjectListState extends State<SubjectListView> {
     setState(() {
       subjectList.addAll(_convertItems(pagingWrap.items));
       _page++;
-      print("update page: $_page");
+      // print("update page: $_page");
     });
     print("length: ${subjectList.length} total: $_total");
     if (subjectList.length >= _total) {
@@ -214,7 +214,7 @@ class SubjectListState extends State<SubjectListView> {
           ? _getMoreWidget()
           : RefreshIndicator(
               onRefresh: () async {
-                print("下拉刷新");
+                // print("下拉刷新");
                 // 持续一秒
                 await Future.delayed(const Duration(seconds: 1), () {
                   _loadSubjects();
