@@ -372,7 +372,7 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
     );
   }
 
-  Widget buildBottom(BuildContext context, double height) {
+  Widget buildPanelBottom(BuildContext context, double height) {
     return Row(
       children: _duration.inMilliseconds > 0
           ? <Widget>[
@@ -451,7 +451,7 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
               end: Alignment.bottomCenter,
             ),
           ),
-          child: buildBackWithFullScreenTitle(context),
+          child: buildPanelTop(context),
         ),
         Expanded(
           child: centerWidget,
@@ -469,7 +469,7 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
           child: Container(
             height: height > 80 ? 45 : height / 2,
             padding: const EdgeInsets.only(left: 8, right: 8, bottom: 5),
-            child: buildBottom(context, height > 80 ? 40 : height / 2),
+            child: buildPanelBottom(context, height > 80 ? 40 : height / 2),
           ),
         )
       ],
@@ -538,16 +538,16 @@ class _IkarosFijkPlayerPanelState extends State<IkarosFijkPlayerPanel> {
         ));
   }
 
-  Widget buildBackWithFullScreenTitle(BuildContext context) {
+  Widget buildPanelTop(BuildContext context) {
     return Container(
       alignment: Alignment.centerLeft,
       child: Row(
         children: player.value.fullScreen
-            ? [
+            ? <Widget>[
                 buildBack(context),
                 buildTitle(context),
               ]
-            : [],
+            : <Widget>[],
       ),
     );
   }
