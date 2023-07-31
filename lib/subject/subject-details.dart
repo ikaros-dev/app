@@ -146,9 +146,11 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                           margin: const EdgeInsets.all(5.0),
                           child: GFButton(
                             color: episode.id == _currentEpisodeId
-                                ? Colors.blueGrey
-                                : Colors.grey,
-                            onPressed: () async {
+                                ? Colors.lightBlueAccent
+                                : Colors.blueAccent,
+                            disabledColor: Colors.grey,
+                            onPressed: episode.resources!.isEmpty ? null
+                                : () async {
                               if (episode.resources!.isNotEmpty) {
                                 await player.reset();
                                 await player.setDataSource(
@@ -156,6 +158,11 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                                     autoPlay: true);
                                 setState(() {
                                   _currentEpisodeId = episode.id;
+                                  _videoTitle =
+                                  episode.resources!.isNotEmpty ? episode.resources![0].name
+                                      :
+                                  (episode.nameCn != null || episode.nameCn != '')
+                                  ? episode.nameCn! : episode.name;
                                 });
                               }
                             },
