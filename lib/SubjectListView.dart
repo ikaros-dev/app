@@ -63,18 +63,23 @@ class SubjectListState extends State<SubjectListView> {
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
-    setState(() {
-      subjectList = _convertItems(pagingWrap.items);
-      _page = 2;
-    });
+    if(mounted) {
+      setState(() {
+        subjectList = _convertItems(pagingWrap.items);
+        _page = 2;
+      });
+    }
   }
 
   _loadMoreSubjects() async {
     if (_baseUrl == '') {
       AuthParams authParams = await AuthApi().getAuthParams();
       if (authParams.baseUrl == '') {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const LoginView()));
+        if(mounted) {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const LoginView()));
+        }
+        return;
       } else {
         _baseUrl = authParams.baseUrl;
       }
@@ -89,16 +94,20 @@ class SubjectListState extends State<SubjectListView> {
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
-    setState(() {
-      subjectList.addAll(_convertItems(pagingWrap.items));
-      _page++;
-      // print("update page: $_page");
-    });
+    if(mounted) {
+      setState(() {
+        subjectList.addAll(_convertItems(pagingWrap.items));
+      });
+    }
+    _page++;
+    // print("update page: $_page");
     print("length: ${subjectList.length} total: $_total");
     if (subjectList.length >= _total) {
-      setState(() {
-        _hasMore = false;
-      });
+      if(mounted) {
+        setState(() {
+          _hasMore = false;
+        });
+      }
     }
   }
 
