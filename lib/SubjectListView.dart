@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:ikaros/LoginView.dart';
 import 'package:ikaros/SubjectDetailsView.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
@@ -30,8 +31,8 @@ class SubjectListState extends State<SubjectListView> {
   String _keyword = "";
   String _baseUrl = '';
 
-  final ScrollController _scrollController = ScrollController();
   bool _hasMore = true;
+  late EasyRefreshController _controller;
 
   List<Subject> _convertItems(List<Map<String, dynamic>> items) {
     return items.map((e) => Subject.fromJson(e)).toList();
@@ -41,8 +42,10 @@ class SubjectListState extends State<SubjectListView> {
     if (_baseUrl == '') {
       AuthParams authParams = await AuthApi().getAuthParams();
       if (authParams.baseUrl == '') {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => const LoginView()));
+        if(mounted) {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const LoginView()));
+        }
       } else {
         _baseUrl = authParams.baseUrl;
       }
@@ -144,18 +147,14 @@ class SubjectListState extends State<SubjectListView> {
   void initState() {
     super.initState();
     _loadMoreSubjects();
-    // 监听滚动事件
-    _scrollController.addListener(() {
-      // 获取滚动条下拉的距离
-      // print(_scrollController.position.pixels);
-      // 获取整个页面的高度
-      // print(_scrollController.position.maxScrollExtent);
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent) {
-        print("exec scroll load more subjects");
-        _loadMoreSubjects();
-      }
-    });
+    _controller = EasyRefreshController();
+  }
+
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
   }
 
   @override
@@ -164,12 +163,6 @@ class SubjectListState extends State<SubjectListView> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: TextField(
-          // onChanged: (v) => {
-          //   setState(() {
-          //     _keyword = v;
-          //     // _loadSubjects();
-          //   })
-          // },
           onSubmitted: (v) => {
             setState(() {
               _keyword = v;
@@ -203,40 +196,33 @@ class SubjectListState extends State<SubjectListView> {
           )
         ],
       ),
-      // body: FutureBuilder(
-      //   future: Future.delayed(Duration.zero, _loadSubjects),
-      //   builder: (BuildContext context, AsyncSnapshot snapshot){
-      //     if(snapshot.connectionState == ConnectionState.done) {
-      //       if(snapshot.hasError) {
-      //         return Text("Load subject list fail: ${snapshot.error}");
-      //       } else {
-      //         return buildSubjectsGridView();
-      //       }
-      //     } else {
-      //       return const Center(
-      //         child: CircularProgressIndicator(),
-      //       );
-      //     }
-      //   },
-      // )
-      body: subjectList.isEmpty
-          ? _getMoreWidget()
-          : RefreshIndicator(
-              onRefresh: () async {
-                // print("下拉刷新");
-                // 持续一秒
-                await Future.delayed(const Duration(seconds: 1), () {
-                  _loadSubjects();
-                });
-              },
-              child: buildSubjectsGridView(),
-            ),
+      body: EasyRefresh(
+        controller: _controller,
+        footer: ClassicalFooter(
+          loadingText: "加载中...",
+          loadFailedText: "加载失败",
+          loadReadyText: "加载就绪",
+          loadedText: "已全部加载",
+          noMoreText: "没有更多了",
+          showInfo: false
+        ),
+        onLoad: () async {
+          // await Future.delayed(const Duration(seconds: 4));
+          await _loadMoreSubjects();
+          if (!mounted) {
+            return;
+          }
+          print("noMore: ${!_hasMore}");
+          _controller.finishLoad(success: true, noMore: !_hasMore);
+          _controller.resetLoadState();
+        },
+        child: buildSubjectsGridView(),
+      ),
     );
   }
 
   Widget buildSubjectsGridView() {
     return GridView.builder(
-      controller: _scrollController,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 2.0,
