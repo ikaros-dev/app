@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
-import 'package:ikaros/LoginView.dart';
-import 'package:ikaros/SubjectDetailsView.dart';
+import 'package:ikaros/user/login.dart';
+import 'package:ikaros/subject/subject-details.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
@@ -9,11 +9,8 @@ import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 
-const cover =
-    "http://nas:9999/files/2023/7/6/b17a4329e4c148bca28602dbae9f9727.jpg";
-
-class SubjectListView extends StatefulWidget {
-  const SubjectListView({super.key});
+class SubjectsPage extends StatefulWidget {
+  const SubjectsPage({super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -21,7 +18,7 @@ class SubjectListView extends StatefulWidget {
   }
 }
 
-class SubjectListState extends State<SubjectListView> {
+class SubjectListState extends State<SubjectsPage> {
   List<Subject> subjectList = [];
   int _page = 1;
   int _size = 15;
@@ -113,36 +110,6 @@ class SubjectListState extends State<SubjectListView> {
       }
     }
   }
-
-  Widget _getMoreWidget() {
-    // 如果还有数据
-    if (_hasMore) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(10.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                '加载中',
-                style: TextStyle(fontSize: 16.0),
-              ),
-              // 加载图标
-              CircularProgressIndicator(
-                strokeWidth: 1.0,
-              )
-            ],
-          ),
-        ),
-      );
-    } else {
-      return const Center(
-        child: Text("...没有更多了..."),
-      );
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -161,6 +128,7 @@ class SubjectListState extends State<SubjectListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         title: TextField(
           onSubmitted: (v) => {
@@ -238,7 +206,7 @@ class SubjectListState extends State<SubjectListView> {
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) =>
-                        SubjectDetailsView(subject: subjectList[index])));
+                        SubjectDetailsPage(subject: subjectList[index])));
               },
               child: AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例

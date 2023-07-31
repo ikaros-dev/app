@@ -6,16 +6,16 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 
-import 'IkarosFijkPlayerPanel.dart';
-import 'api/auth/AuthApi.dart';
-import 'api/auth/AuthParams.dart';
-import 'api/subject/model/Episode.dart';
-import 'api/subject/model/EpisodeResource.dart';
+import 'package:ikaros/video/IkarosFijkPlayerPanel.dart';
+import 'package:ikaros/api/auth/AuthApi.dart';
+import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/subject/model/Episode.dart';
+import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 
-class SubjectDetailsView extends StatefulWidget {
+class SubjectDetailsPage extends StatefulWidget {
   final Subject subject;
 
-  const SubjectDetailsView({super.key, required this.subject});
+  const SubjectDetailsPage({super.key, required this.subject});
 
   @override
   State<StatefulWidget> createState() {
@@ -23,7 +23,7 @@ class SubjectDetailsView extends StatefulWidget {
   }
 }
 
-class _SubjectDetailsView extends State<SubjectDetailsView> {
+class _SubjectDetailsView extends State<SubjectDetailsPage> {
   final FijkPlayer player = FijkPlayer();
   late String _baseUrl = '';
   late int _currentEpisodeId = 0;

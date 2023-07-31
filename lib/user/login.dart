@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:ikaros/SubjectListView.dart';
+import 'package:ikaros/home.dart';
+import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 
 class LoginView extends StatefulWidget {
@@ -176,7 +177,7 @@ class LoginState extends State<LoginView> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const SubjectListView()))
+                      builder: (context) => const HomePage()))
             })
         .onError((error, stackTrace) => {
               Fluttertoast.showToast(

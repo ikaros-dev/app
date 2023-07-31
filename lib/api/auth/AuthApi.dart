@@ -41,4 +41,10 @@ class AuthApi {
     prefs.setString(SharedPreferencesKeyAuthUsername, username);
     prefs.setString(SharedPreferencesKeyAuthPassword, password);
   }
+
+  Future logout()async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+    prefs.reload();
+  }
 }
