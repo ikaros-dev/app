@@ -9,7 +9,7 @@ jobs:
   # job's id
   release:
     # job's name
-    name: build and release ikaros flutter app
+    name: release app
 
     # the type of machine to run the job on
     runs-on: ${{ matrix.os }}
@@ -44,12 +44,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           flutter build apk --release
-
-      # step5: build ios app bundle for mac
-      - name: build android app bundle
-        if: matrix.os == 'macos-latest'
-        run: |
-          flutter build ios --release --no-codesign && mkdir Payload && mv build/ios/iphoneos/Runner.app Payload && zip -r Payload.zip Payload && mkdir output && mv Payload.zip output/ikaros.ipa
 
       # step6: upload android artifacts
       - name: Publish Android Artefacts
