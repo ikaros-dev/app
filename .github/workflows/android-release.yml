@@ -1,0 +1,39 @@
+name: Flutter_Android
+
+on:
+  push:
+    branches:
+      - release-*
+    tags:
+      - '*'
+
+jobs:
+  build_android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Setup Java to compile Android project
+        uses: actions/setup-java@v1
+        with:
+          java-version: '17.x'
+
+      - name: Install and set Flutter version
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.10.5'
+          channel: 'stable'
+
+      - name: Restore packages
+        run: flutter pub get
+
+      - name: Build Android App Bundle
+        run: flutter build apk --release
+
+      - name: Publish Android Artefacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: release-android-${{  github.ref_name }}
+          path: build/app/outputs/flutter-apk
