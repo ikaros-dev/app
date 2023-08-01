@@ -72,9 +72,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          tag_name: ${{ github.ref }}
-          name: Publish ${{ github.ref }}
-          body: publish ${{ github.ref }}
           prerelease: true
           files: |
             release-android-${{  github.ref_name }}
