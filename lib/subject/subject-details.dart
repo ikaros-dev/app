@@ -176,6 +176,10 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                   subTitle: _videoTitle,
                   // 视频列表开关
                   isVideos: true,
+                  // 字幕按钮是否展示，fplayer字幕功能未实现，暂不显示
+                  isCaption: false,
+                  // 清晰度按钮是否展示
+                  isResolution: false,
                   // 视频列表列表
                   videoList: videoList,
                   // 当前视频索引
