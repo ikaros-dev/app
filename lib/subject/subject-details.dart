@@ -8,6 +8,7 @@ import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
+import 'package:ikaros/video/episode-video-item.dart';
 
 class SubjectDetailsPage extends StatefulWidget {
   final Subject subject;
@@ -23,7 +24,7 @@ class SubjectDetailsPage extends StatefulWidget {
 class _SubjectDetailsView extends State<SubjectDetailsPage> {
   // final FijkPlayer player = FijkPlayer();
   final FPlayer player = FPlayer();
-  List<VideoItem> videoList = <VideoItem>[];
+  List<EpisodeVideoItem> videoList = <EpisodeVideoItem>[];
   int videoIndex = 0;
   late String _baseUrl = '';
   late int _currentEpisodeId = 0;
@@ -36,8 +37,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
       await player.setDataSource(url, autoPlay: true, showCover: true);
     } catch (error) {
       Fluttertoast.showToast(
-          msg:
-              "Video play exception: $error",
+          msg: "Video play exception: $error",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.CENTER,
           timeInSecForIosWeb: 1,
@@ -46,6 +46,27 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
           fontSize: 16.0);
       print("播放-异常: $error");
       return;
+    }
+  }
+
+  Future _initVideoList() async {
+    await _getBaseUrl();
+    List<Episode>? episodes = widget.subject.episodes;
+    if (episodes != null && episodes.isNotEmpty) {
+      for (Episode episode in episodes) {
+        String episodeTitle =
+            "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}";
+        if (episode.resources!.isNotEmpty) {
+          EpisodeResource resource = episode.resources![0];
+          String resourceName = resource.name;
+          String url = _baseUrl + resource.url;
+          EpisodeVideoItem videoItem =
+              EpisodeVideoItem(episode.id, episode.subjectId, url: url, title: episodeTitle, subTitle: resourceName);
+          setState(() {
+            videoList.add(videoItem);
+          });
+        }
+      }
     }
   }
 
@@ -67,8 +88,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     Episode episode = await _getFirstEpisode();
     setState(() {
       _currentEpisodeId = episode.id;
-      _episodeTitle =  "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '')
-              ? episode.nameCn! : episode.name}";
+      _episodeTitle =
+          "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}";
     });
     String baseUrl = await _getBaseUrl();
     if (episode.resources!.isNotEmpty) {
@@ -89,25 +110,27 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   @override
   void initState() {
     super.initState();
-    _getFirstEpisodeResource().then((firstEpisodeResource) => {
-          if (firstEpisodeResource.url != '')
-            {
-              player.setDataSource(firstEpisodeResource.url, autoPlay: true, showCover: true),
-              _videoTitle = firstEpisodeResource.name
-            }
-          else
-            {
-              // Fluttertoast.showToast(
-              //     msg:
-              //         "Current subject not found first episode resource, nameCn: ${widget.subject.nameCn}, name: ${widget.subject.name}",
-              //     toastLength: Toast.LENGTH_SHORT,
-              //     gravity: ToastGravity.CENTER,
-              //     timeInSecForIosWeb: 1,
-              //     backgroundColor: Colors.red,
-              //     textColor: Colors.white,
-              //     fontSize: 16.0)
-            }
-        });
+    // _getFirstEpisodeResource().then((firstEpisodeResource) => {
+    //       if (firstEpisodeResource.url != '')
+    //         {
+    //           player.setDataSource(firstEpisodeResource.url, autoPlay: true, showCover: true),
+    //           _videoTitle = firstEpisodeResource.name
+    //         }
+    //       else
+    //         {
+    //           // Fluttertoast.showToast(
+    //           //     msg:
+    //           //         "Current subject not found first episode resource, nameCn: ${widget.subject.nameCn}, name: ${widget.subject.name}",
+    //           //     toastLength: Toast.LENGTH_SHORT,
+    //           //     gravity: ToastGravity.CENTER,
+    //           //     timeInSecForIosWeb: 1,
+    //           //     backgroundColor: Colors.red,
+    //           //     textColor: Colors.white,
+    //           //     fontSize: 16.0)
+    //         }
+    //     });
+    _getFirstEpisodeResource().then((value) =>
+        _initVideoList().then((value) => setVideoUrl(videoList[0].url)));
   }
 
   @override
@@ -141,15 +164,6 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
           children: [
             SizedBox(
               height: 200,
-              // child: FijkView(
-              //   player: player,
-              //   color: Colors.black,
-              //   panelBuilder: ikarosFijkPanelBuilder(
-              //       snapShot: false,
-              //       doubleTap: true,
-              //       fill: true,
-              //       title: _videoTitle),
-              // ),
               child: FView(
                 player: player,
                 width: double.infinity,
@@ -158,11 +172,35 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                 fsFit: FFit.contain, // 全屏模式下的填充
                 fit: FFit.fill, // 正常模式下的填充
                 panelBuilder: fPanelBuilder(
-                  title: _episodeTitle  ,
+                  title: _episodeTitle,
                   subTitle: _videoTitle,
+                  // 视频列表开关
+                  isVideos: true,
+                  // 视频列表列表
+                  videoList: videoList,
+                  // 当前视频索引
+                  videoIndex: videoIndex,
+                  // 全屏模式下点击播放下一集视频回调
+                  playNextVideoFun: () {
+                    setState(() {
+                      videoIndex += 1;
+                      _currentEpisodeId = videoList[videoIndex].id;
+                    });
+                  },
+                  // 视频播放完成回调
+                  onVideoEnd: () async {
+                    var index = videoIndex + 1;
+                    if (index < videoList.length) {
+                      await player.reset();
+                      setState(() {
+                        videoIndex = index;
+                        _currentEpisodeId = videoList[videoIndex].id;
+                      });
+                      setVideoUrl(videoList[index].url);
+                    }
+                  },
                 ),
               ),
-
             ),
             const Align(
               alignment: Alignment.centerLeft,
@@ -184,23 +222,35 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                                 ? Colors.lightBlueAccent
                                 : Colors.blueAccent,
                             disabledColor: Colors.grey,
-                            onPressed: episode.resources!.isEmpty ? null
+                            onPressed: episode.resources!.isEmpty
+                                ? null
                                 : () async {
-                              if (episode.resources!.isNotEmpty) {
-                                await player.reset();
-                                await player.setDataSource(
-                                    _baseUrl + episode.resources!.first.url,
-                                    autoPlay: true);
-                                setState(() {
-                                  _currentEpisodeId = episode.id;
-                                  _videoTitle =
-                                  episode.resources!.isNotEmpty ? episode.resources![0].name
-                                      :
-                                  (episode.nameCn != null || episode.nameCn != '')
-                                  ? episode.nameCn! : episode.name;
-                                });
-                              }
-                            },
+                                    if (episode.resources!.isNotEmpty) {
+                                      await player.reset();
+                                      // await player.setDataSource(
+                                      //     _baseUrl +
+                                      //         episode.resources!.first.url,
+                                      //     autoPlay: false);
+                                      setState(() {
+                                        _currentEpisodeId = episode.id;
+                                        _videoTitle =
+                                            "${episode.sequence}: ${(episode.nameCn != null ||
+                                                    episode.nameCn != '')
+                                                    ? episode.nameCn!
+                                                    : episode.name}";
+                                        _episodeTitle =
+                                            episode.resources![0].name;
+                                        print("video list: $videoList");
+                                        videoIndex = videoList.indexOf(videoList
+                                            .where((element) =>
+                                                _episodeTitle ==
+                                                element.subTitle)
+                                            .first);
+                                        print("videoIndex : $videoIndex");
+                                        setVideoUrl(videoList[videoIndex].url);
+                                      });
+                                    }
+                                  },
                             // text: episode == null ? "空" :
                             //     '${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}',
                             text:
