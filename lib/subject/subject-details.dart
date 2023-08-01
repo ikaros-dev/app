@@ -8,7 +8,7 @@ import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
-import 'package:ikaros/video/episode-video-item.dart';
+import 'package:ikaros/video/IkarosFplayerPanel.dart';
 
 class SubjectDetailsPage extends StatefulWidget {
   final Subject subject;
@@ -24,10 +24,11 @@ class SubjectDetailsPage extends StatefulWidget {
 class _SubjectDetailsView extends State<SubjectDetailsPage> {
   // final FijkPlayer player = FijkPlayer();
   final FPlayer player = FPlayer();
-  List<EpisodeVideoItem> videoList = <EpisodeVideoItem>[];
+  List<IkarosVideoItem> videoList = <IkarosVideoItem>[];
   int videoIndex = 0;
   late String _baseUrl = '';
   late int _currentEpisodeId = 0;
+  String _resourceSubtitleUrl = '';
   String _episodeTitle = '';
   String _videoTitle = '';
 
@@ -60,8 +61,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
           EpisodeResource resource = episode.resources![0];
           String resourceName = resource.name;
           String url = _baseUrl + resource.url;
-          EpisodeVideoItem videoItem =
-              EpisodeVideoItem(episode.id, episode.subjectId, url: url, title: episodeTitle, subTitle: resourceName);
+          IkarosVideoItem videoItem =
+            IkarosVideoItem(id: episode.id, subjectId: episode.subjectId, url: url, title: episodeTitle, subTitle: resourceName);
           setState(() {
             videoList.add(videoItem);
           });
@@ -90,10 +91,16 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
       _currentEpisodeId = episode.id;
       _episodeTitle =
           "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}";
+      _videoTitle =
+      "${episode.sequence}: ${(episode.nameCn != null ||
+          episode.nameCn != '')
+          ? episode.nameCn!
+          : episode.name}";
     });
     String baseUrl = await _getBaseUrl();
     if (episode.resources!.isNotEmpty) {
       EpisodeResource episodeResource = episode.resources![0];
+      _resourceSubtitleUrl = episodeResource.subtitleUrl!;
       episodeResource = EpisodeResource(
           fileId: episodeResource.fileId,
           episodeId: episodeResource.episodeId,
@@ -171,19 +178,20 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                 color: Colors.black,
                 fsFit: FFit.contain, // 全屏模式下的填充
                 fit: FFit.fill, // 正常模式下的填充
-                panelBuilder: fPanelBuilder(
+                panelBuilder: ikarosFPanelBuilder(
                   title: _episodeTitle,
                   subTitle: _videoTitle,
                   // 视频列表开关
                   isVideos: true,
-                  // 字幕按钮是否展示，fplayer字幕功能未实现，暂不显示
-                  isCaption: false,
+                  // 字幕按钮是否展示
+                  isCaption: true,
                   // 清晰度按钮是否展示
                   isResolution: false,
                   // 视频列表列表
                   videoList: videoList,
                   // 当前视频索引
                   videoIndex: videoIndex,
+                  captionUrl: _baseUrl + _resourceSubtitleUrl,
                   // 全屏模式下点击播放下一集视频回调
                   playNextVideoFun: () {
                     setState(() {
@@ -244,6 +252,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                                                     : episode.name}";
                                         _episodeTitle =
                                             episode.resources![0].name;
+                                        _resourceSubtitleUrl =
+                                          episode.resources![0].subtitleUrl!;
                                         print("video list: $videoList");
                                         videoIndex = videoList.indexOf(videoList
                                             .where((element) =>
