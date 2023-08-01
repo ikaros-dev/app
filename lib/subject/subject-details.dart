@@ -1,12 +1,9 @@
-import 'dart:math';
-
-import 'package:fijkplayer/fijkplayer.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:fplayer/fplayer.dart';
 
-import 'package:ikaros/video/IkarosFijkPlayerPanel.dart';
+import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
@@ -24,10 +21,33 @@ class SubjectDetailsPage extends StatefulWidget {
 }
 
 class _SubjectDetailsView extends State<SubjectDetailsPage> {
-  final FijkPlayer player = FijkPlayer();
+  // final FijkPlayer player = FijkPlayer();
+  final FPlayer player = FPlayer();
+  List<VideoItem> videoList = <VideoItem>[];
+  int videoIndex = 0;
   late String _baseUrl = '';
   late int _currentEpisodeId = 0;
+  String _episodeTitle = '';
   String _videoTitle = '';
+
+  // 播放传入的url
+  Future<void> setVideoUrl(String url) async {
+    try {
+      await player.setDataSource(url, autoPlay: true, showCover: true);
+    } catch (error) {
+      Fluttertoast.showToast(
+          msg:
+              "Video play exception: $error",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+      print("播放-异常: $error");
+      return;
+    }
+  }
 
   Future<Episode> _getFirstEpisode() async {
     return Future(() => Stream.fromIterable(widget.subject.episodes!)
@@ -47,6 +67,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     Episode episode = await _getFirstEpisode();
     setState(() {
       _currentEpisodeId = episode.id;
+      _episodeTitle =  "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '')
+              ? episode.nameCn! : episode.name}";
     });
     String baseUrl = await _getBaseUrl();
     if (episode.resources!.isNotEmpty) {
@@ -70,20 +92,20 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     _getFirstEpisodeResource().then((firstEpisodeResource) => {
           if (firstEpisodeResource.url != '')
             {
-              player.setDataSource(firstEpisodeResource.url, autoPlay: false),
+              player.setDataSource(firstEpisodeResource.url, autoPlay: true, showCover: true),
               _videoTitle = firstEpisodeResource.name
             }
           else
             {
-              Fluttertoast.showToast(
-                  msg:
-                      "Current subject not found first episode resource, nameCn: ${widget.subject.nameCn}, name: ${widget.subject.name}",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.CENTER,
-                  timeInSecForIosWeb: 1,
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
-                  fontSize: 16.0)
+              // Fluttertoast.showToast(
+              //     msg:
+              //         "Current subject not found first episode resource, nameCn: ${widget.subject.nameCn}, name: ${widget.subject.name}",
+              //     toastLength: Toast.LENGTH_SHORT,
+              //     gravity: ToastGravity.CENTER,
+              //     timeInSecForIosWeb: 1,
+              //     backgroundColor: Colors.red,
+              //     textColor: Colors.white,
+              //     fontSize: 16.0)
             }
         });
   }
@@ -119,15 +141,28 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
           children: [
             SizedBox(
               height: 200,
-              child: FijkView(
+              // child: FijkView(
+              //   player: player,
+              //   color: Colors.black,
+              //   panelBuilder: ikarosFijkPanelBuilder(
+              //       snapShot: false,
+              //       doubleTap: true,
+              //       fill: true,
+              //       title: _videoTitle),
+              // ),
+              child: FView(
                 player: player,
+                width: double.infinity,
+                height: 200, // 需自行设置，此处宽度/高度=16/9
                 color: Colors.black,
-                panelBuilder: ikarosFijkPanelBuilder(
-                    snapShot: false,
-                    doubleTap: true,
-                    fill: true,
-                    title: _videoTitle),
+                fsFit: FFit.contain, // 全屏模式下的填充
+                fit: FFit.fill, // 正常模式下的填充
+                panelBuilder: fPanelBuilder(
+                  title: _episodeTitle  ,
+                  subTitle: _videoTitle,
+                ),
               ),
+
             ),
             const Align(
               alignment: Alignment.centerLeft,
@@ -279,30 +314,4 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
       ),
     );
   }
-}
-
-Widget simplestUI(
-    FijkPlayer player, BuildContext context, Size viewSize, Rect texturePos) {
-  // texturePos 可能超出 viewSize 大小，所以先进行大小约束。
-  Rect rect = Rect.fromLTRB(
-      max(0.0, texturePos.left),
-      max(0.0, texturePos.top),
-      min(viewSize.width, texturePos.right),
-      min(viewSize.height, texturePos.bottom));
-  bool isPlaying = player.state == FijkState.started;
-  return Positioned.fromRect(
-    rect: rect,
-    child: Container(
-      alignment: Alignment.bottomLeft,
-      child: IconButton(
-        icon: Icon(
-          isPlaying ? Icons.pause : Icons.play_arrow,
-          color: Colors.white,
-        ),
-        onPressed: () {
-          isPlaying ? player.pause() : player.start();
-        },
-      ),
-    ),
-  );
 }
