@@ -1422,7 +1422,7 @@ class __FPanel2State extends State<_FPanel2> {
           : widget.title,
       style: const TextStyle(
         fontSize: 22,
-        color: Color(0xFF787878),
+        color: Colors.blueAccent,
       ),
     );
   }
@@ -1436,7 +1436,7 @@ class __FPanel2State extends State<_FPanel2> {
             : widget.subTitle,
         style: const TextStyle(
           fontSize: 14,
-          color: Color(0xFF787878),
+          color: Colors.blueAccent,
         ),
       ),
     );
