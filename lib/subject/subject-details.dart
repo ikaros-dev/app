@@ -8,6 +8,7 @@ import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
+import 'package:ikaros/consts/tmp-const.dart';
 import 'package:ikaros/video/IkarosFplayerPanel.dart';
 
 class SubjectDetailsPage extends StatefulWidget {
@@ -100,7 +101,9 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     String baseUrl = await _getBaseUrl();
     if (episode.resources!.isNotEmpty) {
       EpisodeResource episodeResource = episode.resources![0];
-      _resourceSubtitleUrl = episodeResource.subtitleUrl!;
+      if(episodeResource.subtitleUrl != null && episodeResource.subtitleUrl != '') {
+        _resourceSubtitleUrl = episodeResource.subtitleUrl!;
+      }
       episodeResource = EpisodeResource(
           fileId: episodeResource.fileId,
           episodeId: episodeResource.episodeId,
@@ -191,7 +194,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                   videoList: videoList,
                   // 当前视频索引
                   videoIndex: videoIndex,
-                  captionUrl: _baseUrl + _resourceSubtitleUrl,
+                  // captionUrl: _baseUrl + _resourceSubtitleUrl,
+                  captionUrl: _baseUrl + TmpConst.captionUrl,
                   // 全屏模式下点击播放下一集视频回调
                   playNextVideoFun: () {
                     setState(() {
@@ -252,8 +256,10 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                                                     : episode.name}";
                                         _episodeTitle =
                                             episode.resources![0].name;
-                                        _resourceSubtitleUrl =
+                                        if(episode.resources != null && episode.resources!.isEmpty) {
+                                          _resourceSubtitleUrl =
                                           episode.resources![0].subtitleUrl!;
+                                        }
                                         print("video list: $videoList");
                                         videoIndex = videoList.indexOf(videoList
                                             .where((element) =>
