@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ikaros/consts/tmp-const.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:wakelock/wakelock.dart';
@@ -70,6 +71,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
 
   bool _isFullScreen = false;
   bool _subtitleIsLoaded = false;
+  bool _showControl = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -149,20 +151,38 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       }
 
       _updateWakeLock();
-
     }
-
-
   }
 
   // 播放状态下开启屏幕常亮
-  void _updateWakeLock() async  {
+  void _updateWakeLock() async {
     bool? isPlaying = await _controller.isPlaying();
-    if(isPlaying != null && isPlaying) {
+    if (isPlaying != null && isPlaying) {
       Wakelock.enable();
     } else {
       Wakelock.disable();
     }
+  }
+
+  _updateShowControl() {
+    setState(() {
+      _showControl = !_showControl;
+    });
+    if (_showControl) {
+      Future.delayed(const Duration(milliseconds: 4000), () {
+        setState(() {
+          _showControl = false;
+        });
+      });
+    }
+    Fluttertoast.showToast(
+        msg: "click screen",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+        fontSize: 16.0);
   }
 
   void setTargetNativeScale(double newValue) {
@@ -221,7 +241,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       mainAxisSize: MainAxisSize.min,
       children: [
         Visibility(
-          visible: true,
+          visible: _showControl,
           child: Container(
             width: double.infinity,
             color: _playerControlsBgColor,
@@ -380,47 +400,54 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
           ),
         ),
         Expanded(
-          child: ColoredBox(
-            color: Colors.black,
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: <Widget>[
-                Center(
-                  child: VlcPlayer(
-                    controller: _controller,
-                    aspectRatio: _aspectRatio,
-                    placeholder:
-                        const Center(child: CircularProgressIndicator()),
-                  ),
-                ),
-                Positioned(
-                  top: _recordingPositionOffset,
-                  left: _recordingPositionOffset,
-                  child: AnimatedOpacity(
-                    opacity: recordingTextOpacity,
-                    duration: const Duration(seconds: 1),
-                    child: const Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Icon(Icons.circle, color: Colors.red),
-                        SizedBox(width: 5),
-                        Text(
-                          'REC',
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+          child: GestureDetector(
+              onDoubleTap: () {
+                _updateShowControl();
+              },
+              onTap: () {
+                _updateShowControl();
+              },
+              child: ColoredBox(
+                color: Colors.black,
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: <Widget>[
+                    Center(
+                      child: VlcPlayer(
+                        controller: _controller,
+                        aspectRatio: _aspectRatio,
+                        placeholder:
+                            const Center(child: CircularProgressIndicator()),
+                      ),
                     ),
-                  ),
+                    Positioned(
+                      top: _recordingPositionOffset,
+                      left: _recordingPositionOffset,
+                      child: AnimatedOpacity(
+                        opacity: recordingTextOpacity,
+                        duration: const Duration(seconds: 1),
+                        child: const Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Icon(Icons.circle, color: Colors.red),
+                            SizedBox(width: 5),
+                            Text(
+                              'REC',
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    ControlsOverlay(_controller),
+                  ],
                 ),
-                ControlsOverlay(_controller),
-              ],
-            ),
-          ),
+              )),
         ),
         Visibility(
-          visible: true,
+          visible: _showControl,
           child: ColoredBox(
             color: _playerControlsBgColor,
             child: Row(
