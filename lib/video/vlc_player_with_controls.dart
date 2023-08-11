@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:ikaros/consts/tmp-const.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:wakelock/wakelock.dart';
 
 import 'controls_overlay.dart';
 
@@ -135,6 +136,32 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       } else {
         setState(() => recordingTextOpacity = 0);
       }
+
+      // load subtitle urls once
+      if (!_subtitleIsLoaded) {
+        for (int i = 0; i < widget.subtitleUrl.length; i++) {
+          _controller.addSubtitleFromNetwork(widget.subtitleUrl[i],
+              isSelected: i == 0);
+        }
+        setState(() {
+          _subtitleIsLoaded = true;
+        });
+      }
+
+      _updateWakeLock();
+
+    }
+
+
+  }
+
+  // 播放状态下开启屏幕常亮
+  void _updateWakeLock() async  {
+    bool? isPlaying = await _controller.isPlaying();
+    if(isPlaying != null && isPlaying) {
+      Wakelock.enable();
+    } else {
+      Wakelock.disable();
     }
   }
 
@@ -504,16 +531,6 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
 
   Future<void> _getSubtitleTracks() async {
     if (!_controller.value.isPlaying) return;
-
-    if (!_subtitleIsLoaded) {
-      for (int i = 0; i < widget.subtitleUrl.length; i++) {
-        await _controller.addSubtitleFromNetwork(widget.subtitleUrl[i],
-            isSelected: i == 0);
-      }
-      setState(() {
-        _subtitleIsLoaded = true;
-      });
-    }
 
     final subtitleTracks = await _controller.getSpuTracks();
 
