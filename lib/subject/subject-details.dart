@@ -8,6 +8,7 @@ import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/consts/tmp-const.dart';
 import 'package:ikaros/video/IkarosFplayerPanel.dart';
 import 'package:ikaros/video/vlc_player_with_controls.dart';
 
@@ -23,9 +24,7 @@ class SubjectDetailsPage extends StatefulWidget {
 }
 
 class _SubjectDetailsView extends State<SubjectDetailsPage> {
-  late VlcPlayerController _videoPlayerController;
-  // final FijkPlayer player = FijkPlayer();
-  final FPlayer player = FPlayer();
+  late VlcPlayerWithControls _vlcPlayerWithControls;
   List<IkarosVideoItem> videoList = <IkarosVideoItem>[];
   int videoIndex = 0;
   late String _baseUrl = '';
@@ -33,8 +32,6 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   String _resourceSubtitleUrl = '';
   String _episodeTitle = '';
   String _videoTitle = '';
-  String tmpVideoUrl =
-      "http://nas:9999/files/2023/7/6/71c4d2955b404237bb1781e3f7301a0f.mkv";
   bool isFullScreen = false;
 
   _updateIsFullScreen(bool val) {
@@ -46,7 +43,6 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   // 播放传入的url
   Future<void> setVideoUrl(String url) async {
     try {
-      await player.setDataSource(url, autoPlay: true, showCover: true);
     } catch (error) {
       Fluttertoast.showToast(
           msg: "Video play exception: $error",
@@ -130,8 +126,11 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   }
 
   @override
-  void initState() {
+  void initState()  {
     super.initState();
+
+    _getBaseUrl();
+
     // _getFirstEpisodeResource().then((firstEpisodeResource) => {
     //       if (firstEpisodeResource.url != '')
     //         {
@@ -153,12 +152,11 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     //     });
     // _getFirstEpisodeResource().then((value) =>
     //     _initVideoList().then((value) => setVideoUrl(videoList[0].url)));
-    _videoPlayerController = VlcPlayerController.network(
-      tmpVideoUrl,
-      hwAcc: HwAcc.full,
-      autoPlay: true,
-      options: VlcPlayerOptions(),
+    _vlcPlayerWithControls = VlcPlayerWithControls(
+      videoUrl: TmpConst.H265_URL,
+      updateIsFullScreen: (val) => _updateIsFullScreen(val),
     );
+    _vlcPlayerWithControls.addSubtitle(TmpConst.H265_CHS_ASS_URL);
 
     // _getFirstEpisodeResource()
     //     .then((value) => _initVideoList().then((value) => {
@@ -169,14 +167,6 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     //             autoPlay: true
     //           )
     //         }));
-  }
-
-  @override
-  void dispose() async {
-    super.dispose();
-    player.release();
-    await _videoPlayerController.stopRendererScanning();
-    await _videoPlayerController.dispose();
   }
 
   @override
@@ -211,59 +201,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
           children: [
             SizedBox(
               height: isFullScreen ? MediaQuery.of(context).size.height : 200,
-              // child: FView(
-              //   player: player,
-              //   width: double.infinity,
-              //   height: 200, // 需自行设置，此处宽度/高度=16/9
-              //   color: Colors.black,
-              //   fsFit: FFit.contain, // 全屏模式下的填充
-              //   fit: FFit.fill, // 正常模式下的填充
-              //   panelBuilder: ikarosFPanelBuilder(
-              //     title: _episodeTitle,
-              //     subTitle: _videoTitle,
-              //     // 视频列表开关
-              //     isVideos: true,
-              //     // 字幕按钮是否展示
-              //     isCaption: true,
-              //     // 清晰度按钮是否展示
-              //     isResolution: false,
-              //     // 视频列表列表
-              //     videoList: videoList,
-              //     // 当前视频索引
-              //     videoIndex: videoIndex,
-              //     // captionUrl: _baseUrl + _resourceSubtitleUrl,
-              //     captionUrl: _baseUrl + TmpConst.captionUrl,
-              //     // 全屏模式下点击播放下一集视频回调
-              //     playNextVideoFun: () {
-              //       setState(() {
-              //         videoIndex += 1;
-              //         _currentEpisodeId = videoList[videoIndex].id;
-              //       });
-              //     },
-              //     // 视频播放完成回调
-              //     onVideoEnd: () async {
-              //       var index = videoIndex + 1;
-              //       if (index < videoList.length) {
-              //         await player.reset();
-              //         setState(() {
-              //           videoIndex = index;
-              //           _currentEpisodeId = videoList[videoIndex].id;
-              //         });
-              //         setVideoUrl(videoList[index].url);
-              //       }
-              //     },
-              //   ),
-              // ),
-              // child: VlcPlayer(
-              //   controller: _videoPlayerController,
-              //   aspectRatio: 16 / 9,
-              //   placeholder: const Center(child: CircularProgressIndicator()),
-              // ),
-              child: VlcPlayerWithControls(
-                _videoPlayerController,
-                aspectRatio: 16 / 9,
-                updateIsFullScreen: (val) => _updateIsFullScreen(val),
-              ),
+              child: _vlcPlayerWithControls,
             ),
             Visibility(
               visible: !isFullScreen,
@@ -294,7 +232,6 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                                   ? null
                                   : () async {
                                       if (episode.resources!.isNotEmpty) {
-                                        await player.reset();
                                         // await player.setDataSource(
                                         //     _baseUrl +
                                         //         episode.resources!.first.url,

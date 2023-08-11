@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
+import 'package:ikaros/consts/tmp-const.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'controls_overlay.dart';
@@ -10,19 +11,19 @@ import 'controls_overlay.dart';
 typedef OnStopRecordingCallback = void Function(String);
 
 class VlcPlayerWithControls extends StatefulWidget {
-  final VlcPlayerController controller;
-  final double aspectRatio;
   final updateIsFullScreen;
+  final String videoUrl;
+  final List<String> subtitleUrl = [];
 
-  const VlcPlayerWithControls(this.controller,
-      {super.key, required this.aspectRatio, this.updateIsFullScreen});
-  // const VlcPlayerWithControls({
-  //   required Key key,
-  //   required this.controller,
-  //   this.showControls = true,
-  //   required this.onStopRecording,
-  // })  : assert(controller != null, 'You must provide a vlc controller'),
-  //       super(key: key);
+  VlcPlayerWithControls(
+      {super.key, this.updateIsFullScreen, required this.videoUrl});
+
+  void addSubtitle(String url) {
+    if ("" == url || !url.endsWith("ass")) {
+      return;
+    }
+    subtitleUrl.add(url);
+  }
 
   @override
   VlcPlayerWithControlsState createState() => VlcPlayerWithControlsState();
@@ -44,10 +45,8 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
 
   late VlcPlayerController _controller;
 
-  //
   late OverlayEntry _overlayEntry;
 
-  //
   double sliderValue = 0.0;
   double volumeValue = 50;
   String position = '';
@@ -60,7 +59,6 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   DateTime lastRecordingShowTime = DateTime.now();
   bool isRecording = false;
 
-  //
   List<double> playbackSpeeds = [0.5, 1.0, 2.0];
   int playbackSpeedIndex = 1;
 
@@ -70,8 +68,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   double? _targetVideoScale;
 
   bool _isFullScreen = false;
-
-  bool _showControls = false;
+  bool _subtitleIsLoaded = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -79,14 +76,21 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller;
+    _controller = VlcPlayerController.network(
+      widget.videoUrl,
+      hwAcc: HwAcc.full,
+      autoPlay: true,
+      options: VlcPlayerOptions(),
+    );
     _controller.addListener(listener);
   }
 
   @override
-  void dispose() {
+  void dispose() async {
     _controller.removeListener(listener);
     super.dispose();
+    await _controller.stopRendererScanning();
+    await _controller.dispose();
   }
 
   void listener() {
@@ -300,24 +304,24 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                         ),
                       ],
                     ),
-                    IconButton(
-                      tooltip: 'Get Snapshot',
-                      icon: const Icon(Icons.camera),
-                      color: Colors.white,
-                      onPressed: _createCameraImage,
-                    ),
-                    IconButton(
-                      color: Colors.white,
-                      icon: _controller.value.isRecording
-                          ? const Icon(Icons.videocam_off_outlined)
-                          : const Icon(Icons.videocam_outlined),
-                      onPressed: _toggleRecording,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.cast),
-                      color: Colors.white,
-                      onPressed: _getRendererDevices,
-                    ),
+                    // IconButton(
+                    //   tooltip: 'Get Snapshot',
+                    //   icon: const Icon(Icons.camera),
+                    //   color: Colors.white,
+                    //   onPressed: _createCameraImage,
+                    // ),
+                    // IconButton(
+                    //   color: Colors.white,
+                    //   icon: _controller.value.isRecording
+                    //       ? const Icon(Icons.videocam_off_outlined)
+                    //       : const Icon(Icons.videocam_outlined),
+                    //   onPressed: _toggleRecording,
+                    // ),
+                    // IconButton(
+                    //   icon: const Icon(Icons.cast),
+                    //   color: Colors.white,
+                    //   onPressed: _getRendererDevices,
+                    // ),
                   ],
                 ),
                 Padding(
@@ -327,19 +331,19 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                     children: [
                       Text(
                         'Size: ${_controller.value.size?.width?.toInt() ?? 0}'
-                            'x${_controller.value.size?.height?.toInt() ?? 0}',
+                        'x${_controller.value.size?.height?.toInt() ?? 0}',
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 10),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10),
                       ),
                       const SizedBox(height: 5),
                       Text(
                         'Status: ${_controller.value.playingState.toString().split('.')[1]}',
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 10),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10),
                       ),
                     ],
                   ),
@@ -348,7 +352,6 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
             ),
           ),
         ),
-
         Expanded(
           child: ColoredBox(
             color: Colors.black,
@@ -389,7 +392,6 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
             ),
           ),
         ),
-
         Visibility(
           visible: true,
           child: ColoredBox(
@@ -421,12 +423,11 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                           value: sliderValue,
                           min: 0.0,
                           max: (!validPosition &&
-                              _controller.value.duration == null)
+                                  _controller.value.duration == null)
                               ? 1.0
-                              : _controller.value.duration.inSeconds
-                              .toDouble(),
+                              : _controller.value.duration.inSeconds.toDouble(),
                           onChanged:
-                          validPosition ? _onSliderPositionChanged : null,
+                              validPosition ? _onSliderPositionChanged : null,
                         ),
                       ),
                       Text(
@@ -437,9 +438,8 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                   ),
                 ),
                 IconButton(
-                  icon: Icon(_isFullScreen
-                      ? Icons.fullscreen_exit
-                      : Icons.fullscreen),
+                  icon: Icon(
+                      _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen),
                   color: Colors.white,
                   // ignore: no-empty-block
                   onPressed: () async {
@@ -505,8 +505,18 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   Future<void> _getSubtitleTracks() async {
     if (!_controller.value.isPlaying) return;
 
+    if (!_subtitleIsLoaded) {
+      for (int i = 0; i < widget.subtitleUrl.length; i++) {
+        await _controller.addSubtitleFromNetwork(widget.subtitleUrl[i],
+            isSelected: i == 0);
+      }
+      setState(() {
+        _subtitleIsLoaded = true;
+      });
+    }
+
     final subtitleTracks = await _controller.getSpuTracks();
-    //
+
     if (subtitleTracks != null && subtitleTracks.isNotEmpty) {
       if (!mounted) return;
       final int selectedSubId = await showDialog(
