@@ -3,8 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:ikaros/consts/tmp-const.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:wakelock/wakelock.dart';
 
@@ -15,17 +13,14 @@ typedef OnStopRecordingCallback = void Function(String);
 class VlcPlayerWithControls extends StatefulWidget {
   final updateIsFullScreen;
   final String videoUrl;
-  final List<String> subtitleUrl = [];
+  final List<String>? subtitleUrls;
+  final Function? onPlayerInitialized;
 
-  VlcPlayerWithControls(
-      {super.key, this.updateIsFullScreen, required this.videoUrl});
-
-  void addSubtitle(String url) {
-    if ("" == url || !url.endsWith("ass")) {
-      return;
-    }
-    subtitleUrl.add(url);
-  }
+  const VlcPlayerWithControls(
+      {super.key,
+      this.updateIsFullScreen,
+      required this.videoUrl,
+      this.subtitleUrls, this.onPlayerInitialized});
 
   @override
   VlcPlayerWithControlsState createState() => VlcPlayerWithControlsState();
@@ -73,14 +68,21 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   bool _subtitleIsLoaded = false;
   bool _showControl = false;
 
+  late String _videoUrl;
+  List<String>? _subtitleUrls;
+  String _videoTitle = "";
+  String _videoSubhead = "";
+
   @override
   bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
+    _videoUrl = widget.videoUrl;
+    _subtitleUrls = widget.subtitleUrls;
     _controller = VlcPlayerController.network(
-      widget.videoUrl,
+      _videoUrl,
       hwAcc: HwAcc.full,
       autoPlay: true,
       options: VlcPlayerOptions(),
@@ -140,9 +142,9 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       }
 
       // load subtitle urls once
-      if (!_subtitleIsLoaded) {
-        for (int i = 0; i < widget.subtitleUrl.length; i++) {
-          _controller.addSubtitleFromNetwork(widget.subtitleUrl[i],
+      if (!_subtitleIsLoaded && _subtitleUrls != null) {
+        for (int i = 0; i < _subtitleUrls!.length; i++) {
+          _controller.addSubtitleFromNetwork(_subtitleUrls![i],
               isSelected: i == 0);
         }
         setState(() {
@@ -151,6 +153,8 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       }
 
       _updateWakeLock();
+
+      widget.onPlayerInitialized?.call();
     }
   }
 
@@ -175,14 +179,14 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
         });
       });
     }
-    Fluttertoast.showToast(
-        msg: "click screen",
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.CENTER,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.green,
-        textColor: Colors.white,
-        fontSize: 16.0);
+    // Fluttertoast.showToast(
+    //     msg: "click screen",
+    //     toastLength: Toast.LENGTH_SHORT,
+    //     gravity: ToastGravity.CENTER,
+    //     timeInSecForIosWeb: 1,
+    //     backgroundColor: Colors.green,
+    //     textColor: Colors.white,
+    //     fontSize: 16.0);
   }
 
   void setTargetNativeScale(double newValue) {
@@ -199,6 +203,56 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       _scaleVideoAnimationController.forward();
     }
     _targetVideoScale = newValue;
+  }
+
+  Future<void> changeDatasource(
+      String videoUrl, List<String>? subtitleUrls, String? videoTitle, String? videoSubhead) async {
+    print("change datasource for videoUrl: $videoUrl");
+    if (_controller.value.isInitialized) {
+      _controller.stopRendererScanning();
+      _controller.stop();
+      setState(() {
+        _videoUrl = videoUrl;
+        _subtitleUrls = subtitleUrls;
+        _controller.setMediaFromNetwork(_videoUrl,
+            autoPlay: true, hwAcc: HwAcc.full);
+
+        if (_subtitleUrls != null && _subtitleUrls!.isNotEmpty) {
+          for (int i = 0; i < _subtitleUrls!.length; i++) {
+            _controller.addSubtitleFromNetwork(_subtitleUrls![i],
+                isSelected: i == 0);
+          }
+        }
+
+        if(videoTitle != null) {
+          _videoTitle = videoTitle;
+        }
+        if(videoSubhead != null) {
+          _videoSubhead = videoSubhead;
+        }
+
+        print("set datasource for video "
+            "title: [$videoTitle] "
+            "and subhead: [$videoSubhead]"
+            "and url: [$videoUrl] "
+        );
+      });
+    }
+
+    // if(_controller.value.isInitialized) {
+    //   await _controller.stopRendererScanning();
+    //   await _controller.stop();
+    //   _controller.removeListener(listener);
+    // }
+    // _videoUrl = videoUrl;
+    // _subtitleUrls = subtitleUrls;
+    // _controller = VlcPlayerController.network(
+    //   _videoUrl,
+    //   hwAcc: HwAcc.full,
+    //   autoPlay: true,
+    //   options: VlcPlayerOptions(),
+    // );
+    // _controller.addListener(listener);
   }
 
   // Workaround the following bugs:
@@ -371,6 +425,31 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                     // ),
                   ],
                 ),
+                Padding(padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _videoTitle,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                      const TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                    const SizedBox(height: 5),
+                    Visibility(
+                      visible: _isFullScreen,
+                      child: Text(
+                      _videoSubhead,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style:
+                      const TextStyle(color: Colors.white, fontSize: 10),
+                    ),)
+
+                  ],
+                ),
+                ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Column(
@@ -401,7 +480,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
         ),
         Expanded(
           child: GestureDetector(
-              onDoubleTap: () {
+              onLongPress: () {
                 _updateShowControl();
               },
               onTap: () {
