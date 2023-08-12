@@ -480,12 +480,10 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
         ),
         Expanded(
           child: GestureDetector(
-              onLongPress: () {
-                _updateShowControl();
-              },
               onTap: () {
                 _updateShowControl();
               },
+              onDoubleTap: _togglePlaying,
               child: ColoredBox(
                 color: Colors.black,
                 child: Stack(
@@ -520,7 +518,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                         ),
                       ),
                     ),
-                    ControlsOverlay(_controller),
+                    // ControlsOverlay(_controller),
                   ],
                 ),
               )),

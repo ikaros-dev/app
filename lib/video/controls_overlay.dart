@@ -7,7 +7,7 @@ class ControlsOverlay extends StatelessWidget {
   static const double _replayButtonIconSize = 100;
   static const double _seekButtonIconSize = 48;
 
-  static const Duration _seekStepForward = Duration(seconds: 10);
+  static const Duration _seekStepForward = Duration(seconds: 30);
   static const Duration _seekStepBackward = Duration(seconds: -10);
 
   static const Color _iconColor = Colors.white;
@@ -65,7 +65,7 @@ class ControlsOverlay extends StatelessWidget {
                           onPressed: () => _seekRelative(_seekStepForward),
                           color: _iconColor,
                           iconSize: _seekButtonIconSize,
-                          icon: const Icon(Icons.forward_10),
+                          icon: const Icon(Icons.replay_30),
                         ),
                       ],
                     ),
