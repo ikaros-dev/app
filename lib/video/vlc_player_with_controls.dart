@@ -173,7 +173,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       _showControl = !_showControl;
     });
     if (_showControl) {
-      Future.delayed(const Duration(milliseconds: 4000), () {
+      Future.delayed(const Duration(milliseconds: 5000), () {
         setState(() {
           _showControl = false;
         });

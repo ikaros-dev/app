@@ -292,7 +292,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
               child: const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "选集",
+                  "正片",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                 ),
               ),
@@ -303,6 +303,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                   rowCount: 3,
                   itemHeight: 50,
                   children: widget.subject.episodes!
+                      .where((element) => element.group == null || element.group == 'MAIN')
                       .map(
                         (episode) => Container(
                             height: 50,
@@ -331,6 +332,53 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                                   '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
                             )),
                       )
+                      .toList()),
+            ),
+            Visibility(
+              visible: !isFullScreen,
+              child: const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "OP&ED&PV&其它",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ),
+            ),
+            Visibility(
+              visible: !isFullScreen,
+              child: GFItemsCarousel(
+                  rowCount: 3,
+                  itemHeight: 50,
+                  children: widget.subject.episodes!
+                      .where((element) => element.group != null && element.group != 'MAIN')
+                      .map(
+                        (episode) => Container(
+                        height: 50,
+                        margin: const EdgeInsets.all(5.0),
+                        child: GFButton(
+                          color: episode.id == _currentEpisodeId
+                              ? Colors.lightBlueAccent
+                              : Colors.blueAccent,
+                          disabledColor: Colors.grey,
+                          onPressed: episode.resources!.isEmpty
+                              ? null
+                              : () async {
+                            if (episode.resources!.isNotEmpty) {
+                              // await player.setDataSource(
+                              //     _baseUrl +
+                              //         episode.resources!.first.url,
+                              //     autoPlay: false);
+                              setState(() {
+                                _loadEpisode(episode);
+                              });
+                            }
+                          },
+                          // text: episode == null ? "空" :
+                          //     '${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}',
+                          text:
+                          '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
+                        )),
+                  )
                       .toList()),
             ),
             Visibility(

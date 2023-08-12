@@ -13,12 +13,13 @@ class Episode {
   @JsonKey(name: "name_cn")
   final String? nameCn;
   final String? description;
-  final double sequence;
+  final int sequence;
+  final String? group;
   final List<EpisodeResource>? resources;
 
   Episode({
     required this.id, required this.subjectId, required this.name,
-    this.nameCn, this.description, required this.sequence, this.resources
+    this.nameCn, this.description, required this.sequence, this.group, this.resources
 });
 
   factory Episode.fromJson(Map<String, dynamic> json) => _$EpisodeFromJson(json);
