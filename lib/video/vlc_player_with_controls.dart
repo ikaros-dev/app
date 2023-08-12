@@ -207,6 +207,10 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
 
   Future<void> changeDatasource(
       String videoUrl, List<String>? subtitleUrls, String? videoTitle, String? videoSubhead) async {
+    if(videoUrl == _videoUrl) {
+      return;
+    }
+
     print("change datasource for videoUrl: $videoUrl");
     if (_controller.value.isInitialized) {
       _controller.stopRendererScanning();
@@ -214,29 +218,31 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       setState(() {
         _videoUrl = videoUrl;
         _subtitleUrls = subtitleUrls;
-        _controller.setMediaFromNetwork(_videoUrl,
-            autoPlay: true, hwAcc: HwAcc.full);
-
-        if (_subtitleUrls != null && _subtitleUrls!.isNotEmpty) {
-          for (int i = 0; i < _subtitleUrls!.length; i++) {
-            _controller.addSubtitleFromNetwork(_subtitleUrls![i],
-                isSelected: i == 0);
-          }
-        }
-
         if(videoTitle != null) {
           _videoTitle = videoTitle;
         }
         if(videoSubhead != null) {
           _videoSubhead = videoSubhead;
         }
-
-        print("set datasource for video "
-            "title: [$videoTitle] "
-            "and subhead: [$videoSubhead]"
-            "and url: [$videoUrl] "
-        );
       });
+
+      await _controller.setMediaFromNetwork(_videoUrl,
+          autoPlay: true, hwAcc: HwAcc.full);
+
+      if (_subtitleUrls != null && _subtitleUrls!.isNotEmpty) {
+        for (int i = 0; i < _subtitleUrls!.length; i++) {
+          print("add subtitle url to video, url: ${_subtitleUrls![i]}");
+          await _controller.addSubtitleFromNetwork(_subtitleUrls![i],
+              isSelected: i == 0);
+        }
+      }
+
+      print("set datasource for video "
+          "title: [$videoTitle] "
+          "and subhead: [$videoSubhead]"
+          "and url: [$videoUrl] "
+      );
+
     }
 
     // if(_controller.value.isInitialized) {

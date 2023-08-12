@@ -1,3 +1,4 @@
+import 'package:ikaros/api/subject/model/Subtitle.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'EpisodeResource.g.dart';
@@ -11,7 +12,7 @@ class EpisodeResource {
   final String url;
   final bool? canRead;
   final String name;
-  final String? subtitleUrl;
+  final List<Subtitle>? subtitles;
   final Set<String>? tags;
 
   EpisodeResource(
@@ -20,7 +21,7 @@ class EpisodeResource {
       required this.url,
       this.canRead,
       required this.name,
-      this.subtitleUrl,
+      this.subtitles,
       this.tags});
 
   factory EpisodeResource.fromJson(Map<String, dynamic> json) =>

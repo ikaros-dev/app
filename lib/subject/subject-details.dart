@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:fplayer/fplayer.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
-import 'package:ikaros/consts/tmp-const.dart';
-import 'package:ikaros/video/IkarosFplayerPanel.dart';
+import 'package:ikaros/api/subject/model/Video.dart';
 import 'package:ikaros/video/vlc_player_with_controls.dart';
 
 class SubjectDetailsPage extends StatefulWidget {
@@ -24,19 +21,18 @@ class SubjectDetailsPage extends StatefulWidget {
 }
 
 class _SubjectDetailsView extends State<SubjectDetailsPage> {
-  List<IkarosVideoItem> videoList = <IkarosVideoItem>[];
+  List<Video> videoList = <Video>[];
   int videoIndex = 0;
   late String _baseUrl = '';
   late int _currentEpisodeId = 0;
-  String _resourceSubtitleUrl = '';
-  String _episodeTitle = '';
-  String _videoTitle = '';
   bool isFullScreen = false;
 
   // String _videoUrl = TmpConst.H265_URL;
   String _videoUrl = "";
   // List<String> _videoSubtitleUrls = [TmpConst.H265_CHS_ASS_URL];
   List<String> _videoSubtitleUrls = [];
+  String _videoTitle = '';
+  String _episodeTitle = '';
 
   late GlobalKey<VlcPlayerWithControlsState> _childKey;
 
@@ -50,19 +46,17 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   Future callChildMethod2ChangePlayerDatasource() async {
     final childState = _childKey.currentState;
     if (childState != null) {
-      await childState.changeDatasource(_videoUrl, _videoSubtitleUrls, _videoTitle, _episodeTitle);
+      await childState.changeDatasource(
+          _videoUrl, _videoSubtitleUrls, _videoTitle, _episodeTitle);
     } else {
       print("child state is null");
     }
   }
 
   // 播放传入的url
-  Future setVideoUrl(String url, List<String>? subtitleUrls) async {
+  Future setVideoUrl() async {
     try {
-      _videoUrl = url;
-      _videoSubtitleUrls = subtitleUrls ?? [];
-
-      print("update video url: $url");
+      print("update video url: $_videoUrl");
       await callChildMethod2ChangePlayerDatasource();
     } catch (error) {
       Fluttertoast.showToast(
@@ -91,14 +85,20 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
           EpisodeResource resource = episode.resources![0];
           String resourceName = resource.name;
           String url = _baseUrl + resource.url;
-          IkarosVideoItem videoItem = IkarosVideoItem(
-              id: episode.id,
+          List<String> subtitleUrls =
+              resource.subtitles!
+                  .map((e) => e.url)
+                  .map((e) => _baseUrl + e)
+                  .toList();
+          Video video = Video(
+              episodeId: resource.episodeId,
               subjectId: episode.subjectId,
               url: url,
               title: episodeTitle,
-              subTitle: resourceName);
+              subhead: resourceName,
+              subtitleUrls: subtitleUrls);
           setState(() {
-            videoList.add(videoItem);
+            videoList.add(video);
           });
         }
       }
@@ -124,17 +124,17 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     Episode episode = await _getFirstEpisode();
     _currentEpisodeId = episode.id;
     _episodeTitle =
-    "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}";
+        "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}";
     _videoTitle =
-    "${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}";
+        "${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}";
 
     String baseUrl = await _getBaseUrl();
     if (episode.resources!.isNotEmpty) {
       EpisodeResource episodeResource = episode.resources![0];
-      if (episodeResource.subtitleUrl != null &&
-          episodeResource.subtitleUrl != '') {
-        _resourceSubtitleUrl = episodeResource.subtitleUrl!;
-      }
+      // if (episodeResource.subtitleUrl != null &&
+      //     episodeResource.subtitleUrl != '') {
+      //   _resourceSubtitleUrl = episodeResource.subtitleUrl!;
+      // }
       episodeResource = EpisodeResource(
           fileId: episodeResource.fileId,
           episodeId: episodeResource.episodeId,
@@ -150,24 +150,28 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   Future<Episode> _loadEpisode(Episode episode) async {
     _currentEpisodeId = episode.id;
     _videoTitle =
-    "${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}";
-    _episodeTitle =
-        episode.resources![0].name;
-    if (episode.resources != null &&
-        episode.resources!.isEmpty) {
-      _resourceSubtitleUrl = episode
-          .resources![0].subtitleUrl!;
+        "${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}";
+    print("episode video title: $_videoTitle");
+    EpisodeResource episodeResource = episode.resources![0];
+    _episodeTitle = episodeResource.name;
+    print("episode title: $_videoTitle");
+    _videoUrl = _baseUrl + episodeResource.url;
+    print("episode resource video url: $_videoUrl");
+    if (episode.resources != null && episode.resources!.isNotEmpty) {
+      _videoSubtitleUrls =
+          episodeResource.subtitles!
+              .map((e) => e.url)
+              .map((e) => _baseUrl + e)
+              .toList();
+      print("video subtitle urls: $_videoSubtitleUrls");
     }
-    print("video list: $videoList");
-    videoIndex = videoList.indexOf(
-        videoList
-            .where((element) =>
-        _episodeTitle ==
-            element.subTitle)
-            .first);
+    List<Video> filterVideos = videoList.where((element) => _episodeTitle == element.title).toList();
+    print("filter video list: $filterVideos");
+    videoIndex = videoList.isNotEmpty && filterVideos.isNotEmpty ? videoList.indexOf(
+        filterVideos.first)
+    : 0;
     print("videoIndex : $videoIndex");
-    await setVideoUrl(
-        videoList[videoIndex].url, null);
+    await setVideoUrl();
     return episode;
   }
 
@@ -180,8 +184,10 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     _getBaseUrl();
     _initVideoList();
 
-    _onPlayerInitialized = ()async {
-      if(!_isPlayerInitializedCallOnce) {
+    _onPlayerInitialized = () async {
+      if (!_isPlayerInitializedCallOnce) {
+        await _getBaseUrl();
+        await _initVideoList();
         Episode episode = await _getFirstEpisode();
         await _loadEpisode(episode);
         _isPlayerInitializedCallOnce = true;
@@ -251,35 +257,35 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
         child: Column(
           children: [
             SizedBox(
-                height: isFullScreen ? MediaQuery.of(context).size.height : 200,
-                child: VlcPlayerWithControls(
-                  key: _childKey,
-                  videoUrl: _videoUrl,
-                  updateIsFullScreen: (val) => _updateIsFullScreen(val),
-                  subtitleUrls: _videoSubtitleUrls,
-                  onPlayerInitialized: _onPlayerInitialized,
-                ),
-                // child: FutureBuilder(
-                //     future: Future.delayed(Duration.zero, _loadFirstVideoEpisode),
-                //     builder: (BuildContext context, AsyncSnapshot snapshot) {
-                //       if (snapshot.connectionState ==
-                //           ConnectionState.done) {
-                //         if (snapshot.hasError) {
-                //           return Text(
-                //               "Load video error: ${snapshot.error}");
-                //         } else {
-                //           return VlcPlayerWithControls(
-                //             videoUrl: _videoUrl,
-                //             updateIsFullScreen: (val) =>
-                //                 _updateIsFullScreen(val),
-                //           );
-                //         }
-                //       } else {
-                //         return const Center(
-                //           child: CircularProgressIndicator(),
-                //         );
-                //       }
-                //     })
+              height: isFullScreen ? MediaQuery.of(context).size.height : 200,
+              child: VlcPlayerWithControls(
+                key: _childKey,
+                videoUrl: _videoUrl,
+                updateIsFullScreen: (val) => _updateIsFullScreen(val),
+                subtitleUrls: _videoSubtitleUrls,
+                onPlayerInitialized: _onPlayerInitialized,
+              ),
+              // child: FutureBuilder(
+              //     future: Future.delayed(Duration.zero, _loadFirstVideoEpisode),
+              //     builder: (BuildContext context, AsyncSnapshot snapshot) {
+              //       if (snapshot.connectionState ==
+              //           ConnectionState.done) {
+              //         if (snapshot.hasError) {
+              //           return Text(
+              //               "Load video error: ${snapshot.error}");
+              //         } else {
+              //           return VlcPlayerWithControls(
+              //             videoUrl: _videoUrl,
+              //             updateIsFullScreen: (val) =>
+              //                 _updateIsFullScreen(val),
+              //           );
+              //         }
+              //       } else {
+              //         return const Center(
+              //           child: CircularProgressIndicator(),
+              //         );
+              //       }
+              //     })
             ),
             Visibility(
               visible: !isFullScreen,
