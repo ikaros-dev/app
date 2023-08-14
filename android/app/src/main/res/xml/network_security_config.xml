@@ -2,6 +2,6 @@
 <network-security-config>
 <!--    <base-config cleartextTrafficPermitted="true" />-->
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">nas</domain>
+        <!-- <domain includeSubdomains="true">nas</domain> -->
     </domain-config>
 </network-security-config>
