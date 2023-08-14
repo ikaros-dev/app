@@ -22,13 +22,13 @@ class SubjectDetailsPage extends StatefulWidget {
 
 class _SubjectDetailsView extends State<SubjectDetailsPage> {
   List<Video> videoList = <Video>[];
-  int videoIndex = 0;
   late String _baseUrl = '';
   late int _currentEpisodeId = 0;
   bool isFullScreen = false;
 
   // String _videoUrl = TmpConst.H265_URL;
   String _videoUrl = "";
+
   // List<String> _videoSubtitleUrls = [TmpConst.H265_CHS_ASS_URL];
   List<String> _videoSubtitleUrls = [];
   String _videoTitle = '';
@@ -85,13 +85,12 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
           EpisodeResource resource = episode.resources![0];
           String resourceName = resource.name;
           String url = _baseUrl + resource.url;
-          List<String> subtitleUrls =
-              resource.subtitles!
-                  .map((e) => e.url)
-                  .map((e) => _baseUrl + e)
-                  .toList();
+          List<String> subtitleUrls = resource.subtitles!
+              .map((e) => e.url)
+              .map((e) => _baseUrl + e)
+              .toList();
           Video video = Video(
-              episodeId: resource.episodeId,
+              episodeId: episode.id,
               subjectId: episode.subjectId,
               url: url,
               title: episodeTitle,
@@ -108,7 +107,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
 
   Future<Episode> _getFirstEpisode() async {
     return Stream.fromIterable(widget.subject.episodes!)
-        .where((e) => 1.0 == e.sequence)
+        .where((e) => 1 == e.sequence)
+        .where((e) => "MAIN" == e.group)
         .first;
   }
 
@@ -120,37 +120,14 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     return _baseUrl;
   }
 
-  Future<EpisodeResource> _getFirstEpisodeResource() async {
-    Episode episode = await _getFirstEpisode();
-    _currentEpisodeId = episode.id;
-    _episodeTitle =
-        "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}";
-    _videoTitle =
-        "${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}";
-
-    String baseUrl = await _getBaseUrl();
-    if (episode.resources!.isNotEmpty) {
-      EpisodeResource episodeResource = episode.resources![0];
-      // if (episodeResource.subtitleUrl != null &&
-      //     episodeResource.subtitleUrl != '') {
-      //   _resourceSubtitleUrl = episodeResource.subtitleUrl!;
-      // }
-      episodeResource = EpisodeResource(
-          fileId: episodeResource.fileId,
-          episodeId: episodeResource.episodeId,
-          url: baseUrl + episodeResource.url,
-          // name: "${episode.sequence}: ${((episode.nameCn != null && episode.nameCn != '') ? episode.nameCn : episode.name)}"
-          name: episodeResource.name);
-      return episodeResource;
-    } else {
-      return EpisodeResource(fileId: 0, episodeId: 0, url: '', name: '');
-    }
-  }
-
   Future<Episode> _loadEpisode(Episode episode) async {
-    _currentEpisodeId = episode.id;
+    setState(() {
+      _currentEpisodeId = episode.id;
+    });
+    print(
+        "[episode] sequence: ${episode.sequence}, nameCn: ${episode.nameCn}, name: ${episode.name}");
     _videoTitle =
-        "${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}";
+        "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}";
     print("episode video title: $_videoTitle");
     EpisodeResource episodeResource = episode.resources![0];
     _episodeTitle = episodeResource.name;
@@ -158,19 +135,12 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     _videoUrl = _baseUrl + episodeResource.url;
     print("episode resource video url: $_videoUrl");
     if (episode.resources != null && episode.resources!.isNotEmpty) {
-      _videoSubtitleUrls =
-          episodeResource.subtitles!
-              .map((e) => e.url)
-              .map((e) => _baseUrl + e)
-              .toList();
+      _videoSubtitleUrls = episodeResource.subtitles!
+          .map((e) => e.url)
+          .map((e) => _baseUrl + e)
+          .toList();
       print("video subtitle urls: $_videoSubtitleUrls");
     }
-    List<Video> filterVideos = videoList.where((element) => _episodeTitle == element.title).toList();
-    print("filter video list: $filterVideos");
-    videoIndex = videoList.isNotEmpty && filterVideos.isNotEmpty ? videoList.indexOf(
-        filterVideos.first)
-    : 0;
-    print("videoIndex : $videoIndex");
     await setVideoUrl();
     return episode;
   }
@@ -303,7 +273,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                   rowCount: 3,
                   itemHeight: 50,
                   children: widget.subject.episodes!
-                      .where((element) => element.group == null || element.group == 'MAIN')
+                      .where((element) =>
+                          element.group == null || element.group == 'MAIN')
                       .map(
                         (episode) => Container(
                             height: 50,
@@ -350,35 +321,36 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                   rowCount: 3,
                   itemHeight: 50,
                   children: widget.subject.episodes!
-                      .where((element) => element.group != null && element.group != 'MAIN')
+                      .where((element) =>
+                          element.group != null && element.group != 'MAIN')
                       .map(
                         (episode) => Container(
-                        height: 50,
-                        margin: const EdgeInsets.all(5.0),
-                        child: GFButton(
-                          color: episode.id == _currentEpisodeId
-                              ? Colors.lightBlueAccent
-                              : Colors.blueAccent,
-                          disabledColor: Colors.grey,
-                          onPressed: episode.resources!.isEmpty
-                              ? null
-                              : () async {
-                            if (episode.resources!.isNotEmpty) {
-                              // await player.setDataSource(
-                              //     _baseUrl +
-                              //         episode.resources!.first.url,
-                              //     autoPlay: false);
-                              setState(() {
-                                _loadEpisode(episode);
-                              });
-                            }
-                          },
-                          // text: episode == null ? "空" :
-                          //     '${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}',
-                          text:
-                          '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
-                        )),
-                  )
+                            height: 50,
+                            margin: const EdgeInsets.all(5.0),
+                            child: GFButton(
+                              color: episode.id == _currentEpisodeId
+                                  ? Colors.lightBlueAccent
+                                  : Colors.blueAccent,
+                              disabledColor: Colors.grey,
+                              onPressed: episode.resources!.isEmpty
+                                  ? null
+                                  : () async {
+                                      if (episode.resources!.isNotEmpty) {
+                                        // await player.setDataSource(
+                                        //     _baseUrl +
+                                        //         episode.resources!.first.url,
+                                        //     autoPlay: false);
+                                        setState(() {
+                                          _loadEpisode(episode);
+                                        });
+                                      }
+                                    },
+                              // text: episode == null ? "空" :
+                              //     '${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}',
+                              text:
+                                  '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
+                            )),
+                      )
                       .toList()),
             ),
             Visibility(
