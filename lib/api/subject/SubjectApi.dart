@@ -10,7 +10,7 @@ class SubjectApi {
 
 
   Future<PagingWrap> listSubjectsByCondition(int page, int size, String name, String nameCn,
-      bool nsfw, SubjectType type) async {
+      bool nsfw, SubjectType? type) async {
     AuthParams authParams = await AuthApi().getAuthParams();
     if(authParams.baseUrl == '' || authParams.username == ''
     || authParams.basicAuth == '') {
@@ -26,7 +26,7 @@ class SubjectApi {
         'name': base64Encode(utf8.encode(name)),
         'nameCn': base64Encode(utf8.encode(nameCn)),
         'nsfw': nsfw,
-        'type': type.name,
+        'type': type?.name,
         // 在这里添加更多查询参数
       };
 
