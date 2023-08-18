@@ -46,8 +46,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   Future callChildMethod2ChangePlayerDatasource() async {
     final childState = _childKey.currentState;
     if (childState != null) {
-      await childState.changeDatasource(
-          _videoUrl, _videoSubtitleUrls, _videoTitle, _episodeTitle);
+      await childState.changeDatasource(_currentEpisodeId, _videoUrl,
+          _videoSubtitleUrls, _videoTitle, _episodeTitle);
     } else {
       print("child state is null");
     }
@@ -230,6 +230,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
               height: isFullScreen ? MediaQuery.of(context).size.height : 200,
               child: VlcPlayerWithControls(
                 key: _childKey,
+                episodeId: _currentEpisodeId,
                 videoUrl: _videoUrl,
                 updateIsFullScreen: (val) => _updateIsFullScreen(val),
                 subtitleUrls: _videoSubtitleUrls,

@@ -1,0 +1,49 @@
+import 'package:ikaros/api/collection/enums/EpisodeGroup.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'EpisodeCollection.g.dart';
+
+@JsonSerializable()
+class EpisodeCollection {
+  final int id;
+  @JsonKey(name: "user_id")
+  final int userId;
+  @JsonKey(name: "episode_id")
+  final int episodeId;
+
+  /**
+   * 是否已经看过.
+   */
+  final bool? finish;
+
+  /**
+   * 观看进度，时间戳，单位 milliseconds.
+   */
+  final int? progress;
+
+  /**
+   * 总时长，时间戳.
+   */
+  final int? duration;
+
+  @JsonKey(name: "subject_id")
+  final int? subjectId;
+  final String name;
+  @JsonKey(name: "name_cn")
+  final String? nameCn;
+  final String? description;
+  final int sequence;
+  @JsonKey(name: "ep_group")
+  final EpisodeGroup group;
+
+  EpisodeCollection({this.progress, required this.id, required this.userId,
+    required this.episodeId, this.finish, this.duration, this.subjectId,
+    required this.name, this.nameCn, this.description,
+    required this.sequence, required this.group});
+
+
+  factory EpisodeCollection.fromJson(Map<String, dynamic> json) => _$EpisodeCollectionFromJson(json);
+
+  Map<String, dynamic> toJson() => _$EpisodeCollectionToJson(this);
+
+}

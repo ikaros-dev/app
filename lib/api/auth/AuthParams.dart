@@ -3,6 +3,7 @@ class AuthParams {
   String username = '';
   String password = '';
   String basicAuth = '';
+  String userId = '';
 
 
 }

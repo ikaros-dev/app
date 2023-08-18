@@ -1,8 +1,11 @@
+import 'dart:ffi';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
+import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
+import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:wakelock/wakelock.dart';
 
@@ -12,6 +15,7 @@ typedef OnStopRecordingCallback = void Function(String);
 
 class VlcPlayerWithControls extends StatefulWidget {
   final updateIsFullScreen;
+  final int episodeId;
   final String videoUrl;
   final List<String>? subtitleUrls;
   final Function? onPlayerInitialized;
@@ -19,8 +23,10 @@ class VlcPlayerWithControls extends StatefulWidget {
   const VlcPlayerWithControls(
       {super.key,
       this.updateIsFullScreen,
+      required this.episodeId,
       required this.videoUrl,
-      this.subtitleUrls, this.onPlayerInitialized});
+      this.subtitleUrls,
+      this.onPlayerInitialized});
 
   @override
   VlcPlayerWithControlsState createState() => VlcPlayerWithControlsState();
@@ -72,6 +78,10 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   List<String>? _subtitleUrls;
   String _videoTitle = "";
   String _videoSubhead = "";
+  late int _episodeId;
+
+  late Future _showControlFuture;
+  bool _showControlFutureInit = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -79,6 +89,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   @override
   void initState() {
     super.initState();
+    _episodeId = widget.episodeId;
     _videoUrl = widget.videoUrl;
     _subtitleUrls = widget.subtitleUrls;
     _controller = VlcPlayerController.network(
@@ -94,8 +105,15 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   void dispose() async {
     _controller.removeListener(listener);
     super.dispose();
+    if (_episodeId > 0) {
+      await EpisodeCollectionApi().updateCollection(
+          _episodeId, _controller.value.position, _controller.value.duration);
+    }
     await _controller.stopRendererScanning();
     await _controller.dispose();
+    if(_showControlFutureInit) {
+      _showControlFuture.ignore();
+    }
   }
 
   void listener() {
@@ -173,9 +191,10 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       _showControl = !_showControl;
     });
     if (_showControl) {
-      Future.delayed(const Duration(milliseconds: 5000), () {
+      _showControlFuture = Future.delayed(const Duration(milliseconds: 5000), () {
         setState(() {
           _showControl = false;
+          _showControlFutureInit = true;
         });
       });
     }
@@ -206,29 +225,44 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   }
 
   Future<void> changeDatasource(
-      String videoUrl, List<String>? subtitleUrls, String? videoTitle, String? videoSubhead) async {
-    if(videoUrl == _videoUrl) {
+      int episodeId,
+      String videoUrl,
+      List<String>? subtitleUrls,
+      String? videoTitle,
+      String? videoSubhead) async {
+    if (videoUrl == _videoUrl) {
       return;
     }
 
     print("change datasource for videoUrl: $videoUrl");
     if (_controller.value.isInitialized) {
+      // update old episode progress
+      if (_episodeId > 0) {
+        await EpisodeCollectionApi().updateCollection(
+            _episodeId, _controller.value.position, _controller.value.duration);
+      }
+
+      // stop old player
+      _controller.pause();
       _controller.stopRendererScanning();
       _controller.stop();
       setState(() {
+        _episodeId = episodeId;
         _videoUrl = videoUrl;
         _subtitleUrls = subtitleUrls;
-        if(videoTitle != null) {
+        if (videoTitle != null) {
           _videoTitle = videoTitle;
         }
-        if(videoSubhead != null) {
+        if (videoSubhead != null) {
           _videoSubhead = videoSubhead;
         }
       });
 
+      // set new player
       await _controller.setMediaFromNetwork(_videoUrl,
           autoPlay: true, hwAcc: HwAcc.full);
 
+      // load new subtitles
       if (_subtitleUrls != null && _subtitleUrls!.isNotEmpty) {
         for (int i = 0; i < _subtitleUrls!.length; i++) {
           print("add subtitle url to video, url: ${_subtitleUrls![i]}");
@@ -237,12 +271,22 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
         }
       }
 
+      // seek to
+      EpisodeCollection episodeCollection =
+          await EpisodeCollectionApi().findCollection(episodeId);
+      if (episodeCollection.progress != null &&
+          episodeCollection.progress! > 0) {
+        print(
+            "seek to episode collection progress:${episodeCollection.progress}");
+        // await _controller.seekTo(Duration(milliseconds: episodeCollection.progress!));
+        //convert to Milliseconds since VLC requires MS to set time
+        await _controller.setTime(episodeCollection.progress!);
+      }
+
       print("set datasource for video "
           "title: [$videoTitle] "
           "and subhead: [$videoSubhead]"
-          "and url: [$videoUrl] "
-      );
-
+          "and url: [$videoUrl] ");
     }
 
     // if(_controller.value.isInitialized) {
@@ -431,30 +475,31 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                     // ),
                   ],
                 ),
-                Padding(padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _videoTitle,
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                      style:
-                      const TextStyle(color: Colors.white, fontSize: 10),
-                    ),
-                    const SizedBox(height: 5),
-                    Visibility(
-                      visible: _isFullScreen,
-                      child: Text(
-                      _videoSubhead,
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                      style:
-                      const TextStyle(color: Colors.white, fontSize: 10),
-                    ),)
-
-                  ],
-                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _videoTitle,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10),
+                      ),
+                      const SizedBox(height: 5),
+                      Visibility(
+                        visible: _isFullScreen,
+                        child: Text(
+                          _videoSubhead,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 10),
+                        ),
+                      )
+                    ],
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
