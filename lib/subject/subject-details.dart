@@ -3,6 +3,9 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/collection/enums/CollectionType.dart';
+import 'package:ikaros/api/collection/model/SubjectCollection.dart';
+import 'package:ikaros/api/collection/model/SubjectCollectionApi.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
@@ -38,6 +41,9 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
 
   late Function _onPlayerInitialized;
   bool _isPlayerInitializedCallOnce = false;
+
+  late CollectionType? _collectionType;
+  late SubjectCollection _subjectCollection;
 
   _updateIsFullScreen(bool val) {
     isFullScreen = val;
@@ -220,6 +226,90 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
               style: const TextStyle(
                   color: Colors.black, backgroundColor: Colors.white),
             ),
+            actions: [
+              FutureBuilder<String>(
+                future: _loadSubjectCollection(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (snapshot.hasError) {
+                      return const Text("Load subject collection error.");
+                    } else {
+                      return Row(
+                        children: [
+                          GFButton(
+                            onPressed: (_subjectCollection.id != -1)
+                                ? () async {
+                              // 取消收藏
+                              await SubjectCollectionApi().removeCollection(widget.subject.id);
+                              Fluttertoast.showToast(
+                                  msg: "取消收藏成功",
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.CENTER,
+                                  timeInSecForIosWeb: 1,
+                                  backgroundColor: Colors.blue,
+                                  textColor: Colors.white,
+                                  fontSize: 16.0);
+                              setState(() {
+                                _loadSubjectCollection();
+                              });
+                            }
+                                : () async {
+                                    await _updateSubjectCollection();
+                                    Fluttertoast.showToast(
+                                        msg: "收藏成功",
+                                        toastLength: Toast.LENGTH_SHORT,
+                                        gravity: ToastGravity.CENTER,
+                                        timeInSecForIosWeb: 1,
+                                        backgroundColor: Colors.blue,
+                                        textColor: Colors.white,
+                                        fontSize: 16.0);
+                                    setState(() {
+                                        _loadSubjectCollection();
+                                    });
+                                  },
+                            text: (_subjectCollection.id != -1) ? '取消收藏' : '收藏',
+                            textColor: Colors.black,
+                            // disabledColor: Colors.grey,
+                            color: Colors.white70,
+                            boxShadow: const BoxShadow(),
+                          ),
+                          Container(width: 10,),
+                          DropdownButton(
+                            borderRadius: BorderRadius.circular(5),
+                            value: _collectionType,
+                            onChanged: (_subjectCollection.id != -1)
+                              ? (newValue) {
+                              setState(() {
+                                _collectionType = newValue as CollectionType?;
+                              });
+                              _updateSubjectCollection();
+                            } : null,
+                            items: [
+                              CollectionType.WISH,
+                              CollectionType.DOING,
+                              CollectionType.DONE,
+                              CollectionType.SHELVE,
+                              CollectionType.DISCARD,
+                              CollectionType.SHELVE,
+                            ]
+                                .map((value) => DropdownMenuItem(
+                                      value: value,
+                                      child: Text(value.name),
+                                    ))
+                                .toList(),
+                          ),
+                        ],
+                      );
+                    }
+                  } else {
+                    return Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                },
+              )
+            ],
           ),
         ),
       ),
@@ -465,5 +555,19 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
         ),
       ),
     );
+  }
+
+  Future<String> _loadSubjectCollection() async {
+    _subjectCollection = await SubjectCollectionApi()
+        .findCollectionBySubjectId(widget.subject.id);
+    _collectionType = _subjectCollection.type;
+    return "";
+  }
+
+  _updateSubjectCollection() async {
+    if (_collectionType != null) {
+      await SubjectCollectionApi()
+          .updateCollection(widget.subject.id, _collectionType!, null);
+    }
   }
 }

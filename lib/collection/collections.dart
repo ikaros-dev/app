@@ -128,11 +128,9 @@ class CollectionsState extends State<CollectionPage> {
         actions: [
           Row(
             children: [
-              GFDropdown(
+              DropdownButton(
                 // padding: const EdgeInsets.all(15),
                 borderRadius: BorderRadius.circular(5),
-                border: const BorderSide(color: Colors.black12, width: 1),
-                dropdownButtonColor: Colors.white,
                 value: _type,
                 onChanged: (newValue) {
                   setState(() {
