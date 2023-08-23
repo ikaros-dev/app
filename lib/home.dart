@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/user/user.dart';
+import 'package:ikaros/collection/collections.dart';
 
 /// 主页面
 class HomePage extends StatefulWidget {
@@ -10,12 +11,12 @@ class HomePage extends StatefulWidget {
   State<StatefulWidget> createState() {
     return _HomePageState();
   }
-
 }
 
 class _HomePageState extends State<HomePage> {
   // Page Controller.
   late PageController _pageController;
+
   // Current page.
   int _pageIndex = 0;
 
@@ -45,7 +46,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: PageView(
         controller: _pageController,
-        children: const <Widget>[SubjectsPage(), UserPage()],
+        children: const <Widget>[CollectionPage(), SubjectsPage(), UserPage()],
         onPageChanged: (index) {
           setState(() {
             _pageIndex = index;
@@ -57,6 +58,10 @@ class _HomePageState extends State<HomePage> {
         type: BottomNavigationBarType.fixed,
         onTap: _onBottomNavigationBarTap,
         items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.collections_sharp),
+            label: '收藏',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.tv),
             label: '条目',
