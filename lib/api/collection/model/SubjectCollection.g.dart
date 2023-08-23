@@ -14,7 +14,8 @@ SubjectCollection _$SubjectCollectionFromJson(Map<String, dynamic> json) =>
       type: $enumDecode(_$CollectionTypeEnumMap, json['type']),
       mainEpisodeProgress: json['main_ep_progress'] as int?,
       isPrivate: json['is_private'] as bool,
-      subjectType: $enumDecode(_$SubjectTypeEnumMap, json['subject_type']),
+      subjectType:
+          $enumDecodeNullable(_$SubjectTypeEnumMap, json['subject_type']),
       name: json['name'] as String,
       nameCn: json['name_cn'] as String?,
       infobox: json['infobox'] as String?,
@@ -31,7 +32,7 @@ Map<String, dynamic> _$SubjectCollectionToJson(SubjectCollection instance) =>
       'type': _$CollectionTypeEnumMap[instance.type]!,
       'main_ep_progress': instance.mainEpisodeProgress,
       'is_private': instance.isPrivate,
-      'subject_type': _$SubjectTypeEnumMap[instance.subjectType]!,
+      'subject_type': _$SubjectTypeEnumMap[instance.subjectType],
       'name': instance.name,
       'name_cn': instance.nameCn,
       'infobox': instance.infobox,

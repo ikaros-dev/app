@@ -1,21 +1,232 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyrefresh/easy_refresh.dart';
+import 'package:getwidget/components/dropdown/gf_dropdown.dart';
+import 'package:ikaros/api/auth/AuthApi.dart';
+import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/collection/enums/CollectionType.dart';
+import 'package:ikaros/api/collection/model/SubjectCollection.dart';
+import 'package:ikaros/api/collection/model/SubjectCollectionApi.dart';
+import 'package:ikaros/api/common/PagingWrap.dart';
+import 'package:ikaros/api/subject/SubjectApi.dart';
+import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/subject/subject-details.dart';
+import 'package:ikaros/user/login.dart';
 
-class CollectionPage extends StatefulWidget{
+class CollectionPage extends StatefulWidget {
   const CollectionPage({super.key});
 
   @override
   State<StatefulWidget> createState() {
     return CollectionsState();
   }
-
 }
 
 class CollectionsState extends State<CollectionPage> {
+  List<SubjectCollection> subjectCollections = [];
+  int _page = 1;
+  int _size = 15;
+  int _total = 0;
+  String _baseUrl = '';
+  CollectionType? _type;
 
+  bool _hasMore = true;
+  late EasyRefreshController _controller;
+
+  List<SubjectCollection> _convertItems(List<Map<String, dynamic>> items) {
+    return items.map((e) => SubjectCollection.fromJson(e)).toList();
+  }
+
+  _loadSubjectCollections() async {
+    if (_baseUrl == '') {
+      AuthParams authParams = await AuthApi().getAuthParams();
+      if (authParams.baseUrl == '') {
+        if (mounted) {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const LoginView()));
+        }
+      } else {
+        _baseUrl = authParams.baseUrl;
+      }
+    }
+
+    print("load data for page=1 size=$_size type=$_type");
+    PagingWrap pagingWrap =
+        await SubjectCollectionApi().fetchSubjectCollections(1, _size, _type);
+    _page = pagingWrap.page;
+    _size = pagingWrap.size;
+    _total = pagingWrap.total;
+    if (mounted) {
+      setState(() {
+        subjectCollections = _convertItems(pagingWrap.items);
+        _page = 2;
+      });
+    }
+  }
+
+  _loadMoreSubjectCollections() async {
+    if (_baseUrl == '') {
+      AuthParams authParams = await AuthApi().getAuthParams();
+      if (authParams.baseUrl == '') {
+        if (mounted) {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const LoginView()));
+        }
+        return;
+      } else {
+        _baseUrl = authParams.baseUrl;
+      }
+    }
+    if (!_hasMore) {
+      return;
+    }
+    print("load data for page=1 size=$_size type=$_type");
+    PagingWrap pagingWrap = await SubjectCollectionApi()
+        .fetchSubjectCollections(_page, _size, _type);
+    _page = pagingWrap.page;
+    _size = pagingWrap.size;
+    _total = pagingWrap.total;
+    if (mounted) {
+      setState(() {
+        subjectCollections.addAll(_convertItems(pagingWrap.items));
+      });
+    }
+    _page++;
+    // print("update page: $_page");
+    print("length: ${subjectCollections.length} total: $_total");
+    if (subjectCollections.length >= _total) {
+      if (mounted) {
+        setState(() {
+          _hasMore = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMoreSubjectCollections();
+    _controller = EasyRefreshController();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Text("Collections");
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        title: const Text(
+          "收藏",
+          style: TextStyle(color: Colors.black),
+        ),
+        actions: [
+          Row(
+            children: [
+              GFDropdown(
+                // padding: const EdgeInsets.all(15),
+                borderRadius: BorderRadius.circular(5),
+                border: const BorderSide(color: Colors.black12, width: 1),
+                dropdownButtonColor: Colors.white,
+                value: _type,
+                onChanged: (newValue) {
+                  setState(() {
+                    _type = newValue;
+                    _loadSubjectCollections();
+                  });
+                },
+                items: [
+                  CollectionType.WISH,
+                  CollectionType.DOING,
+                  CollectionType.DONE,
+                  CollectionType.SHELVE,
+                  CollectionType.DISCARD,
+                  CollectionType.SHELVE,
+                ]
+                    .map((value) => DropdownMenuItem(
+                  value: value,
+                  child: Text(value.name),
+                ))
+                    .toList(),
+              ),
+            ],
+          )
+        ],
+      ),
+      body: EasyRefresh(
+        controller: _controller,
+        footer: ClassicalFooter(
+            loadingText: "加载中...",
+            loadFailedText: "加载失败",
+            loadReadyText: "加载就绪",
+            loadedText: "已全部加载",
+            noMoreText: "没有更多了",
+            showInfo: false),
+        onLoad: () async {
+          // await Future.delayed(const Duration(seconds: 4));
+          await _loadMoreSubjectCollections();
+          if (!mounted) {
+            return;
+          }
+          print("noMore: ${!_hasMore}");
+          _controller.finishLoad(success: true, noMore: !_hasMore);
+          _controller.resetLoadState();
+        },
+        child: buildSubjectCollectionsGridView(),
+      ),
+    );
   }
 
+  Widget buildSubjectCollectionsGridView() {
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 2.0,
+        mainAxisSpacing: 2.0,
+        childAspectRatio: 0.6, // 网格项的宽高比例
+      ),
+      itemCount: subjectCollections.length,
+      itemBuilder: (context, index) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            GestureDetector(
+              onTap: () {
+                SubjectApi().findById(subjectCollections[index].subjectId).then(
+                    (value) => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => SubjectDetailsPage(
+                              subject: value,
+                            ))));
+              },
+              child: AspectRatio(
+                aspectRatio: 7 / 10, // 设置图片宽高比例
+                child: Image.network(
+                  _baseUrl + subjectCollections[index].cover,
+                  fit: BoxFit.fitWidth,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Text(
+                ((subjectCollections[index].nameCn == null ||
+                        subjectCollections[index].nameCn == '')
+                    ? subjectCollections[index].name
+                    : subjectCollections[index].nameCn)!,
+                style: const TextStyle(
+                    fontSize: 14.0, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }

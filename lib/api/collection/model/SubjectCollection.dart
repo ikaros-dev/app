@@ -27,7 +27,7 @@ class SubjectCollection {
   final bool isPrivate;
 
   @JsonKey(name: "subject_type")
-  final SubjectType subjectType;
+  final SubjectType? subjectType;
   final  String name;
   @JsonKey(name: "name_cn")
   final String? nameCn;
@@ -38,11 +38,9 @@ class SubjectCollection {
    */
   final bool nsfw;
   final String cover;
-  // @JsonKey(name: "air_time")
-  // final LocalDateTime airTime;
 
   SubjectCollection({required this.id, required this.userId, required this.subjectId,
-  required this.type, this.mainEpisodeProgress, required this.isPrivate, required this.subjectType,
+  required this.type, this.mainEpisodeProgress, required this.isPrivate, this.subjectType,
   required this.name, this.nameCn, this.infobox, this.summary, required this.nsfw, required this.cover});
 
 
