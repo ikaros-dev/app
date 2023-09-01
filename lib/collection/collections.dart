@@ -9,6 +9,7 @@ import 'package:ikaros/api/collection/model/SubjectCollectionApi.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/subject/subject-details.dart';
 import 'package:ikaros/user/login.dart';
 
@@ -27,7 +28,7 @@ class CollectionsState extends State<CollectionPage> {
   int _size = 15;
   int _total = 0;
   String _baseUrl = '';
-  CollectionType? _type;
+  CollectionType? _type = CollectionType.DOING;
 
   bool _hasMore = true;
   late EasyRefreshController _controller;
@@ -139,16 +140,17 @@ class CollectionsState extends State<CollectionPage> {
                   });
                 },
                 items: [
+                  null,
                   CollectionType.WISH,
                   CollectionType.DOING,
                   CollectionType.DONE,
                   CollectionType.SHELVE,
                   CollectionType.DISCARD,
-                  CollectionType.SHELVE,
                 ]
                     .map((value) => DropdownMenuItem(
                   value: value,
-                  child: Text(value.name),
+                  child: Text(CollectionConst.typeCnMap[value == null ? 'ALL' : value.name]!),
+                  // child: Text(value == null ? 'ALL' : value.name),
                 ))
                     .toList(),
               ),
