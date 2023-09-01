@@ -10,6 +10,7 @@ import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/Video.dart';
+import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/video/vlc_player_with_controls.dart';
 
 class SubjectDetailsPage extends StatefulWidget {
@@ -290,11 +291,10 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                               CollectionType.DONE,
                               CollectionType.SHELVE,
                               CollectionType.DISCARD,
-                              CollectionType.SHELVE,
                             ]
                                 .map((value) => DropdownMenuItem(
                                       value: value,
-                                      child: Text(value.name),
+                                      child: Text(CollectionConst.typeCnMap[value.name]!),
                                     ))
                                 .toList(),
                           ),
