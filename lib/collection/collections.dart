@@ -5,7 +5,7 @@ import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
-import 'package:ikaros/api/collection/model/SubjectCollectionApi.dart';
+import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
@@ -182,6 +182,22 @@ class CollectionsState extends State<CollectionPage> {
     );
   }
 
+  Future<void> _onSubjectCardTap(int subjectId) async {
+    if (subjectId <= 0) {
+      return;
+    }
+
+    Subject subject = await SubjectApi().findById(subjectId);
+    SubjectCollection collection =
+    await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
+
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => SubjectDetailsPage(
+            apiBaseUrl: _baseUrl,
+            subject: subject,
+            collection: collection)));
+  }
+
   Widget buildSubjectCollectionsGridView() {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -197,11 +213,7 @@ class CollectionsState extends State<CollectionPage> {
           children: [
             GestureDetector(
               onTap: () {
-                SubjectApi().findById(subjectCollections[index].subjectId).then(
-                    (value) => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => SubjectDetailsPage(
-                              subject: value,
-                            ))));
+                _onSubjectCardTap(subjectCollections[index].subjectId);
               },
               child: AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
-import 'package:ikaros/user/login.dart';
-import 'package:ikaros/subject/subject-details.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/collection/model/SubjectCollection.dart';
+import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/api/subject/model/SubjectMeta.dart';
+import 'package:ikaros/subject/subject-details.dart';
+import 'package:ikaros/user/login.dart';
 
 class SubjectsPage extends StatefulWidget {
   const SubjectsPage({super.key});
@@ -19,7 +22,7 @@ class SubjectsPage extends StatefulWidget {
 }
 
 class SubjectListState extends State<SubjectsPage> {
-  List<Subject> subjectList = [];
+  List<SubjectMeta> subjectList = [];
   int _page = 1;
   int _size = 15;
   int _total = 0;
@@ -31,15 +34,15 @@ class SubjectListState extends State<SubjectsPage> {
   bool _hasMore = true;
   late EasyRefreshController _controller;
 
-  List<Subject> _convertItems(List<Map<String, dynamic>> items) {
-    return items.map((e) => Subject.fromJson(e)).toList();
+  List<SubjectMeta> _convertItems(List<Map<String, dynamic>> items) {
+    return items.map((e) => SubjectMeta.fromJson(e)).toList();
   }
 
   _loadSubjects() async {
     if (_baseUrl == '') {
       AuthParams authParams = await AuthApi().getAuthParams();
       if (authParams.baseUrl == '') {
-        if(mounted) {
+        if (mounted) {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => const LoginView()));
         }
@@ -56,14 +59,13 @@ class SubjectListState extends State<SubjectsPage> {
     //     textColor: Colors.white,
     //     fontSize: 16.0);
 
-    print(
-        "load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
-    PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
-        1, _size, '', _keyword, _nsfw, null);
+    print("load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
+    PagingWrap pagingWrap = await SubjectApi()
+        .listSubjectsByCondition(1, _size, '', _keyword, _nsfw, null);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
-    if(mounted) {
+    if (mounted) {
       setState(() {
         subjectList = _convertItems(pagingWrap.items);
         _page = 2;
@@ -75,7 +77,7 @@ class SubjectListState extends State<SubjectsPage> {
     if (_baseUrl == '') {
       AuthParams authParams = await AuthApi().getAuthParams();
       if (authParams.baseUrl == '') {
-        if(mounted) {
+        if (mounted) {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => const LoginView()));
         }
@@ -94,7 +96,7 @@ class SubjectListState extends State<SubjectsPage> {
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
-    if(mounted) {
+    if (mounted) {
       setState(() {
         subjectList.addAll(_convertItems(pagingWrap.items));
       });
@@ -103,20 +105,20 @@ class SubjectListState extends State<SubjectsPage> {
     // print("update page: $_page");
     print("length: ${subjectList.length} total: $_total");
     if (subjectList.length >= _total) {
-      if(mounted) {
+      if (mounted) {
         setState(() {
           _hasMore = false;
         });
       }
     }
   }
+
   @override
   void initState() {
     super.initState();
     _loadMoreSubjects();
     _controller = EasyRefreshController();
   }
-
 
   @override
   void dispose() {
@@ -167,13 +169,12 @@ class SubjectListState extends State<SubjectsPage> {
       body: EasyRefresh(
         controller: _controller,
         footer: ClassicalFooter(
-          loadingText: "加载中...",
-          loadFailedText: "加载失败",
-          loadReadyText: "加载就绪",
-          loadedText: "已全部加载",
-          noMoreText: "没有更多了",
-          showInfo: false
-        ),
+            loadingText: "加载中...",
+            loadFailedText: "加载失败",
+            loadReadyText: "加载就绪",
+            loadedText: "已全部加载",
+            noMoreText: "没有更多了",
+            showInfo: false),
         onLoad: () async {
           // await Future.delayed(const Duration(seconds: 4));
           await _loadMoreSubjects();
@@ -187,6 +188,28 @@ class SubjectListState extends State<SubjectsPage> {
         child: buildSubjectsGridView(),
       ),
     );
+  }
+
+  Future<void> _onSubjectCardTap(SubjectMeta subjectMeta) async {
+    // SubjectApi().findById(subjectList[index].id).then(
+    //         (value) => Navigator.of(context).push(MaterialPageRoute(
+    //         builder: (context) => SubjectDetailsPage(
+    //           subject: value,
+    //         ))));
+    int subjectId = subjectMeta.id;
+    if (subjectId <= 0) {
+      return;
+    }
+
+    Subject subject = await SubjectApi().findById(subjectId);
+    SubjectCollection collection =
+        await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
+
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => SubjectDetailsPage(
+            apiBaseUrl: _baseUrl,
+            subject: subject,
+            collection: collection)));
   }
 
   Widget buildSubjectsGridView() {
@@ -204,9 +227,7 @@ class SubjectListState extends State<SubjectsPage> {
           children: [
             GestureDetector(
               onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        SubjectDetailsPage(subject: subjectList[index])));
+                _onSubjectCardTap(subjectList[index]);
               },
               child: AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例

@@ -1,34 +1,34 @@
 import 'package:json_annotation/json_annotation.dart';
 
-enum CollectionStatus {
+enum CollectionType {
   /**
    * Not collection.
    */
-  @JsonValue(0)
+  @JsonValue("NOT")
   NOT,
   /**
    * Wist watch.
    */
-  @JsonValue(1)
+  @JsonValue("WISH")
   WISH,
   /**
    * Watching.
    */
-  @JsonValue(2)
+  @JsonValue("DOING")
   DOING,
   /**
    * Watch done.
    */
-  @JsonValue(3)
+  @JsonValue("DONE")
   DONE,
   /**
    * No time to watch it.
    */
-  @JsonValue(4)
+  @JsonValue("SHELVE")
   SHELVE,
   /**
    * Discard it.
    */
-  @JsonValue(5)
+  @JsonValue("DISCARD")
   DISCARD;
 }

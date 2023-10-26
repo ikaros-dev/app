@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
@@ -7,8 +5,6 @@ import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:wakelock/wakelock.dart';
-
-import 'controls_overlay.dart';
 
 typedef OnStopRecordingCallback = void Function(String);
 
@@ -110,7 +106,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     }
     await _controller.stopRendererScanning();
     await _controller.dispose();
-    if(_showControlFutureInit) {
+    if (_showControlFutureInit) {
       _showControlFuture.ignore();
     }
   }
@@ -190,11 +186,14 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       _showControl = !_showControl;
     });
     if (_showControl) {
-      _showControlFuture = Future.delayed(const Duration(milliseconds: 5000), () {
-        setState(() {
-          _showControl = false;
-          _showControlFutureInit = true;
-        });
+      _showControlFuture =
+          Future.delayed(const Duration(milliseconds: 5000), () {
+        if (mounted) {
+          setState(() {
+            _showControl = false;
+            _showControlFutureInit = true;
+          });
+        }
       });
     }
     // Fluttertoast.showToast(

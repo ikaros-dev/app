@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:getwidget/getwidget.dart';
-import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/attachment/AttachmentRelationApi.dart';
+import 'package:ikaros/api/attachment/model/VideoSubtitle.dart';
+import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
-import 'package:ikaros/api/collection/model/SubjectCollectionApi.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
@@ -14,9 +14,15 @@ import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/video/vlc_player_with_controls.dart';
 
 class SubjectDetailsPage extends StatefulWidget {
+  final String apiBaseUrl;
   final Subject subject;
+  final SubjectCollection collection;
 
-  const SubjectDetailsPage({super.key, required this.subject});
+  const SubjectDetailsPage(
+      {super.key,
+      required this.apiBaseUrl,
+      required this.subject,
+      required this.collection});
 
   @override
   State<StatefulWidget> createState() {
@@ -25,8 +31,10 @@ class SubjectDetailsPage extends StatefulWidget {
 }
 
 class _SubjectDetailsView extends State<SubjectDetailsPage> {
+  late SubjectCollection _subjectCollection;
+  late CollectionType _collectionType;
+
   List<Video> videoList = <Video>[];
-  late String _baseUrl = '';
   late int _currentEpisodeId = 0;
   bool isFullScreen = false;
 
@@ -42,9 +50,6 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
 
   late Function _onPlayerInitialized;
   bool _isPlayerInitializedCallOnce = false;
-
-  late CollectionType? _collectionType;
-  late SubjectCollection _subjectCollection;
 
   _updateIsFullScreen(bool val) {
     isFullScreen = val;
@@ -79,7 +84,6 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   }
 
   Future _initVideoList() async {
-    await _getBaseUrl();
     if (videoList.isNotEmpty) {
       return;
     }
@@ -91,11 +95,15 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
         if (episode.resources!.isNotEmpty) {
           EpisodeResource resource = episode.resources![0];
           String resourceName = resource.name;
-          String url = _baseUrl + resource.url;
-          List<String> subtitleUrls = resource.subtitles!
-              .map((e) => e.url)
-              .map((e) => _baseUrl + e)
-              .toList();
+          String url = widget.apiBaseUrl + resource.url;
+          List<VideoSubtitle> videoSubtitles = await AttachmentRelationApi()
+              .findByAttachmentId(resource.attachmentId);
+          List<String> subtitleUrls = [];
+          for (var element in videoSubtitles) {
+            var subUrl = widget.apiBaseUrl + element.url;
+            subtitleUrls.add(subUrl);
+          }
+
           Video video = Video(
               episodeId: episode.id,
               subjectId: episode.subjectId,
@@ -103,9 +111,11 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
               title: episodeTitle,
               subhead: resourceName,
               subtitleUrls: subtitleUrls);
-          setState(() {
-            videoList.add(video);
-          });
+          if (mounted) {
+            setState(() {
+              videoList.add(video);
+            });
+          }
         }
       }
     }
@@ -117,14 +127,6 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
         .where((e) => 1 == e.sequence)
         .where((e) => "MAIN" == e.group)
         .first;
-  }
-
-  Future<String> _getBaseUrl() async {
-    if (_baseUrl == '') {
-      AuthParams authParams = await AuthApi().getAuthParams();
-      _baseUrl = authParams.baseUrl;
-    }
-    return _baseUrl;
   }
 
   Future<Episode> _loadEpisode(Episode episode) async {
@@ -139,13 +141,17 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     EpisodeResource episodeResource = episode.resources![0];
     _episodeTitle = episodeResource.name;
     print("episode title: $_videoTitle");
-    _videoUrl = _baseUrl + episodeResource.url;
+    _videoUrl = widget.apiBaseUrl + episodeResource.url;
     print("episode resource video url: $_videoUrl");
     if (episode.resources != null && episode.resources!.isNotEmpty) {
-      _videoSubtitleUrls = episodeResource.subtitles!
-          .map((e) => e.url)
-          .map((e) => _baseUrl + e)
-          .toList();
+      List<VideoSubtitle> videoSubtitles = await AttachmentRelationApi()
+          .findByAttachmentId(episode.resources![0].attachmentId);
+      List<String> subtitleUrls = [];
+      for (var element in videoSubtitles) {
+        var subUrl = widget.apiBaseUrl + element.url;
+        subtitleUrls.add(subUrl);
+      }
+      _videoSubtitleUrls = subtitleUrls;
       print("video subtitle urls: $_videoSubtitleUrls");
     }
     await setVideoUrl();
@@ -156,14 +162,16 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   void initState() {
     super.initState();
 
+    _subjectCollection = widget.collection;
+    _collectionType = _subjectCollection.type;
     _childKey = GlobalKey<VlcPlayerWithControlsState>();
 
-    _getBaseUrl();
+    // _getBaseUrl();
     _initVideoList();
 
     _onPlayerInitialized = () async {
       if (!_isPlayerInitializedCallOnce) {
-        await _getBaseUrl();
+        // await _getBaseUrl();
         await _initVideoList();
         Episode episode = await _getFirstEpisode();
         await _loadEpisode(episode);
@@ -206,113 +214,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize:
-            Size.fromHeight(MediaQuery.of(context).size.height * 0.07),
-        child: Visibility(
-          visible: !isFullScreen,
-          child: AppBar(
-            iconTheme: const IconThemeData(
-              color: Colors.black, //change your color here
-            ),
-            backgroundColor: Colors.white,
-
-            // Here we take the value from the MyHomePage object that was created by
-            // the App.build method, and use it to set our appbar title.
-            title: Text(
-              (widget.subject.nameCn != null && widget.subject.nameCn != '')
-                  ? widget.subject.nameCn!
-                  : widget.subject.name,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                  color: Colors.black, backgroundColor: Colors.white),
-            ),
-            actions: [
-              FutureBuilder<String>(
-                future: _loadSubjectCollection(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (snapshot.hasError) {
-                      return const Text("Load subject collection error.");
-                    } else {
-                      return Row(
-                        children: [
-                          GFButton(
-                            onPressed: (_subjectCollection.id != -1)
-                                ? () async {
-                              // 取消收藏
-                              await SubjectCollectionApi().removeCollection(widget.subject.id);
-                              Fluttertoast.showToast(
-                                  msg: "取消收藏成功",
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.CENTER,
-                                  timeInSecForIosWeb: 1,
-                                  backgroundColor: Colors.blue,
-                                  textColor: Colors.white,
-                                  fontSize: 16.0);
-                              setState(() {
-                                _loadSubjectCollection();
-                              });
-                            }
-                                : () async {
-                                    await _updateSubjectCollection();
-                                    Fluttertoast.showToast(
-                                        msg: "收藏成功",
-                                        toastLength: Toast.LENGTH_SHORT,
-                                        gravity: ToastGravity.CENTER,
-                                        timeInSecForIosWeb: 1,
-                                        backgroundColor: Colors.blue,
-                                        textColor: Colors.white,
-                                        fontSize: 16.0);
-                                    setState(() {
-                                        _loadSubjectCollection();
-                                    });
-                                  },
-                            text: (_subjectCollection.id != -1) ? '取消收藏' : '收藏',
-                            textColor: Colors.black,
-                            // disabledColor: Colors.grey,
-                            color: Colors.white70,
-                            boxShadow: const BoxShadow(),
-                          ),
-                          Container(width: 10,),
-                          DropdownButton(
-                            borderRadius: BorderRadius.circular(5),
-                            value: _collectionType,
-                            onChanged: (_subjectCollection.id != -1)
-                              ? (newValue) {
-                              setState(() {
-                                _collectionType = newValue as CollectionType?;
-                              });
-                              _updateSubjectCollection();
-                            } : null,
-                            items: [
-                              CollectionType.WISH,
-                              CollectionType.DOING,
-                              CollectionType.DONE,
-                              CollectionType.SHELVE,
-                              CollectionType.DISCARD,
-                            ]
-                                .map((value) => DropdownMenuItem(
-                                      value: value,
-                                      child: Text(CollectionConst.typeCnMap[value.name]!),
-                                    ))
-                                .toList(),
-                          ),
-                        ],
-                      );
-                    }
-                  } else {
-                    return Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                },
-              )
-            ],
-          ),
-        ),
-      ),
+      appBar: _buildAppBar(),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -379,10 +281,6 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                                   ? null
                                   : () async {
                                       if (episode.resources!.isNotEmpty) {
-                                        // await player.setDataSource(
-                                        //     _baseUrl +
-                                        //         episode.resources!.first.url,
-                                        //     autoPlay: false);
                                         setState(() {
                                           _loadEpisode(episode);
                                         });
@@ -465,27 +363,9 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                         width: 120,
                         child: AspectRatio(
                           aspectRatio: 7 / 10, // 设置图片宽高比例
-                          child: FutureBuilder(
-                            future: Future.delayed(Duration.zero, _getBaseUrl),
-                            builder:
-                                (BuildContext context, AsyncSnapshot snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.done) {
-                                if (snapshot.hasError) {
-                                  return Text(
-                                      "Load subject cover: ${snapshot.error}");
-                                } else {
-                                  return Image.network(
-                                    _baseUrl + widget.subject.cover,
-                                    fit: BoxFit.fitWidth,
-                                  );
-                                }
-                              } else {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
-                            },
+                          child: Image.network(
+                            widget.apiBaseUrl + widget.subject.cover,
+                            fit: BoxFit.fitWidth,
                           ),
                         ),
                       ),
@@ -557,6 +437,106 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     );
   }
 
+  PreferredSizeWidget _buildAppBar() {
+    return PreferredSize(
+      preferredSize: Size.fromHeight(MediaQuery.of(context).size.height * 0.07),
+      child: Visibility(
+        visible: !isFullScreen,
+        child: AppBar(
+          iconTheme: const IconThemeData(
+            color: Colors.black, //change your color here
+          ),
+          backgroundColor: Colors.white,
+          title: Text(
+            (widget.subject.nameCn != null && widget.subject.nameCn != '')
+                ? widget.subject.nameCn!
+                : widget.subject.name,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+                color: Colors.black, backgroundColor: Colors.white),
+          ),
+          actions: [_buildAppBarCollection()],
+        ),
+      ),
+    );
+  }
+
+  Row _buildAppBarCollection() {
+    return Row(
+      children: [
+        GFButton(
+          onPressed: (_subjectCollection.id != -1)
+              ? () async {
+                  // 取消收藏
+                  await SubjectCollectionApi()
+                      .removeCollection(widget.subject.id);
+                  Fluttertoast.showToast(
+                      msg: "取消收藏成功",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.CENTER,
+                      timeInSecForIosWeb: 1,
+                      backgroundColor: Colors.blue,
+                      textColor: Colors.white,
+                      fontSize: 16.0);
+                  if (mounted) {
+                    setState(() {
+                      _loadSubjectCollection();
+                    });
+                  }
+                }
+              : () async {
+                  await _updateSubjectCollection();
+                  Fluttertoast.showToast(
+                      msg: "收藏成功",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.CENTER,
+                      timeInSecForIosWeb: 1,
+                      backgroundColor: Colors.blue,
+                      textColor: Colors.white,
+                      fontSize: 16.0);
+                  setState(() {
+                    _loadSubjectCollection();
+                  });
+                },
+          text: (_subjectCollection.id != -1) ? '取消收藏' : '收藏',
+          textColor: Colors.black,
+          // disabledColor: Colors.grey,
+          color: Colors.white70,
+          boxShadow: const BoxShadow(),
+        ),
+        Container(
+          width: 10,
+        ),
+        DropdownButton(
+          borderRadius: BorderRadius.circular(5),
+          value: _collectionType,
+          onChanged: (_subjectCollection.id != -1)
+              ? (newValue) async {
+                  if (mounted) {
+                    setState(() {
+                      _collectionType = (newValue as CollectionType?)!;
+                    });
+                  }
+                  await _updateSubjectCollection();
+                }
+              : null,
+          items: [
+            CollectionType.WISH,
+            CollectionType.DOING,
+            CollectionType.DONE,
+            CollectionType.SHELVE,
+            CollectionType.DISCARD,
+          ]
+              .map((value) => DropdownMenuItem(
+                    value: value,
+                    child: Text(CollectionConst.typeCnMap[value.name]!),
+                  ))
+              .toList(),
+        ),
+      ],
+    );
+  }
+
   Future<String> _loadSubjectCollection() async {
     _subjectCollection = await SubjectCollectionApi()
         .findCollectionBySubjectId(widget.subject.id);
@@ -565,9 +545,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   }
 
   _updateSubjectCollection() async {
-    if (_collectionType != null) {
-      await SubjectCollectionApi()
-          .updateCollection(widget.subject.id, _collectionType!, null);
-    }
+    await SubjectCollectionApi()
+        .updateCollection(widget.subject.id, _collectionType, null);
   }
 }

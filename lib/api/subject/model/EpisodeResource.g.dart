@@ -8,24 +8,22 @@ part of 'EpisodeResource.dart';
 
 EpisodeResource _$EpisodeResourceFromJson(Map<String, dynamic> json) =>
     EpisodeResource(
-      fileId: json['file_id'] as int,
-      episodeId: json['episode_id'] as int,
+      attachmentId: json['attachmentId'] as int,
+      parentAttachmentId: json['parentAttachmentId'] as int,
+      episodeId: json['episodeId'] as int,
       url: json['url'] as String,
       canRead: json['canRead'] as bool?,
       name: json['name'] as String,
-      subtitles: (json['subtitles'] as List<dynamic>?)
-          ?.map((e) => Subtitle.fromJson(e as Map<String, dynamic>))
-          .toList(),
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toSet(),
     );
 
 Map<String, dynamic> _$EpisodeResourceToJson(EpisodeResource instance) =>
     <String, dynamic>{
-      'file_id': instance.fileId,
-      'episode_id': instance.episodeId,
+      'attachmentId': instance.attachmentId,
+      'parentAttachmentId': instance.parentAttachmentId,
+      'episodeId': instance.episodeId,
       'url': instance.url,
       'canRead': instance.canRead,
       'name': instance.name,
-      'subtitles': instance.subtitles,
       'tags': instance.tags?.toList(),
     };
