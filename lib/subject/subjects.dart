@@ -61,7 +61,7 @@ class SubjectListState extends State<SubjectsPage> {
 
     print("load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
     PagingWrap pagingWrap = await SubjectApi()
-        .listSubjectsByCondition(1, _size, '', _keyword, _nsfw, null);
+        .listSubjectsByCondition(1, _size, '', _keyword, _nsfw, SubjectType.ANIME);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
