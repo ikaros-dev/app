@@ -173,8 +173,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
       if (!_isPlayerInitializedCallOnce) {
         // await _getBaseUrl();
         await _initVideoList();
-        Episode episode = await _getFirstEpisode();
-        await _loadEpisode(episode);
+        // Episode episode = await _getFirstEpisode();
+        // await _loadEpisode(episode);
         _isPlayerInitializedCallOnce = true;
       }
     };
