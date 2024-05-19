@@ -149,7 +149,7 @@ class LoginState extends State<LoginView> {
               shape: MaterialStateProperty.all(const StadiumBorder(
                   side: BorderSide(style: BorderStyle.none)))),
           child:
-              Text('登录', style: Theme.of(context).primaryTextTheme.headline5),
+              Text('登录', style: Theme.of(context).primaryTextTheme.headlineSmall),
           onPressed: () {
             // 表单校验通过才会继续执行
             if ((_formKey.currentState as FormState).validate()) {
