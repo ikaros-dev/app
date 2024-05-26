@@ -141,14 +141,23 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     EpisodeResource episodeResource = episode.resources![0];
     _episodeTitle = episodeResource.name;
     print("episode title: $_videoTitle");
-    _videoUrl = widget.apiBaseUrl + episodeResource.url;
+    if (episodeResource.url.startsWith("http")) {
+      _videoUrl = episodeResource.url;
+    } else {
+      _videoUrl = widget.apiBaseUrl + episodeResource.url;
+    }
     print("episode resource video url: $_videoUrl");
     if (episode.resources != null && episode.resources!.isNotEmpty) {
       List<VideoSubtitle> videoSubtitles = await AttachmentRelationApi()
           .findByAttachmentId(episode.resources![0].attachmentId);
       List<String> subtitleUrls = [];
       for (var element in videoSubtitles) {
-        var subUrl = widget.apiBaseUrl + element.url;
+        var subUrl = '';
+        if (element.url.startsWith("http")) {
+          subUrl = element.url;
+        } else {
+          subUrl = widget.apiBaseUrl + episodeResource.url;
+        }
         subtitleUrls.add(subUrl);
       }
       _videoSubtitleUrls = subtitleUrls;
