@@ -212,6 +212,13 @@ class SubjectListState extends State<SubjectsPage> {
             collection: collection)));
   }
 
+
+  String _getCoverUrl(String url){
+    if (url.startsWith("http")) return url;
+    if (!url.startsWith('/')) url = '/$url';
+    return _baseUrl + url;
+  }
+
   Widget buildSubjectsGridView() {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -232,7 +239,7 @@ class SubjectListState extends State<SubjectsPage> {
               child: AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例
                 child: Image.network(
-                  _baseUrl + subjectList[index].cover,
+                  _getCoverUrl(subjectList[index].cover),
                   fit: BoxFit.fitWidth,
                 ),
               ),
