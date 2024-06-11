@@ -11,6 +11,7 @@ import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/SubjectMeta.dart';
 import 'package:ikaros/subject/subject-details.dart';
 import 'package:ikaros/user/login.dart';
+import 'package:ikaros/utils/url-utils.dart';
 
 class SubjectsPage extends StatefulWidget {
   const SubjectsPage({super.key});
@@ -213,12 +214,6 @@ class SubjectListState extends State<SubjectsPage> {
   }
 
 
-  String _getCoverUrl(String url){
-    if (url.startsWith("http")) return url;
-    if (!url.startsWith('/')) url = '/$url';
-    return _baseUrl + url;
-  }
-
   Widget buildSubjectsGridView() {
     return GridView.builder(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -239,7 +234,7 @@ class SubjectListState extends State<SubjectsPage> {
               child: AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例
                 child: Image.network(
-                  _getCoverUrl(subjectList[index].cover),
+                  UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
                   fit: BoxFit.fitWidth,
                 ),
               ),

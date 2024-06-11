@@ -12,6 +12,7 @@ import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/subject/subject-details.dart';
 import 'package:ikaros/user/login.dart';
+import 'package:ikaros/utils/url-utils.dart';
 
 class CollectionPage extends StatefulWidget {
   const CollectionPage({super.key});
@@ -218,7 +219,7 @@ class CollectionsState extends State<CollectionPage> {
               child: AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例
                 child: Image.network(
-                  _baseUrl + subjectCollections[index].cover,
+                  UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
                   fit: BoxFit.fitWidth,
                 ),
               ),
