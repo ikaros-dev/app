@@ -1,12 +1,16 @@
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/HomeView.dart';
+import 'package:ikaros/utils/PlatformUtils.dart';
+import 'package:system_theme/system_theme.dart';
 
 void main() {
-  runApp(const MyApp());
+  bool isMobile = PlatformUtils.isMobile();
+  runApp(isMobile ?  const MobileApp() : const DesktopApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MobileApp extends StatelessWidget {
+  const MobileApp({super.key});
 
   // This widget is the root of your application.
   @override
@@ -17,4 +21,20 @@ class MyApp extends StatelessWidget {
       home: HomeView(),
     );
   }
+}
+
+class DesktopApp extends StatelessWidget {
+  const DesktopApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return FluentApp(
+      title: "Ikaros Desktop",
+      theme: FluentThemeData(
+        accentColor: SystemTheme.accentColor.accent.toAccentColor(),
+      ),
+      home: Text("Hello Ikaros"),
+    );
+  }
+
 }

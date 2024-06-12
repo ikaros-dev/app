@@ -48,6 +48,8 @@ dependencies:
   flutter_vlc_player: ^7.2.0
   wakelock: ^0.6.2
   provider: ^6.0.5
+  fluent_ui: ^4.8.7
+  system_theme: ^2.3.1
 
 dev_dependencies:
   flutter_test:
