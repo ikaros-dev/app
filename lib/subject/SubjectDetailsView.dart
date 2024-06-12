@@ -10,17 +10,16 @@ import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/Video.dart';
-import 'package:ikaros/consts/collection-const.dart';
-import 'package:ikaros/subject/subjects.dart';
-import 'package:ikaros/utils/url-utils.dart';
-import 'package:ikaros/video/vlc_player_with_controls.dart';
+import 'package:ikaros/consts/CollectionConst.dart';
+import 'package:ikaros/utils/UrlUtils.dart';
+import 'package:ikaros/video/VlcPlayerWithControls.dart';
 
-class SubjectDetailsPage extends StatefulWidget {
+class SubjectDetailsView extends StatefulWidget {
   final String apiBaseUrl;
   final Subject subject;
   final SubjectCollection collection;
 
-  const SubjectDetailsPage(
+  const SubjectDetailsView(
       {super.key,
       required this.apiBaseUrl,
       required this.subject,
@@ -32,7 +31,7 @@ class SubjectDetailsPage extends StatefulWidget {
   }
 }
 
-class _SubjectDetailsView extends State<SubjectDetailsPage> {
+class _SubjectDetailsView extends State<SubjectDetailsView> {
   late SubjectCollection _subjectCollection;
   late CollectionType _collectionType;
 
@@ -375,7 +374,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                         child: AspectRatio(
                           aspectRatio: 7 / 10, // 设置图片宽高比例
                           child: Image.network(
-                            UrlUtils.getCoverUrl(widget.apiBaseUrl, widget.subject.cover),
+                            UrlUtils.getCoverUrl(
+                                widget.apiBaseUrl, widget.subject.cover),
                             fit: BoxFit.fitWidth,
                           ),
                         ),

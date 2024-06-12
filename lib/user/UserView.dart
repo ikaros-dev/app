@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/home.dart';
+import 'package:ikaros/HomeView.dart';
 
-class UserPage extends StatefulWidget {
-  const UserPage({super.key});
+class UserView extends StatefulWidget {
+  const UserView({super.key});
 
   @override
   State<StatefulWidget> createState() {
-    return _UserPageState();
+    return _UserViewState();
   }
 }
 
-class _UserPageState extends State<UserPage> {
+class _UserViewState extends State<UserView> {
   @override
   Widget build(BuildContext context) {
     // return const Text("User Page");
@@ -74,7 +74,7 @@ class _UserPageState extends State<UserPage> {
     await AuthApi().logout();
     if(mounted) {
       Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const HomePage()));
+          MaterialPageRoute(builder: (context) => const HomeView()));
     }
   }
 }

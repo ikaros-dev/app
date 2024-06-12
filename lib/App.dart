@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ikaros/home.dart';
+import 'package:ikaros/HomeView.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Ikaros',
-      home: HomePage(),
+      home: HomeView(),
     );
   }
 }

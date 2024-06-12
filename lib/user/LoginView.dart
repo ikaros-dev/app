@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:ikaros/home.dart';
-import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
+import 'package:ikaros/HomeView.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -148,8 +147,8 @@ class LoginState extends State<LoginView> {
               // 设置圆角
               shape: MaterialStateProperty.all(const StadiumBorder(
                   side: BorderSide(style: BorderStyle.none)))),
-          child:
-              Text('登录', style: Theme.of(context).primaryTextTheme.headlineSmall),
+          child: Text('登录',
+              style: Theme.of(context).primaryTextTheme.headlineSmall),
           onPressed: () {
             // 表单校验通过才会继续执行
             if ((_formKey.currentState as FormState).validate()) {
@@ -174,10 +173,8 @@ class LoginState extends State<LoginView> {
     AuthApi()
         .login(_baseUrl, _username, _password)
         .then((value) => {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const HomePage()))
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const HomeView()))
             })
         .onError((error, stackTrace) => {
               Fluttertoast.showToast(

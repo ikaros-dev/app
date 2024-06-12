@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:ikaros/subject/subjects.dart';
-import 'package:ikaros/user/user.dart';
-import 'package:ikaros/collection/collections.dart';
+import 'package:ikaros/collection/CollectionView.dart';
+import 'package:ikaros/subject/SubjectsView.dart';
+import 'package:ikaros/user/UserView.dart';
 
 /// 主页面
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+class HomeView extends StatefulWidget {
+  const HomeView({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return _HomePageState();
+    return _HomeViewState();
   }
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomeViewState extends State<HomeView> {
   // Page Controller.
   late PageController _pageController;
 
@@ -48,7 +48,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: PageView(
         controller: _pageController,
-        children: const <Widget>[CollectionPage(), SubjectsPage(), UserPage()],
+        children: const <Widget>[CollectionView(), SubjectsView(), UserView()],
         onPageChanged: (index) {
           setState(() {
             _pageIndex = index;

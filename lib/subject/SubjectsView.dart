@@ -9,12 +9,12 @@ import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/SubjectMeta.dart';
-import 'package:ikaros/subject/subject-details.dart';
-import 'package:ikaros/user/login.dart';
-import 'package:ikaros/utils/url-utils.dart';
+import 'package:ikaros/subject/SubjectDetailsView.dart';
+import 'package:ikaros/user/LoginView.dart';
+import 'package:ikaros/utils/UrlUtils.dart';
 
-class SubjectsPage extends StatefulWidget {
-  const SubjectsPage({super.key});
+class SubjectsView extends StatefulWidget {
+  const SubjectsView({super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -22,7 +22,7 @@ class SubjectsPage extends StatefulWidget {
   }
 }
 
-class SubjectListState extends State<SubjectsPage> {
+class SubjectListState extends State<SubjectsView> {
   List<SubjectMeta> subjectList = [];
   int _page = 1;
   int _size = 15;
@@ -207,7 +207,7 @@ class SubjectListState extends State<SubjectsPage> {
         await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
     Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => SubjectDetailsPage(
+        builder: (context) => SubjectDetailsView(
             apiBaseUrl: _baseUrl,
             subject: subject,
             collection: collection)));

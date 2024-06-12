@@ -9,13 +9,13 @@ import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
-import 'package:ikaros/consts/collection-const.dart';
-import 'package:ikaros/subject/subject-details.dart';
-import 'package:ikaros/user/login.dart';
-import 'package:ikaros/utils/url-utils.dart';
+import 'package:ikaros/consts/CollectionConst.dart';
+import 'package:ikaros/subject/SubjectDetailsView.dart';
+import 'package:ikaros/user/LoginView.dart';
+import 'package:ikaros/utils/UrlUtils.dart';
 
-class CollectionPage extends StatefulWidget {
-  const CollectionPage({super.key});
+class CollectionView extends StatefulWidget {
+  const CollectionView({super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -23,7 +23,7 @@ class CollectionPage extends StatefulWidget {
   }
 }
 
-class CollectionsState extends State<CollectionPage> {
+class CollectionsState extends State<CollectionView> {
   List<SubjectCollection> subjectCollections = [];
   int _page = 1;
   int _size = 15;
@@ -193,7 +193,7 @@ class CollectionsState extends State<CollectionPage> {
     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
     Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => SubjectDetailsPage(
+        builder: (context) => SubjectDetailsView(
             apiBaseUrl: _baseUrl,
             subject: subject,
             collection: collection)));
