@@ -1,8 +1,8 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:ikaros/DesktopView.dart';
-import 'package:ikaros/MobileView.dart';
-import 'package:ikaros/utils/PlatformUtils.dart';
+import 'package:ikaros/desktop_view.dart';
+import 'package:ikaros/mobile_view.dart';
+import 'package:ikaros/utils/platform_utils.dart';
 import 'package:system_theme/system_theme.dart';
 
 void main() {

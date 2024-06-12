@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/MobileView.dart';
+import 'package:ikaros/mobile_view.dart';
 
 class UserView extends StatefulWidget {
   const UserView({super.key});

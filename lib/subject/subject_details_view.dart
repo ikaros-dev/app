@@ -10,9 +10,9 @@ import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/Video.dart';
-import 'package:ikaros/consts/CollectionConst.dart';
-import 'package:ikaros/utils/UrlUtils.dart';
-import 'package:ikaros/video/VlcPlayerWithControls.dart';
+import 'package:ikaros/consts/collection_const.dart';
+import 'package:ikaros/utils/url_utils.dart';
+import 'package:ikaros/video/vlc_player_with_controls.dart';
 
 class SubjectDetailsView extends StatefulWidget {
   final String apiBaseUrl;

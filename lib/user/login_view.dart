@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/MobileView.dart';
+import 'package:ikaros/mobile_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});

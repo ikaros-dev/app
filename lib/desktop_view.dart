@@ -1,9 +1,9 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:ikaros/subject/SubjectsView.dart';
-import 'package:ikaros/user/UserView.dart';
+import 'package:ikaros/subject/subjects_view.dart';
+import 'package:ikaros/user/user_view.dart';
 
-import 'collection/CollectionView.dart';
+import 'collection/collection_view.dart';
 
 /// 主页面
 class DesktopView extends StatefulWidget {

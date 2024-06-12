@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ikaros/collection/CollectionView.dart';
-import 'package:ikaros/subject/SubjectsView.dart';
-import 'package:ikaros/user/UserView.dart';
+import 'package:ikaros/collection/collection_view.dart';
+import 'package:ikaros/subject/subjects_view.dart';
+import 'package:ikaros/user/user_view.dart';
 
 /// 主页面
 class MobileView extends StatefulWidget {

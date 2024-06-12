@@ -9,9 +9,9 @@ import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/SubjectMeta.dart';
-import 'package:ikaros/subject/SubjectDetailsView.dart';
-import 'package:ikaros/user/LoginView.dart';
-import 'package:ikaros/utils/UrlUtils.dart';
+import 'package:ikaros/subject/subject_details_view.dart';
+import 'package:ikaros/user/login_view.dart';
+import 'package:ikaros/utils/url_utils.dart';
 
 class SubjectsView extends StatefulWidget {
   const SubjectsView({super.key});
