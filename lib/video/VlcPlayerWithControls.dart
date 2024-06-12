@@ -117,27 +117,25 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     if (_controller.value.isInitialized) {
       final oPosition = _controller.value.position;
       final oDuration = _controller.value.duration;
-      if (oPosition != null && oDuration != null) {
-        if (oDuration.inHours == 0) {
-          final strPosition = oPosition.toString().split('.').first;
-          final strDuration = oDuration.toString().split('.').first;
-          setState(() {
-            position =
-                "${strPosition.split(':')[1]}:${strPosition.split(':')[2]}";
-            duration =
-                "${strDuration.split(':')[1]}:${strDuration.split(':')[2]}";
-          });
-        } else {
-          setState(() {
-            position = oPosition.toString().split('.').first;
-            duration = oDuration.toString().split('.').first;
-          });
-        }
+      if (oDuration.inHours == 0) {
+        final strPosition = oPosition.toString().split('.').first;
+        final strDuration = oDuration.toString().split('.').first;
         setState(() {
-          validPosition = oDuration.compareTo(oPosition) >= 0;
-          sliderValue = validPosition ? oPosition.inSeconds.toDouble() : 0;
+          position =
+              "${strPosition.split(':')[1]}:${strPosition.split(':')[2]}";
+          duration =
+              "${strDuration.split(':')[1]}:${strDuration.split(':')[2]}";
+        });
+      } else {
+        setState(() {
+          position = oPosition.toString().split('.').first;
+          duration = oDuration.toString().split('.').first;
         });
       }
+      setState(() {
+        validPosition = oDuration.compareTo(oPosition) >= 0;
+        sliderValue = validPosition ? oPosition.inSeconds.toDouble() : 0;
+      });
       setState(() {
         numberOfCaptions = _controller.value.spuTracksCount;
         numberOfAudioTracks = _controller.value.audioTracksCount;
@@ -505,8 +503,8 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Size: ${_controller.value.size?.width?.toInt() ?? 0}'
-                        'x${_controller.value.size?.height?.toInt() ?? 0}',
+                        'Size: ${_controller.value.size.width.toInt() ?? 0}'
+                        'x${_controller.value.size.height.toInt() ?? 0}',
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
                         style:
@@ -730,7 +728,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
 
     final audioTracks = await _controller.getAudioTracks();
     //
-    if (audioTracks != null && audioTracks.isNotEmpty) {
+    if (audioTracks.isNotEmpty) {
       if (!mounted) return;
       final int selectedAudioTrackId = await showDialog(
         context: context,
@@ -773,7 +771,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   Future<void> _getRendererDevices() async {
     final castDevices = await _controller.getRendererDevices();
     //
-    if (castDevices != null && castDevices.isNotEmpty) {
+    if (castDevices.isNotEmpty) {
       if (!mounted) return;
       final String selectedCastDeviceName = await showDialog(
         context: context,

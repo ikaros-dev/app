@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
-import 'package:getwidget/components/dropdown/gf_dropdown.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
-import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
@@ -149,10 +148,11 @@ class CollectionsState extends State<CollectionView> {
                   CollectionType.DISCARD,
                 ]
                     .map((value) => DropdownMenuItem(
-                  value: value,
-                  child: Text(CollectionConst.typeCnMap[value == null ? 'ALL' : value.name]!),
-                  // child: Text(value == null ? 'ALL' : value.name),
-                ))
+                          value: value,
+                          child: Text(CollectionConst
+                              .typeCnMap[value == null ? 'ALL' : value.name]!),
+                          // child: Text(value == null ? 'ALL' : value.name),
+                        ))
                     .toList(),
               ),
             ],
@@ -190,13 +190,11 @@ class CollectionsState extends State<CollectionView> {
 
     Subject subject = await SubjectApi().findById(subjectId);
     SubjectCollection collection =
-    await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
+        await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
     Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => SubjectDetailsView(
-            apiBaseUrl: _baseUrl,
-            subject: subject,
-            collection: collection)));
+            apiBaseUrl: _baseUrl, subject: subject, collection: collection)));
   }
 
   Widget buildSubjectCollectionsGridView() {
@@ -219,7 +217,8 @@ class CollectionsState extends State<CollectionView> {
               child: AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例
                 child: Image.network(
-                  UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
+                  UrlUtils.getCoverUrl(
+                      _baseUrl, subjectCollections[index].cover),
                   fit: BoxFit.fitWidth,
                 ),
               ),
