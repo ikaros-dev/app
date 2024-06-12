@@ -9,8 +9,10 @@ import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/collection_const.dart';
+import 'package:ikaros/consts/platform_const.dart';
 import 'package:ikaros/subject/subject_details_view.dart';
 import 'package:ikaros/user/login_view.dart';
+import 'package:ikaros/utils/platform_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 
 class CollectionView extends StatefulWidget {
@@ -199,8 +201,10 @@ class CollectionsState extends State<CollectionView> {
 
   Widget buildSubjectCollectionsGridView() {
     return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: PlatformUtils.isMobile()
+        ? PlatformConst.SUBJECT_ROW_COUNT_MOBILE
+        : PlatformConst.SUBJECT_ROW_COUNT_DESKTOP,
         crossAxisSpacing: 2.0,
         mainAxisSpacing: 2.0,
         childAspectRatio: 0.6, // 网格项的宽高比例
