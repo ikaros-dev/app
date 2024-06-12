@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
-import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
+import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
@@ -63,8 +64,8 @@ class SubjectListState extends State<SubjectsView> {
     //     fontSize: 16.0);
 
     print("load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
-    PagingWrap pagingWrap = await SubjectApi()
-        .listSubjectsByCondition(1, _size, '', _keyword, _nsfw, SubjectType.ANIME);
+    PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
+        1, _size, '', _keyword, _nsfw, SubjectType.ANIME);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
@@ -208,20 +209,25 @@ class SubjectListState extends State<SubjectsView> {
     SubjectCollection collection =
         await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => SubjectDetailsView(
-            apiBaseUrl: _baseUrl,
-            subject: subject,
-            collection: collection)));
+    if (PlatformUtils.isMobile()) {
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => SubjectDetailsView(
+              apiBaseUrl: _baseUrl, subject: subject, collection: collection)));
+    } else {
+      var map = <String, dynamic>{};
+      map['apiBaseUrl'] = _baseUrl;
+      map['subject'] = subject;
+      map['collection'] = collection;
+      GoRouter.of(context).go('/subject/details', extra: map);
+    }
   }
-
 
   Widget buildSubjectsGridView() {
     return GridView.builder(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: PlatformUtils.isMobile()
-        ? PlatformConst.SUBJECT_ROW_COUNT_MOBILE
-        : PlatformConst.SUBJECT_ROW_COUNT_DESKTOP,
+            ? PlatformConst.SUBJECT_ROW_COUNT_MOBILE
+            : PlatformConst.SUBJECT_ROW_COUNT_DESKTOP,
         crossAxisSpacing: 2.0,
         mainAxisSpacing: 2.0,
         childAspectRatio: 0.6, // 网格项的宽高比例

@@ -333,6 +333,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.2"
+  go_router:
+    dependency: "direct main"
+    description:
+      name: go_router
+      sha256: abec47eb8c8c36ebf41d0a4c64dbbe7f956e39a012b3aafc530e951bdc12fe3f
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "14.1.4"
   graphs:
     dependency: transitive
     description:

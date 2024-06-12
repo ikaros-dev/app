@@ -430,7 +430,7 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           SizedBox(
-                            width: 400,
+                            width: MediaQuery.of(context).size.width,
                             child: Text(
                               widget.subject.summary!,
                             ),

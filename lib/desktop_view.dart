@@ -1,8 +1,12 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ikaros/subject/subject_details_view.dart';
 import 'package:ikaros/subject/subjects_view.dart';
 import 'package:ikaros/user/user_view.dart';
 
+import 'api/collection/model/SubjectCollection.dart';
+import 'api/subject/model/Subject.dart';
 import 'collection/collection_view.dart';
 
 /// 主页面

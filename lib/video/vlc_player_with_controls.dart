@@ -1,8 +1,10 @@
+import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
+import 'package:ikaros/utils/platform_utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:wakelock/wakelock.dart';
 
@@ -42,6 +44,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   final double initSnapshotBottomPosition = 10;
 
   late VlcPlayerController _mobileController;
+  late Player _desktopController;
 
   late OverlayEntry _overlayEntry;
 
@@ -87,27 +90,39 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     _episodeId = widget.episodeId;
     _videoUrl = widget.videoUrl;
     _subtitleUrls = widget.subtitleUrls;
-    _mobileController = VlcPlayerController.network(
-      _videoUrl,
-      hwAcc: HwAcc.full,
-      autoPlay: true,
-      options: VlcPlayerOptions(),
-    );
-    _mobileController.addListener(listener);
+    if (PlatformUtils.isMobile()) {
+      _mobileController = VlcPlayerController.network(
+        _videoUrl,
+        hwAcc: HwAcc.full,
+        autoPlay: true,
+        options: VlcPlayerOptions(),
+      );
+      _mobileController.addListener(listener);
+    } else {
+      _desktopController = Player(id: _episodeId);
+      _desktopController.open(
+        Media.network(_videoUrl),
+        autoStart: true,
+      );
+    }
   }
 
   @override
   void dispose() async {
-    _mobileController.removeListener(listener);
-    super.dispose();
-    if (_episodeId > 0) {
-      await EpisodeCollectionApi().updateCollection(
-          _episodeId, _mobileController.value.position, _mobileController.value.duration);
-    }
-    await _mobileController.stopRendererScanning();
-    await _mobileController.dispose();
-    if (_showControlFutureInit) {
-      _showControlFuture.ignore();
+    if (PlatformUtils.isMobile()) {
+      _mobileController.removeListener(listener);
+      super.dispose();
+      if (_episodeId > 0) {
+        await EpisodeCollectionApi().updateCollection(_episodeId,
+            _mobileController.value.position, _mobileController.value.duration);
+      }
+      await _mobileController.stopRendererScanning();
+      await _mobileController.dispose();
+      if (_showControlFutureInit) {
+        _showControlFuture.ignore();
+      }
+    } else {
+      _desktopController.stop();
     }
   }
 
@@ -141,7 +156,8 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
         numberOfAudioTracks = _mobileController.value.audioTracksCount;
       });
       // update recording blink widget
-      if (_mobileController.value.isRecording && _mobileController.value.isPlaying) {
+      if (_mobileController.value.isRecording &&
+          _mobileController.value.isPlaying) {
         if (DateTime.now().difference(lastRecordingShowTime).inSeconds >= 1) {
           setState(() {
             lastRecordingShowTime = DateTime.now();
@@ -231,11 +247,11 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     }
 
     print("change datasource for videoUrl: $videoUrl");
-    if (_mobileController.value.isInitialized) {
+    if (PlatformUtils.isMobile() && _mobileController.value.isInitialized) {
       // update old episode progress
       if (_episodeId > 0) {
-        await EpisodeCollectionApi().updateCollection(
-            _episodeId, _mobileController.value.position, _mobileController.value.duration);
+        await EpisodeCollectionApi().updateCollection(_episodeId,
+            _mobileController.value.position, _mobileController.value.duration);
       }
 
       // stop old player
@@ -285,6 +301,9 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
           "and url: [$videoUrl] ");
     }
 
+    if (!PlatformUtils.isMobile()) {
+      _desktopController.open(Media.network(videoUrl), autoStart: true);
+    }
     // if(_controller.value.isInitialized) {
     //   await _controller.stopRendererScanning();
     //   await _controller.stop();
@@ -336,9 +355,14 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    // return _buildMobileVideo();
+    return PlatformUtils.isMobile()
+        ? _buildMobileVideo()
+        : _buildDesktopVideo();
+  }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+  Widget _buildMobileVideo() {
+    return ListView(
       children: [
         Visibility(
           visible: _showControl,
@@ -603,7 +627,8 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                           max: (!validPosition &&
                                   _mobileController.value.duration == null)
                               ? 1.0
-                              : _mobileController.value.duration.inSeconds.toDouble(),
+                              : _mobileController.value.duration.inSeconds
+                                  .toDouble(),
                           onChanged:
                               validPosition ? _onSliderPositionChanged : null,
                         ),
@@ -637,6 +662,27 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDesktopVideo() {
+    return Scaffold(
+      body: ConstrainedBox(
+        constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.6,
+            maxHeight: MediaQuery.sizeOf(context).height),
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: Video(
+            player: _desktopController,
+            // height: MediaQuery.sizeOf(context).height,
+            width: MediaQuery.of(context).size.width * 0.6,
+            scale: 1.0,
+            // default
+            showControls: true, // default
+          ),
+        ),
+      ),
     );
   }
 
@@ -677,7 +723,8 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       sliderValue = progress.floor().toDouble();
     });
     //convert to Milliseconds since VLC requires MS to set time
-    _mobileController.setTime(sliderValue.toInt() * Duration.millisecondsPerSecond);
+    _mobileController
+        .setTime(sliderValue.toInt() * Duration.millisecondsPerSecond);
   }
 
   Future<void> _getSubtitleTracks() async {
@@ -719,7 +766,8 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
           );
         },
       );
-      if (selectedSubId != null) await _mobileController.setSpuTrack(selectedSubId);
+      if (selectedSubId != null)
+        await _mobileController.setSpuTrack(selectedSubId);
     }
   }
 
