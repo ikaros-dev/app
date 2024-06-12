@@ -1,6 +1,7 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:ikaros/HomeView.dart';
+import 'package:ikaros/DesktopView.dart';
+import 'package:ikaros/MobileView.dart';
 import 'package:ikaros/utils/PlatformUtils.dart';
 import 'package:system_theme/system_theme.dart';
 
@@ -18,7 +19,7 @@ class MobileApp extends StatelessWidget {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Ikaros',
-      home: HomeView(),
+      home: MobileView(),
     );
   }
 }
@@ -33,7 +34,7 @@ class DesktopApp extends StatelessWidget {
       theme: FluentThemeData(
         accentColor: SystemTheme.accentColor.accent.toAccentColor(),
       ),
-      home: Text("Hello Ikaros"),
+      home: DesktopView(),
     );
   }
 

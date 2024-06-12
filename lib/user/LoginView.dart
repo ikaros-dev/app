@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/HomeView.dart';
+import 'package:ikaros/MobileView.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -174,7 +174,7 @@ class LoginState extends State<LoginView> {
         .login(_baseUrl, _username, _password)
         .then((value) => {
               Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const HomeView()))
+                  MaterialPageRoute(builder: (context) => const MobileView()))
             })
         .onError((error, stackTrace) => {
               Fluttertoast.showToast(

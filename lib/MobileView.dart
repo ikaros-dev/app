@@ -4,16 +4,16 @@ import 'package:ikaros/subject/SubjectsView.dart';
 import 'package:ikaros/user/UserView.dart';
 
 /// 主页面
-class HomeView extends StatefulWidget {
-  const HomeView({Key? key}) : super(key: key);
+class MobileView extends StatefulWidget {
+  const MobileView({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return _HomeViewState();
+    return _MobileViewState();
   }
 }
 
-class _HomeViewState extends State<HomeView> {
+class _MobileViewState extends State<MobileView> {
   // Page Controller.
   late PageController _pageController;
 
@@ -40,8 +40,6 @@ class _HomeViewState extends State<HomeView> {
       curve: Curves.linear,
     );
   }
-
-  // TODO Widget _buildMobileWid
 
   @override
   Widget build(BuildContext context) {

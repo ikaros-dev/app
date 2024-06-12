@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/HomeView.dart';
+import 'package:ikaros/MobileView.dart';
 
 class UserView extends StatefulWidget {
   const UserView({super.key});
@@ -74,7 +74,7 @@ class _UserViewState extends State<UserView> {
     await AuthApi().logout();
     if(mounted) {
       Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const HomeView()));
+          MaterialPageRoute(builder: (context) => const MobileView()));
     }
   }
 }
