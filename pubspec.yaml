@@ -50,6 +50,7 @@ dependencies:
   provider: ^6.0.5
   fluent_ui: ^4.8.7
   system_theme: ^2.3.1
+  dart_vlc: ^0.4.0
 
 dev_dependencies:
   flutter_test:

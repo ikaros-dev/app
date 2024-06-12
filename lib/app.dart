@@ -1,3 +1,4 @@
+import 'package:dart_vlc/dart_vlc.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/desktop_view.dart';
@@ -7,6 +8,7 @@ import 'package:system_theme/system_theme.dart';
 
 void main() {
   bool isMobile = PlatformUtils.isMobile();
+  if (!isMobile) DartVLC.initialize();
   runApp(isMobile ?  const MobileApp() : const DesktopApp());
 }
 
