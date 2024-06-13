@@ -11,6 +11,7 @@ import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/Video.dart';
 import 'package:ikaros/consts/collection_const.dart';
+import 'package:ikaros/utils/platform_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 import 'package:ikaros/video/vlc_player_with_controls.dart';
 
@@ -229,7 +230,7 @@ class _SubjectDetailsView extends State<SubjectDetailsView> {
         child: Column(
           children: [
             SizedBox(
-              height: isFullScreen ? MediaQuery.of(context).size.height : 200,
+              height: isFullScreen ? MediaQuery.of(context).size.height : (PlatformUtils.isMobile()? 200 : 400),
               child: VlcPlayerWithControls(
                 key: _childKey,
                 episodeId: _currentEpisodeId,

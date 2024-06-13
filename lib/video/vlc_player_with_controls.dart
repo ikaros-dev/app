@@ -666,24 +666,72 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   }
 
   Widget _buildDesktopVideo() {
-    return Scaffold(
-      body: ConstrainedBox(
-        constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.6,
-            maxHeight: MediaQuery.sizeOf(context).height),
-        child: AspectRatio(
-          aspectRatio: 16 / 9,
-          child: Video(
-            player: _desktopController,
-            // height: MediaQuery.sizeOf(context).height,
-            width: MediaQuery.of(context).size.width * 0.6,
-            scale: 1.0,
-            // default
-            showControls: true, // default
-          ),
-        ),
-      ),
+    return ListView(
+      children: [
+        Expanded(
+          child: ColoredBox(
+            color: Colors.black,
+            child: Stack(
+              alignment: Alignment.bottomCenter,
+              children: <Widget>[
+                Center(
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Video(
+                      player: _desktopController,
+                      // height: MediaQuery.sizeOf(context).height,
+                      // width: MediaQuery.of(context).size.width * 0.6,
+                      scale: 1.0,
+                      // default
+                      showControls: true, // default
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: _recordingPositionOffset,
+                  left: _recordingPositionOffset,
+                  child: AnimatedOpacity(
+                    opacity: recordingTextOpacity,
+                    duration: const Duration(seconds: 1),
+                    child: const Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Icon(Icons.circle, color: Colors.red),
+                        SizedBox(width: 5),
+                        Text(
+                          'REC',
+                          style: TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // ControlsOverlay(_controller),
+              ],
+            ),
+          )),
+      ],
     );
+    // return ListView(
+    //   body: ConstrainedBox(
+    //     constraints: BoxConstraints(
+    //         maxWidth: MediaQuery.of(context).size.width * 0.6,
+    //         maxHeight: MediaQuery.sizeOf(context).height),
+    //     child: AspectRatio(
+    //       aspectRatio: 16 / 9,
+    //       child: Video(
+    //         player: _desktopController,
+    //         // height: MediaQuery.sizeOf(context).height,
+    //         width: MediaQuery.of(context).size.width * 0.6,
+    //         scale: 1.0,
+    //         // default
+    //         showControls: true, // default
+    //       ),
+    //     ),
+    //   ),
+    // );
   }
 
   Future<void> _cyclePlaybackSpeed() async {
