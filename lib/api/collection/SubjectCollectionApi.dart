@@ -33,7 +33,7 @@ class SubjectCollectionApi {
     String baseUrl = authParams.baseUrl;
     String basicAuth = authParams.basicAuth;
     String userId = authParams.userId;
-    String apiUrl = "$baseUrl/api/v1alpha1/subject/collections/$userId"
+    String apiUrl = "$baseUrl/api/v1alpha1/collection/subjects"
         "?page=$page&size=$size";
     if (type != null) {
       apiUrl = "${apiUrl}&type=${type.name}";
@@ -67,7 +67,7 @@ class SubjectCollectionApi {
     String baseUrl = authParams.baseUrl;
     String basicAuth = authParams.basicAuth;
     String userId = authParams.userId;
-    String apiUrl = "$baseUrl/api/v1alpha1/subject/collection/$userId/$subjectId";
+    String apiUrl = "$baseUrl/api/v1alpha1/collection/subject/$subjectId";
 
     try {
       BaseOptions options = BaseOptions();
@@ -97,8 +97,8 @@ class SubjectCollectionApi {
     String baseUrl = authParams.baseUrl;
     String basicAuth = authParams.basicAuth;
     String userId = authParams.userId;
-    String apiUrl = "$baseUrl/api/v1alpha1/subject/collection/collect"
-    "?userId=$userId&subjectId=$subjectId&type=${type.name}";
+    String apiUrl = "$baseUrl/api/v1alpha1/collection/subject/collect"
+    "?subjectId=$subjectId&type=${type.name}";
 
     if(isPrivate != null) {
       apiUrl = "$apiUrl&isPrivate=$isPrivate";
@@ -131,9 +131,8 @@ class SubjectCollectionApi {
 
     String baseUrl = authParams.baseUrl;
     String basicAuth = authParams.basicAuth;
-    String userId = authParams.userId;
-    String apiUrl = "$baseUrl/api/v1alpha1/subject/collection/collect"
-    "?userId=$userId&subjectId=$subjectId";
+    String apiUrl = "$baseUrl/api/v1alpha1/collection/subject/collect"
+    "?subjectId=$subjectId";
 
     try {
       BaseOptions options = BaseOptions();

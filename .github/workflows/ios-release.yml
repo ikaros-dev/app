@@ -39,3 +39,12 @@ jobs:
         with:
           name: release-ios-${{  github.ref_name }}
           path: output
+
+      - name: Rename ipa file
+        run: mv output/ikaros.ipa ikaros-v${{  github.ref_name }}.ipa
+      - name: Init LanZouCloud-CMD
+        run: |
+          git clone https://github.com/zaxtyson/LanZouCloud-CMD.git && cd LanZouCloud-CMD && python3 -m pip install -r requirements.txt && python3 main.py
+      - name: Publish IPA LanZouCloud
+        run: |
+          login ${{ secrets.LANZOUCLOUD_COOKIE }} && cd Ikaros/App/ipa && upload ikaros-v${{  github.ref_name }}.ipa && logout && bye

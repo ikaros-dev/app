@@ -37,3 +37,12 @@ jobs:
         with:
           name: release-android-${{  github.ref_name }}
           path: build/app/outputs/flutter-apk
+
+      - name: Tar apk file
+        run: tar -cvf ikaros-v${{  github.ref_name }}.tar build/app/outputs/flutter-apk
+      - name: Init LanZouCloud-CMD
+        run: |
+          git clone https://github.com/zaxtyson/LanZouCloud-CMD.git && cd LanZouCloud-CMD && python3 -m pip install -r requirements.txt && python3 main.py
+      - name: Publish ZIP LanZouCloud
+        run: |
+          login ${{ secrets.LANZOUCLOUD_COOKIE }} && cd Ikaros/App/ipa && upload ikaros-v${{  github.ref_name }}.tar && logout && bye
