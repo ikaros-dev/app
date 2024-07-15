@@ -24,9 +24,8 @@ class EpisodeCollectionApi {
 
     String baseUrl = authParams.baseUrl;
     String basicAuth = authParams.basicAuth;
-    String userId = authParams.userId;
     String apiUrl =
-        "$baseUrl/api/v1alpha1/episode/collection/$userId/$episodeId";
+        "$baseUrl/api/v1alpha1/collection/episode/$episodeId";
 
     try {
       BaseOptions options = BaseOptions();
@@ -57,7 +56,7 @@ class EpisodeCollectionApi {
     String basicAuth = authParams.basicAuth;
     String userId = authParams.userId;
     String apiUrl =
-        "$baseUrl/api/v1alpha1/episode/collection/$userId/$episodeId";
+        "$baseUrl/api/v1alpha1/collection/episode/$episodeId";
 
     final queryParams = {
       'progress': seek.inMilliseconds,
