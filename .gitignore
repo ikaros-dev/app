@@ -43,6 +43,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-**generated**
-**Generated**
+**/generated**
+**/Generated**
 
