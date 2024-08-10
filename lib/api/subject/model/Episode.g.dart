@@ -12,7 +12,7 @@ Episode _$EpisodeFromJson(Map<String, dynamic> json) => Episode(
       name: json['name'] as String,
       nameCn: json['name_cn'] as String?,
       description: json['description'] as String?,
-      sequence: json['sequence'] as int,
+      sequence: json['sequence'] as double,
       group: json['group'] as String?,
       resources: (json['resources'] as List<dynamic>?)
           ?.map((e) => EpisodeResource.fromJson(e as Map<String, dynamic>))

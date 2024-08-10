@@ -13,7 +13,7 @@ class Episode {
   @JsonKey(name: "name_cn")
   final String? nameCn;
   final String? description;
-  final int sequence;
+  final double sequence;
   final String? group;
   final List<EpisodeResource>? resources;
 
