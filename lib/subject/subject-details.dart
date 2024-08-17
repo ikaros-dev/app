@@ -41,7 +41,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   bool isFullScreen = false;
 
   // String _videoUrl = TmpConst.H265_URL;
-  String _videoUrl = "";
+  String _videoUrl = "http://";
 
   // List<String> _videoSubtitleUrls = [TmpConst.H265_CHS_ASS_URL];
   List<String> _videoSubtitleUrls = [];
