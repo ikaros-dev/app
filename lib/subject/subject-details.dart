@@ -430,11 +430,11 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           SizedBox(
-                            width: 400,
+                            width: 350,
                             child: Text(
-                              widget.subject.summary!,
+                              widget.subject.summary!
                             ),
-                          ),
+                            )
                         ],
                       ),
                     ],

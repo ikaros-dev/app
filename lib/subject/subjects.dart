@@ -239,18 +239,15 @@ class SubjectListState extends State<SubjectsPage> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Text(
-                ((subjectList[index].nameCn == null ||
-                        subjectList[index].nameCn == '')
-                    ? subjectList[index].name
-                    : subjectList[index].nameCn)!,
-                style: const TextStyle(
-                    fontSize: 14.0, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
+            Text(
+              ((subjectList[index].nameCn == null ||
+                  subjectList[index].nameCn == '')
+                  ? subjectList[index].name
+                  : subjectList[index].nameCn)!,
+              style: const TextStyle(
+                  fontSize: 14.0, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         );

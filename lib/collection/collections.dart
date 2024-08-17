@@ -224,18 +224,15 @@ class CollectionsState extends State<CollectionPage> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Text(
-                ((subjectCollections[index].nameCn == null ||
-                        subjectCollections[index].nameCn == '')
-                    ? subjectCollections[index].name
-                    : subjectCollections[index].nameCn)!,
-                style: const TextStyle(
-                    fontSize: 14.0, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-              ),
+            Text(
+              ((subjectCollections[index].nameCn == null ||
+                  subjectCollections[index].nameCn == '')
+                  ? subjectCollections[index].name
+                  : subjectCollections[index].nameCn)!,
+              style: const TextStyle(
+                  fontSize: 14.0, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         );
