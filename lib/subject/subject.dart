@@ -130,8 +130,8 @@ class _SubjectState extends State<SubjectPage> {
         ),
         const SizedBox(width: 10),
         // 右边标题
-        Column(
-          children: [_buildSubjectTitleInfo()],
+        Expanded(
+          child: _buildSubjectTitleInfo(),
         )
       ],
     );
@@ -313,7 +313,7 @@ class _SubjectState extends State<SubjectPage> {
     if (_subject.episodes == null) return <String>[];
     var groupSet = _subject.episodes?.map((e) => e.group).toSet();
     var groupList = groupSet?.toList();
-    groupList?.sort((a, b)=> a.hashCode.compareTo(b.hashCode));
+    groupList?.sort((a, b) => a.hashCode.compareTo(b.hashCode));
     return groupList;
   }
 
@@ -345,7 +345,7 @@ class _SubjectState extends State<SubjectPage> {
               child: SizedBox(
                 height: 40,
                 child: MaterialButton(
-                  onPressed: () => {},
+                  onPressed: () => {context.go("/subject/episode/${ep.id}")},
                   shape: const RoundedRectangleBorder(
                     side: BorderSide(
                       color: Colors.deepPurple,
@@ -355,7 +355,10 @@ class _SubjectState extends State<SubjectPage> {
                       Radius.circular(8),
                     ),
                   ),
-                  child: Text("${ep.sequence} : ${ep.name}", overflow: TextOverflow.ellipsis,),
+                  child: Text(
+                    "${ep.sequence} : ${ep.name}",
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
             ))
