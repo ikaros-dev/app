@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ikaros/home.dart';
+import 'package:ikaros/router.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,10 +11,10 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
+    return MaterialApp.router(
+      routerConfig: router,
       title: 'Ikaros',
-      home: HomePage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
