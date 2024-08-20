@@ -233,7 +233,10 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
               height: isFullScreen ? MediaQuery.of(context).size.height : 200,
               child: VlcPlayerWithControls(
                 key: _childKey,
+                episodeId: _currentEpisodeId,
+                videoUrl: _videoUrl,
                 updateIsFullScreen: (val) => _updateIsFullScreen(val),
+                subtitleUrls: _videoSubtitleUrls,
                 onPlayerInitialized: _onPlayerInitialized,
               ),
               // child: FutureBuilder(

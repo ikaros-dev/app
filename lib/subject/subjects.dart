@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
@@ -203,18 +202,15 @@ class SubjectListState extends State<SubjectsPage> {
       return;
     }
 
-    // Subject subject = await SubjectApi().findById(subjectId);
-    // SubjectCollection collection =
-    //     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
+    Subject subject = await SubjectApi().findById(subjectId);
+    SubjectCollection collection =
+        await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
-    if (mounted) {
-      context.go("/subject/details/$subjectId");
-    }
-    // Navigator.of(context).push(MaterialPageRoute(
-    //     builder: (context) => SubjectDetailsPage(
-    //         apiBaseUrl: _baseUrl,
-    //         subject: subject,
-    //         collection: collection)));
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => SubjectDetailsPage(
+            apiBaseUrl: _baseUrl,
+            subject: subject,
+            collection: collection)));
   }
 
 
