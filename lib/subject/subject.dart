@@ -11,7 +11,6 @@ import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/url-utils.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class SubjectPage extends StatefulWidget {
   final String? id;
@@ -97,11 +96,11 @@ class _SubjectState extends State<SubjectPage> {
           }
           var url =
               "$_apiBaseUrl/console/#/subjects/subject/details/${widget.id}";
-          if (await canLaunchUrl(Uri.parse(url))) {
-            await launchUrl(Uri.parse(url));
-          } else {
-            throw 'Could not launch $url';
-          }
+          // if (await canLaunchUrl(Uri.parse(url))) {
+          //   await launchUrl(Uri.parse(url));
+          // } else {
+          //   throw 'Could not launch $url';
+          // }
         },
         icon: const Icon(
           Icons.ac_unit_sharp,
