@@ -43,6 +43,11 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-**/generated**
-**/Generated**
+**generated**
+**generated_**
+**Generated**
+.kotlin/
+**build**
+local.properties
+.gradle/
 
