@@ -26,7 +26,7 @@ jobs:
           channel: 'stable'
 
       - name: Restore packages
-        run: flutter pub get --disable-telemetry
+        run: flutter pub get
 
       - name: Build Flutter
         run: flutter build ios --release --no-codesign
@@ -61,7 +61,7 @@ jobs:
           channel: 'stable'
 
       - name: Restore packages
-        run: flutter pub get --disable-telemetry
+        run: flutter pub get
 
       - name: Build Android App Bundle
         run: flutter build apk --release
