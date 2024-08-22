@@ -111,7 +111,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
                     _episode = snapshot.data;
                     if (_episode.resources == null ||
                         _episode.resources!.isEmpty) {
-                      return const Text("Load episode fail.");
+                      return const Text("Current Episode Not Bind Attachment Resources.");
                     }
                     return Column(
                       children: [
