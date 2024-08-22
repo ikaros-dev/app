@@ -234,7 +234,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
               child: VlcPlayerWithControls(
                 key: _childKey,
                 updateIsFullScreen: (val) => _updateIsFullScreen(val),
-                onPlayerInitialized: _onPlayerInitialized,
+                onPlayerInitialized: _onPlayerInitialized, videoUrl: _videoUrl, videoTitle: _videoTitle, episodeId: _currentEpisodeId,
               ),
               // child: FutureBuilder(
               //     future: Future.delayed(Duration.zero, _loadFirstVideoEpisode),

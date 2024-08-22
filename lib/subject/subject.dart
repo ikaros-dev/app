@@ -361,8 +361,7 @@ class _SubjectState extends State<SubjectPage> {
                       ? null
                       : () => {
                             Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => SubjectEpisodePage(
-                                      id: ep.id.toString(),
+                                builder: (context) => SubjectEpisodePage(episode: ep,
                                     )))
                           },
                   child: Text(

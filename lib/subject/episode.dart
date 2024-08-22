@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:dart_vlc/dart_vlc.dart' as DartVlc;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ikaros/api/attachment/AttachmentRelationApi.dart';
@@ -13,9 +15,9 @@ import 'package:ikaros/api/subject/model/Video.dart';
 import 'package:ikaros/video/vlc_player_with_controls.dart';
 
 class SubjectEpisodePage extends StatefulWidget {
-  final String? id;
+  final Episode episode;
 
-  const SubjectEpisodePage({super.key, this.id});
+  const SubjectEpisodePage({super.key, required this.episode});
 
   @override
   State<StatefulWidget> createState() {
@@ -26,9 +28,6 @@ class SubjectEpisodePage extends StatefulWidget {
 class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   late String _apiBaseUrl = "";
   late Episode _episode;
-  var _loadEpisodeWithIdFuture;
-  var _loadApiBaseUrlFuture;
-  var _loadVideoSubtitlesByAttIdFuture;
 
   bool _isFullScreen = false;
   late GlobalKey<VlcPlayerWithControlsState> _childKey;
@@ -38,13 +37,10 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   String _episodeTitle = '';
   late int _currentEpisodeId = 0;
   List<Video> _videoList = <Video>[];
-  late Function _onPlayerInitialized;
-  bool _isPlayerInitializedCallOnce = false;
   late EpisodeResource? _currentResource = null;
 
-  Future<Episode> _loadEpisodeWithId() async {
-    return EpisodeApi().findById(int.parse(widget.id.toString()));
-  }
+  // Windows and Linux Dart Vlc Player
+  late DartVlc.Player _dartVlcPlayer;
 
   Future<AuthParams> _loadBaseUrl() async {
     return AuthApi().getAuthParams();
@@ -53,28 +49,18 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   @override
   void initState() {
     super.initState();
-    _loadEpisodeWithIdFuture = _loadEpisodeWithId();
-    _loadApiBaseUrlFuture = _loadBaseUrl();
-    _loadVideoSubtitlesByAttIdFuture =
-        (attId) => _loadVideoSubtitlesByAttId(attId);
+    _episode = widget.episode;
     _childKey = GlobalKey<VlcPlayerWithControlsState>();
-    _onPlayerInitialized = () async {
-      if (!_isPlayerInitializedCallOnce) {
-        await _loadBaseUrl();
-        if (_episode != null &&
-            _episode.resources != null &&
-            _episode.resources!.isNotEmpty) {
-          EpisodeResource resource = _episode.resources!.first;
-          await _loadEpisodeResource(resource);
-        }
-        // await _initVideoList();
-        // Episode episode = await _getFirstEpisode();
-        // await _loadEpisode(episode);
-        // await _loadEpisodeWithId();
-        _isPlayerInitializedCallOnce = true;
-      }
-    };
+
+    if (Platform.isWindows || Platform.isLinux) {
+      _dartVlcPlayer = DartVlc.Player(id: hashCode);
+    }
+    if (_episode.resources != null && _episode.resources!.isNotEmpty) {
+      _loadEpisodeResource(_episode.resources!.first);
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -96,100 +82,59 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
           ),
         ),
         body: SingleChildScrollView(
-          // child: Column(
-          //   children: [
-          //     _buildVideoPlayer(),
-          //   ],
-          // )
-          child: FutureBuilder<Episode>(
-              future: _loadEpisodeWithIdFuture,
-              builder: (BuildContext context, AsyncSnapshot snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasError) {
-                    return Text("Load video error: ${snapshot.error}");
-                  } else {
-                    _episode = snapshot.data;
-                    if (_episode.resources == null ||
-                        _episode.resources!.isEmpty) {
-                      return const Text("Current Episode Not Bind Attachment Resources.");
-                    }
-                    return Column(
-                      children: [
-                        _buildVideoPlayer(),
-                        Visibility(
-                          visible: !_isFullScreen,
-                          child: Column(
-                            children: [
-                              const Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  "资源",
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 20),
-                                ),
-                              ),
-                              _buildResourceSelectListView(),
-                            ],
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-                } else {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-              }),
+          child: _buildEpisodePage(),
         ));
   }
 
+  Widget _buildEpisodePage(){
+    if (_episode.resources == null ||
+        _episode.resources!.isEmpty) {
+      return const Text("Current Episode Not Bind Attachment Resources.");
+    }
+    return Column(
+      children: [
+        _buildVideoPlayer(),
+        Visibility(
+          visible: !_isFullScreen,
+          child: Column(
+            children: [
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "资源",
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20),
+                ),
+              ),
+              _buildResourceSelectListView(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildVideoPlayer() {
-    // return SizedBox(
-    //   height: _isFullScreen ? MediaQuery.of(context).size.height : 200,
-    //   child: VlcPlayerWithControls(
-    //     key: _childKey,
-    //     episodeId: _currentEpisodeId,
-    //     videoUrl: _videoUrl,
-    //     updateIsFullScreen: (val) => _updateIsFullScreen(val),
-    //     subtitleUrls: _videoSubtitleUrls,
-    //   ),
-    // );
+    bool useDartVlcPlayer = Platform.isWindows || Platform.isLinux;
+    if (_currentResource == null) {
+      return const CircularProgressIndicator();
+    }
     return SizedBox(
       height: _isFullScreen ? MediaQuery.of(context).size.height : 200,
-      child: VlcPlayerWithControls(
+      child: useDartVlcPlayer ?
+        DartVlc.Video(
+          player: _dartVlcPlayer,
+          showControls: true,
+        )
+      :
+      VlcPlayerWithControls(
         key: _childKey,
         updateIsFullScreen: (val) => _updateIsFullScreen(val),
+        videoUrl: _videoUrl, videoTitle: _videoTitle, episodeId: _currentEpisodeId,
+        subtitleUrls: _videoSubtitleUrls,
       ),
     );
-    // return SizedBox(
-    // height: _isFullScreen ? MediaQuery.of(context).size.height : 200,
-    // child: FutureBuilder<List<VideoSubtitle>>(
-    //     future: loadVideoSubtitlesByAttId(episodeResource.attachmentId),
-    //     builder: (BuildContext context, AsyncSnapshot snapshot) {
-    //       if (snapshot.connectionState == ConnectionState.done) {
-    //         if (snapshot.hasError) {
-    //           return Text("Load video error: ${snapshot.error}");
-    //         } else {
-    //           List<VideoSubtitle> subtitles = snapshot.data;
-    //           List<String> videoSubtitleUrls =
-    //               subtitles.map((vs) => vs.url).toList();
-    //           return VlcPlayerWithControls(
-    //             key: _childKey,
-    //             episodeId: episodeResource.episodeId,
-    //             videoUrl: episodeResource.url,
-    //             videoTitle: episodeResource.name,
-    //             updateIsFullScreen: (val) => _updateIsFullScreen(val),
-    //             subtitleUrls: videoSubtitleUrls,
-    //           );
-    //         }
-    //       } else {
-    //         return const Center(
-    //           child: CircularProgressIndicator(),
-    //         );
-    //       }
-    //     }));
   }
 
   _updateIsFullScreen(bool val) {
@@ -207,6 +152,13 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   }
 
   Future setVideoUrl() async {
+    if (Platform.isWindows || Platform.isLinux) {
+      _dartVlcPlayer.open(
+        DartVlc.Media.network(_videoUrl),
+        autoStart: true, // default
+      );
+      return;
+    }
     try {
       print("update video url: $_videoUrl");
       await callChildMethod2ChangePlayerDatasource();
@@ -313,7 +265,9 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
         }
         subtitleUrls.add(subUrl);
       }
-      _videoSubtitleUrls = subtitleUrls;
+      setState(() {
+        _videoSubtitleUrls = subtitleUrls;
+      });
       print("video subtitle urls: $_videoSubtitleUrls");
     }
     await setVideoUrl();

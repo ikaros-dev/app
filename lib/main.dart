@@ -1,8 +1,14 @@
+import 'dart:io';
+
+import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/layout.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 
 void main() {
+  if (Platform.isWindows || Platform.isLinux) {
+    DartVLC.initialize();
+  }
   runApp(const MyApp());
 }
 
