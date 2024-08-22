@@ -4,7 +4,6 @@ import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:wakelock/wakelock.dart';
 
 typedef OnStopRecordingCallback = void Function(String);
 
@@ -175,9 +174,9 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   void _updateWakeLock() async {
     bool? isPlaying = await _controller.isPlaying();
     if (isPlaying != null && isPlaying) {
-      Wakelock.enable();
+      // Wakelock.enable();
     } else {
-      Wakelock.disable();
+      // Wakelock.disable();
     }
   }
 
