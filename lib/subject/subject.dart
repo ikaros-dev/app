@@ -340,7 +340,7 @@ class _SubjectState extends State<SubjectPage> {
             ))
         .toList();
     if (tabs.isEmpty) return const TabBar(tabs: []);
-    return TabBar(tabs: tabs, isScrollable: true);
+    return TabBar(tabs: tabs, isScrollable: groups.isNotEmpty && groups.length != 1);
   }
 
   List<Episode>? _getEpisodesByGroup(String group) {
