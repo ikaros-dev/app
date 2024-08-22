@@ -210,7 +210,10 @@ class _SubjectState extends State<SubjectPage> {
       builder: (context) {
         return AlertDialog(
           title: const Text("选集播放"),
-          content: _buildEpisodeSelectTabs(),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.6,
+            child: _buildEpisodeSelectTabs(),
+          ),
           actions: <Widget>[
             // TextButton(
             //   child: Text("确认"),
@@ -385,20 +388,6 @@ class _SubjectState extends State<SubjectPage> {
 
     return ListView(
       children: buttons,
-    );
-    return SingleChildScrollView(
-      child: Wrap(
-        children: buttons,
-      ),
-      // child: Column(
-      //   key: Key(group),
-      //   crossAxisAlignment: CrossAxisAlignment.center,
-      //   children: [
-      //     Wrap(
-      //       children: buttons,
-      //     )
-      //   ],
-      // ),
     );
   }
 
