@@ -10,7 +10,7 @@ import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
-import 'package:ikaros/utils/url-utils.dart';
+import 'package:ikaros/utils/url_utils.dart';
 
 import 'episode.dart';
 

@@ -12,7 +12,7 @@ import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/Video.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/subject/subjects.dart';
-import 'package:ikaros/utils/url-utils.dart';
+import 'package:ikaros/utils/url_utils.dart';
 import 'package:ikaros/video/vlc_player_with_controls.dart';
 
 class SubjectDetailsPage extends StatefulWidget {

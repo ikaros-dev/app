@@ -8,7 +8,8 @@ import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/SubjectMeta.dart';
 import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
-import 'package:ikaros/utils/url-utils.dart';
+import 'package:ikaros/utils/screen_utils.dart';
+import 'package:ikaros/utils/url_utils.dart';
 
 class SubjectsPage extends StatefulWidget {
   const SubjectsPage({super.key});
@@ -210,8 +211,8 @@ class SubjectListState extends State<SubjectsPage> {
 
   Widget buildSubjectsGridView() {
     return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: ScreenUtils.screenWidthGt600(context)  ? 6 : 3,
         crossAxisSpacing: 2.0,
         mainAxisSpacing: 2.0,
         childAspectRatio: 0.6, // 网格项的宽高比例

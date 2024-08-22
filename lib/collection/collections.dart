@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
-import 'package:getwidget/components/dropdown/gf_dropdown.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
@@ -10,10 +9,10 @@ import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
-import 'package:ikaros/subject/subject-details.dart';
 import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
-import 'package:ikaros/utils/url-utils.dart';
+import 'package:ikaros/utils/screen_utils.dart';
+import 'package:ikaros/utils/url_utils.dart';
 
 class CollectionPage extends StatefulWidget {
   const CollectionPage({super.key});
@@ -200,8 +199,8 @@ class CollectionsState extends State<CollectionPage> {
 
   Widget buildSubjectCollectionsGridView() {
     return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: ScreenUtils.screenWidthGt600(context) ? 6 : 3,
         crossAxisSpacing: 2.0,
         mainAxisSpacing: 2.0,
         childAspectRatio: 0.6, // 网格项的宽高比例
