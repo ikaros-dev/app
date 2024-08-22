@@ -90,9 +90,50 @@ class DesktopLayout extends StatefulWidget {
 }
 
 class _DesktopLayoutState extends State<DesktopLayout> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    const CollectionPage(), const SubjectsPage(), const UserPage(),
+  ];
+
+  void _onMenuItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return const Text("desktop page");
+    return Scaffold(
+      body: Row(
+        children: [
+          // 左边的菜单栏
+          NavigationRail(
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: _onMenuItemTapped,
+            labelType: NavigationRailLabelType.all,
+            destinations: const [
+              NavigationRailDestination(
+                icon: Icon(Icons.collections_sharp),
+                label: Text('收藏'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.tv),
+                label: Text('条目'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.account_circle),
+                label: Text('我的'),
+              ),
+            ],
+          ),
+          // 右边的内容区域
+          Expanded(
+            child: _pages[_selectedIndex],
+          ),
+        ],
+      ),
+    );
   }
 
 }
