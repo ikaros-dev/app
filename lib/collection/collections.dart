@@ -11,6 +11,7 @@ import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/subject/subject-details.dart';
+import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
 import 'package:ikaros/utils/url-utils.dart';
 
@@ -193,10 +194,8 @@ class CollectionsState extends State<CollectionPage> {
     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
     Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => SubjectDetailsPage(
-            apiBaseUrl: _baseUrl,
-            subject: subject,
-            collection: collection)));
+        builder: (context) => SubjectPage(
+            id: subjectId.toString(),)));
   }
 
   Widget buildSubjectCollectionsGridView() {
