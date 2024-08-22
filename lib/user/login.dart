@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:ikaros/home.dart';
+import 'package:ikaros/layout.dart';
 import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 
@@ -177,7 +177,7 @@ class LoginState extends State<LoginView> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const HomePage()))
+                      builder: (context) => const MobileLayout()))
             })
         .onError((error, stackTrace) => {
               Fluttertoast.showToast(

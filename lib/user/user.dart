@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/home.dart';
+import 'package:ikaros/layout.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -74,7 +74,7 @@ class _UserPageState extends State<UserPage> {
     await AuthApi().logout();
     if(mounted) {
       Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const HomePage()));
+          MaterialPageRoute(builder: (context) => const MobileLayout()));
     }
   }
 }

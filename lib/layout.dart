@@ -3,17 +3,17 @@ import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/user/user.dart';
 import 'package:ikaros/collection/collections.dart';
 
-/// 主页面
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+/// 主页面 移动端
+class MobileLayout extends StatefulWidget {
+  const MobileLayout({Key? key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
-    return _HomePageState();
+    return _MobileLayoutState();
   }
 }
 
-class _HomePageState extends State<HomePage> {
+class _MobileLayoutState extends State<MobileLayout> {
   // Page Controller.
   late PageController _pageController;
 
@@ -76,4 +76,23 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+}
+
+// 主页面 PC端
+class DesktopLayout extends StatefulWidget {
+  const DesktopLayout({super.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return _DesktopLayoutState();
+  }
+
+}
+
+class _DesktopLayoutState extends State<DesktopLayout> {
+  @override
+  Widget build(BuildContext context) {
+    return const Text("desktop page");
+  }
+
 }

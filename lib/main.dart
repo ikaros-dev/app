@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ikaros/home.dart';
+import 'package:ikaros/layout.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,10 +11,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    var screenWidth = MediaQuery.of(context).size.width;
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Ikaros',
-      home: HomePage(),
+      home: screenWidth > 600 ?  const DesktopLayout(): const MobileLayout(),
     );
   }
 }
