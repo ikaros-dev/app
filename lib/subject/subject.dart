@@ -343,7 +343,8 @@ class _SubjectState extends State<SubjectPage> {
             ))
         .toList();
     if (tabs.isEmpty) return const TabBar(tabs: []);
-    return TabBar(tabs: tabs, isScrollable: groups.isNotEmpty && groups.length != 1);
+    return TabBar(
+        tabs: tabs, isScrollable: groups.isNotEmpty && groups.length != 1);
   }
 
   List<Episode>? _getEpisodesByGroup(String group) {
@@ -359,22 +360,15 @@ class _SubjectState extends State<SubjectPage> {
               margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
               child: SizedBox(
                 height: 40,
-                child: MaterialButton(
-                  onPressed: () => {
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) => SubjectEpisodePage(
-                              id: ep.id.toString(),
-                            )))
-                  },
-                  shape: const RoundedRectangleBorder(
-                    side: BorderSide(
-                      color: Colors.deepPurple,
-                      width: 1,
-                    ),
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(8),
-                    ),
-                  ),
+                  child: ElevatedButton(
+                  onPressed: (ep.resources == null || ep.resources!.isEmpty)
+                      ? null
+                      : () => {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => SubjectEpisodePage(
+                                      id: ep.id.toString(),
+                                    )))
+                          },
                   child: Text(
                     "${ep.sequence} : ${ep.name}",
                     overflow: TextOverflow.ellipsis,
