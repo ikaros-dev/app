@@ -8,9 +8,9 @@ part of 'EpisodeResource.dart';
 
 EpisodeResource _$EpisodeResourceFromJson(Map<String, dynamic> json) =>
     EpisodeResource(
-      attachmentId: json['attachmentId'] as int,
-      parentAttachmentId: json['parentAttachmentId'] as int,
-      episodeId: json['episodeId'] as int,
+      attachmentId: (json['attachmentId'] as num).toInt(),
+      parentAttachmentId: (json['parentAttachmentId'] as num).toInt(),
+      episodeId: (json['episodeId'] as num).toInt(),
       url: json['url'] as String,
       canRead: json['canRead'] as bool?,
       name: json['name'] as String,

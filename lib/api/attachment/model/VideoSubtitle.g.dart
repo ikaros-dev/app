@@ -8,7 +8,7 @@ part of 'VideoSubtitle.dart';
 
 VideoSubtitle _$VideoSubtitleFromJson(Map<String, dynamic> json) =>
     VideoSubtitle(
-      attachmentId: json['attachment_id'] as int,
+      attachmentId: (json['attachment_id'] as num).toInt(),
       name: json['name'] as String,
       url: json['url'] as String,
     );

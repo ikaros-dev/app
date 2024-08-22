@@ -8,17 +8,17 @@ part of 'EpisodeCollection.dart';
 
 EpisodeCollection _$EpisodeCollectionFromJson(Map<String, dynamic> json) =>
     EpisodeCollection(
-      progress: json['progress'] as int?,
-      id: json['id'] as int,
-      userId: json['user_id'] as int,
-      episodeId: json['episode_id'] as int,
+      progress: (json['progress'] as num?)?.toInt(),
+      id: (json['id'] as num).toInt(),
+      userId: (json['user_id'] as num).toInt(),
+      episodeId: (json['episode_id'] as num).toInt(),
       finish: json['finish'] as bool?,
-      duration: json['duration'] as int?,
-      subjectId: json['subject_id'] as int?,
+      duration: (json['duration'] as num?)?.toInt(),
+      subjectId: (json['subject_id'] as num?)?.toInt(),
       name: json['name'] as String,
       nameCn: json['name_cn'] as String?,
       description: json['description'] as String?,
-      sequence: json['sequence'] as int,
+      sequence: (json['sequence'] as num).toInt(),
       group: $enumDecode(_$EpisodeGroupEnumMap, json['ep_group']),
     );
 
@@ -47,5 +47,13 @@ const _$EpisodeGroupEnumMap = {
   EpisodeGroup.SMALL_THEATER: 'SMALL_THEATER',
   EpisodeGroup.LIVE: 'LIVE',
   EpisodeGroup.COMMERCIAL_MESSAGE: 'COMMERCIAL_MESSAGE',
+  EpisodeGroup.ORIGINAL_SOUND_TRACK: 'ORIGINAL_SOUND_TRACK',
+  EpisodeGroup.ORIGINAL_VIDEO_ANIMATION: 'ORIGINAL_VIDEO_ANIMATION',
+  EpisodeGroup.ORIGINAL_ANIMATION_DISC: 'ORIGINAL_ANIMATION_DISC',
+  EpisodeGroup.MUSIC_DIST1: 'MUSIC_DIST1',
+  EpisodeGroup.MUSIC_DIST2: 'MUSIC_DIST2',
+  EpisodeGroup.MUSIC_DIST3: 'MUSIC_DIST3',
+  EpisodeGroup.MUSIC_DIST4: 'MUSIC_DIST4',
+  EpisodeGroup.MUSIC_DIST5: 'MUSIC_DIST5',
   EpisodeGroup.OTHER: 'OTHER',
 };

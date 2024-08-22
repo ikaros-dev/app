@@ -7,7 +7,7 @@ part of 'SubjectSync.dart';
 // **************************************************************************
 
 SubjectSync _$SubjectSyncFromJson(Map<String, dynamic> json) => SubjectSync(
-      subjectId: json['subjectId'] as int,
+      subjectId: (json['subjectId'] as num).toInt(),
       platform: $enumDecode(_$SubjectSyncPlatformEnumMap, json['platform']),
       platformId: json['platformId'] as String,
     );

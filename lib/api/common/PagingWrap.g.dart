@@ -7,9 +7,9 @@ part of 'PagingWrap.dart';
 // **************************************************************************
 
 PagingWrap _$PagingWrapFromJson(Map<String, dynamic> json) => PagingWrap(
-      page: json['page'] as int,
-      size: json['size'] as int,
-      total: json['total'] as int,
+      page: (json['page'] as num).toInt(),
+      size: (json['size'] as num).toInt(),
+      total: (json['total'] as num).toInt(),
       items: (json['items'] as List<dynamic>)
           .map((e) => e as Map<String, dynamic>)
           .toList(),

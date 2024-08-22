@@ -1,4 +1,4 @@
-import 'package:ikaros/api/collection/enums/EpisodeGroup.dart';
+import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'EpisodeCollection.g.dart';

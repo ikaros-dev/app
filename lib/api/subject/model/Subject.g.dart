@@ -7,7 +7,7 @@ part of 'Subject.dart';
 // **************************************************************************
 
 Subject _$SubjectFromJson(Map<String, dynamic> json) => Subject(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       type: $enumDecode(_$SubjectTypeEnumMap, json['type']),
       name: json['name'] as String,
       nameCn: json['name_cn'] as String?,
@@ -18,7 +18,7 @@ Subject _$SubjectFromJson(Map<String, dynamic> json) => Subject(
       episodes: (json['episodes'] as List<dynamic>?)
           ?.map((e) => Episode.fromJson(e as Map<String, dynamic>))
           .toList(),
-      totalEpisodes: json['total_episodes'] as int?,
+      totalEpisodes: (json['total_episodes'] as num?)?.toInt(),
       syncs: (json['syncs'] as List<dynamic>?)
           ?.map((e) => SubjectSync.fromJson(e as Map<String, dynamic>))
           .toList(),

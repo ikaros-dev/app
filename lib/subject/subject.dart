@@ -6,6 +6,7 @@ import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
+import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
@@ -76,6 +77,7 @@ class _SubjectState extends State<SubjectPage> {
                       _buildSubjectDisplayRow(),
                       _buildEpisodeAndCollectionButtonsRow(),
                       _buildDetailsRow(),
+                      // _buildEpisodesGroupTabsRow(),
                     ],
                   );
                 }
@@ -207,7 +209,7 @@ class _SubjectState extends State<SubjectPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("选集播放"),
+          title: const Text("选集播放"),
           content: _buildEpisodeSelectTabs(),
           actions: <Widget>[
             // TextButton(
@@ -282,7 +284,7 @@ class _SubjectState extends State<SubjectPage> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(
-              width: 350,
+              width: MediaQuery.of(context).size.width,
               child: Text(_subject.summary!),
             )
           ],
@@ -292,9 +294,9 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   Widget _buildEpisodeSelectTabs() {
-    var groups = _getEpisodeGroups();
+    var groups = _getEpisodeGroupEnums();
     var len = 0;
-    if (groups != null) len = groups.length;
+    if (groups.isNotEmpty) len = groups.length;
     if (len == 0) return Container();
     return DefaultTabController(
         length: len,
@@ -309,26 +311,36 @@ class _SubjectState extends State<SubjectPage> {
         ));
   }
 
-  List<String?>? _getEpisodeGroups() {
-    if (_subject.episodes == null) return <String>[];
+  List<EpisodeGroup> _getEpisodeGroupEnums() {
+    var epGroups = <EpisodeGroup>[];
+    if (_subject.episodes == null) return epGroups;
     var groupSet = _subject.episodes?.map((e) => e.group).toSet();
-    var groupList = groupSet?.toList();
-    groupList?.sort((a, b) => a.hashCode.compareTo(b.hashCode));
-    return groupList;
+    if (groupSet == null) return epGroups;
+    for (var group in groupSet) {
+      var findEpGroups = EpisodeGroup.values.where((ep) => ep.name == group);
+      if (findEpGroups.isEmpty) continue;
+      var epGroup = findEpGroups.first;
+      epGroups.add(epGroup);
+    }
+    epGroups.sort((a, b) => Enum.compareByIndex(a, b));
+    return epGroups;
   }
 
   Widget _buildEpisodeSelectTabBar() {
-    var groups = _getEpisodeGroups();
+    var groups = _getEpisodeGroupEnums();
     var tabs = groups
-        ?.map((g) =>
-            Text(key: Key(g.toString()), SubjectConst.episodeGroupCnMap[g]!))
+        .map((g) => Text(
+              key: Key(g.toString()),
+              SubjectConst.episodeGroupCnMap[g.name]!,
+              style: const TextStyle(fontSize: 14),
+            ))
         .map((text) => Tab(
               key: text.key,
               child: text,
             ))
         .toList();
-    if (tabs == null) return const TabBar(tabs: []);
-    return TabBar(tabs: tabs);
+    if (tabs.isEmpty) return const TabBar(tabs: []);
+    return TabBar(tabs: tabs, isScrollable: true);
   }
 
   List<Episode>? _getEpisodesByGroup(String group) {
@@ -391,10 +403,10 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   TabBarView _buildEpisodeSelectTabView() {
-    var groups = _getEpisodeGroups();
+    var groups = _getEpisodeGroupEnums();
     var tabViews =
-        groups?.map((g) => _getEpisodesTabViewByGroup(g.toString())).toList();
-    if (tabViews == null) {
+        groups.map((g) => _getEpisodesTabViewByGroup(g.name)).toList();
+    if (tabViews.isEmpty) {
       return const TabBarView(
         children: [],
       );

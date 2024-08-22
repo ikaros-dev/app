@@ -7,7 +7,7 @@ part of 'SubjectMeta.dart';
 // **************************************************************************
 
 SubjectMeta _$SubjectMetaFromJson(Map<String, dynamic> json) => SubjectMeta(
-      id: json['id'] as int,
+      id: (json['id'] as num).toInt(),
       type: $enumDecode(_$SubjectTypeEnumMap, json['type']),
       name: json['name'] as String,
       nameCn: json['name_cn'] as String?,

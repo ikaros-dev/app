@@ -7,12 +7,12 @@ part of 'Episode.dart';
 // **************************************************************************
 
 Episode _$EpisodeFromJson(Map<String, dynamic> json) => Episode(
-      id: json['id'] as int,
-      subjectId: json['subject_id'] as int,
+      id: (json['id'] as num).toInt(),
+      subjectId: (json['subject_id'] as num).toInt(),
       name: json['name'] as String,
       nameCn: json['name_cn'] as String?,
       description: json['description'] as String?,
-      sequence: json['sequence'] as double,
+      sequence: (json['sequence'] as num).toDouble(),
       group: json['group'] as String?,
       resources: (json['resources'] as List<dynamic>?)
           ?.map((e) => EpisodeResource.fromJson(e as Map<String, dynamic>))

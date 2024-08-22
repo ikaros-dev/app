@@ -8,10 +8,10 @@ part of 'AttachmentRelation.dart';
 
 AttachmentRelation _$AttachmentRelationFromJson(Map<String, dynamic> json) =>
     AttachmentRelation(
-      id: json['id'] as int,
-      attachmentId: json['attachment_id'] as int,
+      id: (json['id'] as num).toInt(),
+      attachmentId: (json['attachment_id'] as num).toInt(),
       type: $enumDecode(_$AttachmentRelationTypeEnumMap, json['type']),
-      relationAttachmentId: json['relation_attachment_id'] as int,
+      relationAttachmentId: (json['relation_attachment_id'] as num).toInt(),
     );
 
 Map<String, dynamic> _$AttachmentRelationToJson(AttachmentRelation instance) =>

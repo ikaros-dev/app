@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
-import 'package:ikaros/api/collection/enums/EpisodeGroup.dart';
+import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 
 import 'model/EpisodeCollection.dart';
 

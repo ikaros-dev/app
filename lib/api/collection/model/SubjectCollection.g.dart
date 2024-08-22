@@ -8,11 +8,11 @@ part of 'SubjectCollection.dart';
 
 SubjectCollection _$SubjectCollectionFromJson(Map<String, dynamic> json) =>
     SubjectCollection(
-      id: json['id'] as int,
-      userId: json['user_id'] as int,
-      subjectId: json['subject_id'] as int,
+      id: (json['id'] as num).toInt(),
+      userId: (json['user_id'] as num).toInt(),
+      subjectId: (json['subject_id'] as num).toInt(),
       type: $enumDecode(_$CollectionTypeEnumMap, json['type']),
-      mainEpisodeProgress: json['main_ep_progress'] as int?,
+      mainEpisodeProgress: (json['main_ep_progress'] as num?)?.toInt(),
       isPrivate: json['is_private'] as bool,
       subjectType:
           $enumDecodeNullable(_$SubjectTypeEnumMap, json['subject_type']),

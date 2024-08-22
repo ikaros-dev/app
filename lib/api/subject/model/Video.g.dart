@@ -7,8 +7,8 @@ part of 'Video.dart';
 // **************************************************************************
 
 Video _$VideoFromJson(Map<String, dynamic> json) => Video(
-      episodeId: json['episode_id'] as int,
-      subjectId: json['subject_id'] as int,
+      episodeId: (json['episode_id'] as num).toInt(),
+      subjectId: (json['subject_id'] as num).toInt(),
       url: json['url'] as String,
       title: json['title'] as String?,
       subhead: json['subhead'] as String?,
