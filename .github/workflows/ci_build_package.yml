@@ -22,7 +22,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.10.5'
+          flutter-version: '3.24.1'
           channel: 'stable'
 
       - name: Restore packages
@@ -57,7 +57,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.10.5'
+          flutter-version: '3.24.1'
           channel: 'stable'
 
       - name: Restore packages
