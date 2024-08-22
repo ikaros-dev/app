@@ -211,7 +211,7 @@ class _SubjectState extends State<SubjectPage> {
         return AlertDialog(
           title: const Text("选集播放"),
           content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.6,
+            width: MediaQuery.of(context).size.width * 0.8,
             child: _buildEpisodeSelectTabs(),
           ),
           actions: <Widget>[
@@ -232,43 +232,39 @@ class _SubjectState extends State<SubjectPage> {
     );
   }
 
+  bool _episodesHasResource() {
+    bool hasRes = false;
+    if (_subject.episodes == null) return hasRes;
+    for (var ep in _subject.episodes!) {
+      if (ep.resources != null && ep.resources!.isNotEmpty) {
+        hasRes = true;
+        break;
+      }
+    }
+    return hasRes;
+  }
+
   Row _buildEpisodeAndCollectionButtonsRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        MaterialButton(
-          onPressed: () async {
-            bool? cancel = await showEpisodesDialog();
-            // ignore: unnecessary_null_comparison
-            if (cancel == null) {
-              print("返回");
-            } else {
-              print("确认");
-            }
-          },
-          shape: const RoundedRectangleBorder(
-            side: BorderSide(
-              color: Colors.deepPurple,
-              width: 1,
-            ),
-            borderRadius: BorderRadius.all(
-              Radius.circular(8),
-            ),
-          ),
+        ElevatedButton(
+          onPressed: _episodesHasResource()
+              ? () async {
+                  bool? cancel = await showEpisodesDialog();
+                  // ignore: unnecessary_null_comparison
+                  if (cancel == null) {
+                    print("返回");
+                  } else {
+                    print("确认");
+                  }
+                }
+              : null,
           child: const Text("选集"),
         ),
         const SizedBox(width: 2),
-        const MaterialButton(
+        const ElevatedButton(
           onPressed: null,
-          shape: RoundedRectangleBorder(
-            side: BorderSide(
-              color: Colors.deepPurple,
-              width: 1,
-            ),
-            borderRadius: BorderRadius.all(
-              Radius.circular(8),
-            ),
-          ),
           child: Text("收藏"),
         )
       ],
@@ -360,7 +356,7 @@ class _SubjectState extends State<SubjectPage> {
               margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
               child: SizedBox(
                 height: 40,
-                  child: ElevatedButton(
+                child: ElevatedButton(
                   onPressed: (ep.resources == null || ep.resources!.isEmpty)
                       ? null
                       : () => {
