@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
-import 'package:ikaros/api/collection/model/SubjectCollection.dart';
-import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
-import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/SubjectMeta.dart';
-import 'package:ikaros/subject/subject-details.dart';
+import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
 import 'package:ikaros/utils/url-utils.dart';
 
@@ -61,8 +58,8 @@ class SubjectListState extends State<SubjectsPage> {
     //     fontSize: 16.0);
 
     print("load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
-    PagingWrap pagingWrap = await SubjectApi()
-        .listSubjectsByCondition(1, _size, '', _keyword, _nsfw, SubjectType.ANIME);
+    PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
+        1, _size, '', _keyword, _nsfw, SubjectType.ANIME);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
@@ -202,17 +199,14 @@ class SubjectListState extends State<SubjectsPage> {
       return;
     }
 
-    Subject subject = await SubjectApi().findById(subjectId);
-    SubjectCollection collection =
-        await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
+    // Subject subject = await SubjectApi().findById(subjectId);
+    // SubjectCollection collection =
+    //     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
     Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => SubjectDetailsPage(
-            apiBaseUrl: _baseUrl,
-            subject: subject,
-            collection: collection)));
+        builder: (context) => SubjectPage(
+            id: subjectId.toString(),)));
   }
-
 
   Widget buildSubjectsGridView() {
     return GridView.builder(
@@ -241,11 +235,11 @@ class SubjectListState extends State<SubjectsPage> {
             ),
             Text(
               ((subjectList[index].nameCn == null ||
-                  subjectList[index].nameCn == '')
+                      subjectList[index].nameCn == '')
                   ? subjectList[index].name
                   : subjectList[index].nameCn)!,
-              style: const TextStyle(
-                  fontSize: 14.0, fontWeight: FontWeight.bold),
+              style:
+                  const TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
             ),

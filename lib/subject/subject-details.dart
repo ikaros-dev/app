@@ -22,9 +22,9 @@ class SubjectDetailsPage extends StatefulWidget {
 
   const SubjectDetailsPage(
       {super.key,
-      required this.apiBaseUrl,
-      required this.subject,
-      required this.collection});
+        required this.apiBaseUrl,
+        required this.subject,
+        required this.collection});
 
   @override
   State<StatefulWidget> createState() {
@@ -138,7 +138,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     print(
         "[episode] sequence: ${episode.sequence}, nameCn: ${episode.nameCn}, name: ${episode.name}");
     _videoTitle =
-        "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}";
+    "${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}";
     print("episode video title: $_videoTitle");
     EpisodeResource episodeResource = episode.resources![0];
     _episodeTitle = episodeResource.name;
@@ -233,10 +233,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
               height: isFullScreen ? MediaQuery.of(context).size.height : 200,
               child: VlcPlayerWithControls(
                 key: _childKey,
-                episodeId: _currentEpisodeId,
-                videoUrl: _videoUrl,
                 updateIsFullScreen: (val) => _updateIsFullScreen(val),
-                subtitleUrls: _videoSubtitleUrls,
                 onPlayerInitialized: _onPlayerInitialized,
               ),
               // child: FutureBuilder(
@@ -278,31 +275,31 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                   itemHeight: 50,
                   children: widget.subject.episodes!
                       .where((element) =>
-                          element.group == null || element.group == 'MAIN')
+                  element.group == null || element.group == 'MAIN')
                       .map(
                         (episode) => Container(
-                            height: 50,
-                            margin: const EdgeInsets.all(5.0),
-                            child: GFButton(
-                              color: episode.id == _currentEpisodeId
-                                  ? Colors.lightBlueAccent
-                                  : Colors.blueAccent,
-                              disabledColor: Colors.grey,
-                              onPressed: episode.resources!.isEmpty
-                                  ? null
-                                  : () async {
-                                      if (episode.resources!.isNotEmpty) {
-                                        setState(() {
-                                          _loadEpisode(episode);
-                                        });
-                                      }
-                                    },
-                              // text: episode == null ? "空" :
-                              //     '${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}',
-                              text:
-                                  '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
-                            )),
-                      )
+                        height: 50,
+                        margin: const EdgeInsets.all(5.0),
+                        child: GFButton(
+                          color: episode.id == _currentEpisodeId
+                              ? Colors.lightBlueAccent
+                              : Colors.blueAccent,
+                          disabledColor: Colors.grey,
+                          onPressed: episode.resources!.isEmpty
+                              ? null
+                              : () async {
+                            if (episode.resources!.isNotEmpty) {
+                              setState(() {
+                                _loadEpisode(episode);
+                              });
+                            }
+                          },
+                          // text: episode == null ? "空" :
+                          //     '${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}',
+                          text:
+                          '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
+                        )),
+                  )
                       .toList()),
             ),
             Visibility(
@@ -322,35 +319,35 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                   itemHeight: 50,
                   children: widget.subject.episodes!
                       .where((element) =>
-                          element.group != null && element.group != 'MAIN')
+                  element.group != null && element.group != 'MAIN')
                       .map(
                         (episode) => Container(
-                            height: 50,
-                            margin: const EdgeInsets.all(5.0),
-                            child: GFButton(
-                              color: episode.id == _currentEpisodeId
-                                  ? Colors.lightBlueAccent
-                                  : Colors.blueAccent,
-                              disabledColor: Colors.grey,
-                              onPressed: episode.resources!.isEmpty
-                                  ? null
-                                  : () async {
-                                      if (episode.resources!.isNotEmpty) {
-                                        // await player.setDataSource(
-                                        //     _baseUrl +
-                                        //         episode.resources!.first.url,
-                                        //     autoPlay: false);
-                                        setState(() {
-                                          _loadEpisode(episode);
-                                        });
-                                      }
-                                    },
-                              // text: episode == null ? "空" :
-                              //     '${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}',
-                              text:
-                                  '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
-                            )),
-                      )
+                        height: 50,
+                        margin: const EdgeInsets.all(5.0),
+                        child: GFButton(
+                          color: episode.id == _currentEpisodeId
+                              ? Colors.lightBlueAccent
+                              : Colors.blueAccent,
+                          disabledColor: Colors.grey,
+                          onPressed: episode.resources!.isEmpty
+                              ? null
+                              : () async {
+                            if (episode.resources!.isNotEmpty) {
+                              // await player.setDataSource(
+                              //     _baseUrl +
+                              //         episode.resources!.first.url,
+                              //     autoPlay: false);
+                              setState(() {
+                                _loadEpisode(episode);
+                              });
+                            }
+                          },
+                          // text: episode == null ? "空" :
+                          //     '${episode.sequence}: ${(episode.nameCn != null || episode.nameCn != '') ? episode.nameCn! : episode.name}',
+                          text:
+                          '${episode.sequence}: ${(episode.nameCn != null && episode.nameCn != '') ? episode.nameCn! : episode.name}',
+                        )),
+                  )
                       .toList()),
             ),
             Visibility(
@@ -432,9 +429,9 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
                           SizedBox(
                             width: 350,
                             child: Text(
-                              widget.subject.summary!
+                                widget.subject.summary!
                             ),
-                            )
+                          )
                         ],
                       ),
                     ],
@@ -478,37 +475,37 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
         GFButton(
           onPressed: (_subjectCollection.id != -1)
               ? () async {
-                  // 取消收藏
-                  await SubjectCollectionApi()
-                      .removeCollection(widget.subject.id);
-                  Fluttertoast.showToast(
-                      msg: "取消收藏成功",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.CENTER,
-                      timeInSecForIosWeb: 1,
-                      backgroundColor: Colors.blue,
-                      textColor: Colors.white,
-                      fontSize: 16.0);
-                  if (mounted) {
-                    setState(() {
-                      _loadSubjectCollection();
-                    });
-                  }
-                }
+            // 取消收藏
+            await SubjectCollectionApi()
+                .removeCollection(widget.subject.id);
+            Fluttertoast.showToast(
+                msg: "取消收藏成功",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.blue,
+                textColor: Colors.white,
+                fontSize: 16.0);
+            if (mounted) {
+              setState(() {
+                _loadSubjectCollection();
+              });
+            }
+          }
               : () async {
-                  await _updateSubjectCollection();
-                  Fluttertoast.showToast(
-                      msg: "收藏成功",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.CENTER,
-                      timeInSecForIosWeb: 1,
-                      backgroundColor: Colors.blue,
-                      textColor: Colors.white,
-                      fontSize: 16.0);
-                  setState(() {
-                    _loadSubjectCollection();
-                  });
-                },
+            await _updateSubjectCollection();
+            Fluttertoast.showToast(
+                msg: "收藏成功",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.blue,
+                textColor: Colors.white,
+                fontSize: 16.0);
+            setState(() {
+              _loadSubjectCollection();
+            });
+          },
           text: (_subjectCollection.id != -1) ? '取消收藏' : '收藏',
           textColor: Colors.black,
           // disabledColor: Colors.grey,
@@ -523,13 +520,13 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
           value: _collectionType,
           onChanged: (_subjectCollection.id != -1)
               ? (newValue) async {
-                  if (mounted) {
-                    setState(() {
-                      _collectionType = (newValue as CollectionType?)!;
-                    });
-                  }
-                  await _updateSubjectCollection();
-                }
+            if (mounted) {
+              setState(() {
+                _collectionType = (newValue as CollectionType?)!;
+              });
+            }
+            await _updateSubjectCollection();
+          }
               : null,
           items: [
             CollectionType.WISH,
@@ -539,9 +536,9 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
             CollectionType.DISCARD,
           ]
               .map((value) => DropdownMenuItem(
-                    value: value,
-                    child: Text(CollectionConst.typeCnMap[value.name]!),
-                  ))
+            value: value,
+            child: Text(CollectionConst.typeCnMap[value.name]!),
+          ))
               .toList(),
         ),
       ],

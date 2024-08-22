@@ -9,18 +9,10 @@ typedef OnStopRecordingCallback = void Function(String);
 
 class VlcPlayerWithControls extends StatefulWidget {
   final updateIsFullScreen;
-  final int episodeId;
-  final String videoUrl;
-  final List<String>? subtitleUrls;
   final Function? onPlayerInitialized;
 
   const VlcPlayerWithControls(
-      {super.key,
-      this.updateIsFullScreen,
-      required this.episodeId,
-      required this.videoUrl,
-      this.subtitleUrls,
-      this.onPlayerInitialized});
+      {super.key, this.updateIsFullScreen, this.onPlayerInitialized});
 
   @override
   VlcPlayerWithControlsState createState() => VlcPlayerWithControlsState();
@@ -68,11 +60,11 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   bool _subtitleIsLoaded = false;
   bool _showControl = false;
 
-  late String _videoUrl;
-  List<String>? _subtitleUrls;
+  late String _videoUrl = "http";
+  List<String>? _subtitleUrls = [];
   String _videoTitle = "";
   String _videoSubhead = "";
-  late int _episodeId;
+  late int _episodeId = 0;
 
   late Future _showControlFuture;
   bool _showControlFutureInit = false;
@@ -83,9 +75,10 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   @override
   void initState() {
     super.initState();
-    _episodeId = widget.episodeId;
-    _videoUrl = widget.videoUrl;
-    _subtitleUrls = widget.subtitleUrls;
+    // _episodeId = widget.episodeId;
+    // _videoUrl = widget.videoUrl;
+    // _subtitleUrls = widget.subtitleUrls;
+    // _videoTitle = widget.videoTitle!;
     _controller = VlcPlayerController.network(
       _videoUrl,
       hwAcc: HwAcc.full,
