@@ -132,8 +132,8 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
       VlcPlayerWithControls(
         key: _childKey,
         updateIsFullScreen: (val) => _updateIsFullScreen(val),
-        videoUrl: _videoUrl, videoTitle: _videoTitle, episodeId: _currentEpisodeId,
-        subtitleUrls: _videoSubtitleUrls,
+        videoTitle: _videoTitle, episodeId: _currentEpisodeId,
+        subtitleUrls: _videoSubtitleUrls, videoUrl: '',
       ),
     );
   }
