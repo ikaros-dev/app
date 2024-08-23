@@ -193,14 +193,14 @@ packages:
   dart_vlc:
     dependency: "direct main"
     description:
-      path: "dependencies/dart_vlc"
+      path: "../../chivehao/dart_vlc"
       relative: true
     source: path
     version: "0.5.0"
   dart_vlc_ffi:
     dependency: transitive
     description:
-      path: "dependencies/dart_vlc/ffi"
+      path: "../../chivehao/dart_vlc/ffi"
       relative: true
     source: path
     version: "0.3.0"

@@ -166,6 +166,11 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
         DartVlc.Media.network(_videoUrl),
         autoStart: true, // default
       );
+      if (_videoSubtitleUrls.isNotEmpty) {
+        for (var subtitle in _videoSubtitleUrls) {
+          _dartVlcPlayer.addSlave(DartVlc.MediaSlaveType.subtitle, subtitle, true);
+        }
+      }
       return;
     }
     try {
