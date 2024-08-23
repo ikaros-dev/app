@@ -22,11 +22,15 @@ ikaros app by flutter
 flutter packages pub run build_runner build
 ```
 
-## Screenshot
-![](https://alist.ikaros.run/d/share/local/ikaros-dev/app/screenshot/Screenshot_20240822_165352.png?sign=77RntvTkPEd9j5aIZrwjefOQF4deOTQC_sS5qidtsW4=:0)
-![](https://alist.ikaros.run/d/share/local/ikaros-dev/app/screenshot/Screenshot_20240822_165216.png?sign=11h_ljzcU3ZEKv8FmN3dhnDjXn3QpOr7EmpqT936QhQ=:0)
-![](https://alist.ikaros.run/d/share/local/ikaros-dev/app/screenshot/Screenshot_20240822_170209.png?sign=GRa4gqbLPqwTn36fhCwcyhhakupI1LoV2TaXNhwxCrA=:0)
-![](https://alist.ikaros.run/d/share/local/ikaros-dev/app/screenshot/Screenshot_20240822_165300.png?sign=k5GwpLH3-0OShcqu7RpPKyPZ15D_QcSll8dDbs6gQGs=:0)
-![](https://alist.ikaros.run/d/share/local/ikaros-dev/app/screenshot/Screenshot_20240822_165317.png?sign=0KPsuctc-cnJ1FIX9nixtq2xvzO8oHUh43tmJWtmpAw=:0)
-![](https://alist.ikaros.run/d/share/local/ikaros-dev/app/screenshot/Screenshot_20240822_165423.png?sign=4oB4RN0QD2hxygcaa6_c4H_wdrhLee7jhUDx63wtip4=:0)
+## Version
+APP的版本规定
+
+服务端版本.主版本.子版本
+
+app的服务端版本只取服务端版本的主版本和子版本，忽略第三级别的Bug版本，
+
+比如当前APP适配的服务端是 0.15.5, 那么服务端版本就是15，此时APP的版本就是 15.3.0
+
+如果服务端版本是1.0.0，此时服务端的子版本最大曾是两位数，则，app的服务端版本是 1 * 100 + 0 = 100
+，此时APP的版本就是 100.3.0
 
