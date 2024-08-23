@@ -98,11 +98,14 @@ jobs:
       - name: Build Android App Bundle
         run: flutter build windows --release
 
+      - name: Zip release files
+        run: Compress-Archive -Path "build\\windows\\x64\\runner\\Release\\*" -DestinationPath "output.zip"
+
       - name: Publish Windows Artefacts
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
-          file: build/windows/x64/runner/Release/app.exe
-          asset_name: ikaros-${{  github.ref_name }}.exe
+          file: output.zip
+          asset_name: ikaros-${{  github.ref_name }}.zip
 
 
