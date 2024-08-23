@@ -167,9 +167,11 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
         autoStart: true, // default
       );
       if (_videoSubtitleUrls.isNotEmpty) {
-        for (var subtitle in _videoSubtitleUrls) {
-          _dartVlcPlayer.addSlave(DartVlc.MediaSlaveType.subtitle, subtitle, true);
-        }
+        setState(() {
+          for (var subtitle in _videoSubtitleUrls) {
+            _dartVlcPlayer.addSlave(DartVlc.MediaSlaveType.subtitle, subtitle, true);
+          }
+        });
       }
       return;
     }
