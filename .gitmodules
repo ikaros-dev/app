@@ -1,0 +1,3 @@
+[submodule "dependencies/dart_vlc"]
+	path = dependencies/dart_vlc
+	url = https://github.com/chivehao/dart_vlc.git

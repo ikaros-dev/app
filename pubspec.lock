@@ -193,20 +193,17 @@ packages:
   dart_vlc:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "14c71da2da31bfddf805e13db356e0c3ea283c5f"
-      url: "https://github.com/chivehao/dart_vlc.git"
-    source: git
-    version: "0.4.0"
+      path: "dependencies/dart_vlc"
+      relative: true
+    source: path
+    version: "0.5.0"
   dart_vlc_ffi:
     dependency: transitive
     description:
-      name: dart_vlc_ffi
-      sha256: "670d4b27296935e4e4b8d903d6833c222fc94133bbd3e9fa36d8a2e7751a63d0"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.0+1"
+      path: "dependencies/dart_vlc/ffi"
+      relative: true
+    source: path
+    version: "0.3.0"
   dio:
     dependency: "direct main"
     description:
