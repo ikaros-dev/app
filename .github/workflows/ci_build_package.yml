@@ -118,44 +118,44 @@ jobs:
           asset_name: ikaros-windows-${{  github.ref_name }}.zip
 
 
-  build_linux:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v2
-
-      - name: Git submodule init
-        uses: snickerbockers/submodules-init@v4
-
-      - name: Setup Java to compile Android project
-        uses: actions/setup-java@v1
-        with:
-          java-version: '17.x'
-
-      - name: Install and set Flutter version
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.1'
-          channel: 'stable'
-
-      - name: Restore packages
-        run: flutter pub get
-
-      - name: Enable linux desktop
-        run: flutter config --enable-linux-desktop
-
-      - name: Build Android App Bundle
-        run: flutter build linux --release
-
-      - name: Tar release files
-        run: tar -czvf output.tar.gz build/linux/x64/release/bundle
-
-      - name: Publish Windows Artefacts
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
-          file: output.tar.gz
-          asset_name: ikaros-linux-${{  github.ref_name }}.tar.gz
+#  build_linux:
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout the code
+#        uses: actions/checkout@v2
+#
+#      - name: Git submodule init
+#        uses: snickerbockers/submodules-init@v4
+#
+#      - name: Setup Java to compile Android project
+#        uses: actions/setup-java@v1
+#        with:
+#          java-version: '17.x'
+#
+#      - name: Install and set Flutter version
+#        uses: subosito/flutter-action@v2
+#        with:
+#          flutter-version: '3.24.1'
+#          channel: 'stable'
+#
+#      - name: Restore packages
+#        run: flutter pub get
+#
+#      - name: Enable linux desktop
+#        run: flutter config --enable-linux-desktop
+#
+#      - name: Build Android App Bundle
+#        run: flutter build linux --release
+#
+#      - name: Tar release files
+#        run: tar -czvf output.tar.gz build/linux/x64/release/bundle
+#
+#      - name: Publish Windows Artefacts
+#        uses: svenstaro/upload-release-action@v2
+#        with:
+#          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
+#          file: output.tar.gz
+#          asset_name: ikaros-linux-${{  github.ref_name }}.tar.gz
 
 
