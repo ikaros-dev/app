@@ -74,3 +74,35 @@ jobs:
           asset_name: ikaros-${{  github.ref_name }}.apk
 
 
+  build_windows:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Setup Java to compile Android project
+        uses: actions/setup-java@v1
+        with:
+          java-version: '17.x'
+
+      - name: Install and set Flutter version
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.1'
+          channel: 'stable'
+
+      - name: Restore packages
+        run: flutter pub get
+
+      - name: Build Android App Bundle
+        run: flutter build windows --release
+
+      - name: Publish Windows Artefacts
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
+          file: build/windows/x64/runner/Release/app.exe
+          asset_name: ikaros-${{  github.ref_name }}.exe
+
+

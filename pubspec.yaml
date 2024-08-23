@@ -52,6 +52,10 @@ dependencies:
       url: https://github.com/chivehao/dart_vlc.git
   audio_video_progress_bar: ^2.0.3
 
+#dependency_overrides:
+#  dart_vlc:
+#    path: ../../chivehao/dart_vlc
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
