@@ -126,6 +126,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
         DartVlc.Video(
           player: _dartVlcPlayer,
           showControls: true,
+          onFullScreenChange: _onFullScreenChange,
         )
       :
       VlcPlayerWithControls(
@@ -137,8 +138,16 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     );
   }
 
+  _onFullScreenChange(){
+    setState(() {
+      _isFullScreen = !_isFullScreen;
+    });
+  }
+
   _updateIsFullScreen(bool val) {
-    _isFullScreen = val;
+    setState(() {
+      _isFullScreen = val;
+    });
   }
 
   Future callChildMethod2ChangePlayerDatasource() async {
