@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:getwidget/getwidget.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
+import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
@@ -35,13 +37,24 @@ class _SubjectState extends State<SubjectPage> {
   late Subject _subject;
   late SubjectCollection? _subjectCollection;
   late CollectionType _collectionType;
-  bool _subjectCollectButtonLoading = false;
 
   var _loadSubjectWithIdFuture;
   var _loadApiBaseUrlFuture;
 
+  List<EpisodeCollection> _episodeCollections = List.empty();
+
   Future<Subject> _loadSubjectWithId() async {
-    return SubjectApi().findById(int.parse(widget.id.toString()));
+    _subject = await SubjectApi().findById(int.parse(widget.id.toString()));
+    _episodeCollections = await EpisodeCollectionApi().findListBySubjectId(int.parse(widget.id.toString()));
+    return _subject;
+  }
+
+  bool _episodeIsFinish(int episodeId)  {
+    if (_episodeCollections.isEmpty) {
+      return false;
+    }
+    EpisodeCollection epColl = _episodeCollections.where((ep)=>ep.episodeId == episodeId).first;
+    return epColl.finish ?? false;
   }
 
   Future<AuthParams> _loadBaseUrl() async {
@@ -75,7 +88,7 @@ class _SubjectState extends State<SubjectPage> {
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               if (snapshot.connectionState == ConnectionState.done) {
                 if (snapshot.hasError) {
-                  return Text("Load video error: ${snapshot.error}");
+                  return Text("Load subject error: ${snapshot.error}");
                 } else {
                   _subject = snapshot.data;
 
@@ -406,7 +419,8 @@ class _SubjectState extends State<SubjectPage> {
               margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
               child: SizedBox(
                 height: 40,
-                child: ElevatedButton(
+                child: GFButton(
+                  color: _episodeIsFinish(ep.id) ? Colors.green : Colors.lightBlueAccent,
                   onPressed: (ep.resources == null || ep.resources!.isEmpty)
                       ? null
                       : () => {

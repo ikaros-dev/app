@@ -32,14 +32,13 @@ class EpisodeCollection {
   @JsonKey(name: "name_cn")
   final String? nameCn;
   final String? description;
-  final int sequence;
   @JsonKey(name: "ep_group")
   final EpisodeGroup group;
 
   EpisodeCollection({this.progress, required this.id, required this.userId,
     required this.episodeId, this.finish, this.duration, this.subjectId,
     required this.name, this.nameCn, this.description,
-    required this.sequence, required this.group});
+    required this.group});
 
 
   factory EpisodeCollection.fromJson(Map<String, dynamic> json) => _$EpisodeCollectionFromJson(json);

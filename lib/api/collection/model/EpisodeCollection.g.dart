@@ -18,7 +18,6 @@ EpisodeCollection _$EpisodeCollectionFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       nameCn: json['name_cn'] as String?,
       description: json['description'] as String?,
-      sequence: (json['sequence'] as num).toInt(),
       group: $enumDecode(_$EpisodeGroupEnumMap, json['ep_group']),
     );
 
@@ -34,7 +33,6 @@ Map<String, dynamic> _$EpisodeCollectionToJson(EpisodeCollection instance) =>
       'name': instance.name,
       'name_cn': instance.nameCn,
       'description': instance.description,
-      'sequence': instance.sequence,
       'ep_group': _$EpisodeGroupEnumMap[instance.group]!,
     };
 

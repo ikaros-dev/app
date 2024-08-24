@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
@@ -11,7 +13,6 @@ class EpisodeCollectionApi {
       userId: -1,
       episodeId: -1,
       name: '',
-      sequence: -1,
       group: EpisodeGroup.MAIN);
 
   Future<EpisodeCollection> findCollection(int episodeId) async {
@@ -41,6 +42,42 @@ class EpisodeCollectionApi {
       print(e);
       return error;
     }
+  }
+
+  Future<List<EpisodeCollection>> findListBySubjectId(int subjectId) async {
+    List<EpisodeCollection> result = [];
+    AuthParams authParams = await AuthApi().getAuthParams();
+    if (authParams.baseUrl == '' ||
+        authParams.username == '' ||
+        authParams.basicAuth == '') {
+      return result;
+    }
+    String baseUrl = authParams.baseUrl;
+    String basicAuth = authParams.basicAuth;
+    String apiUrl =
+        "$baseUrl/api/v1alpha1/collection/episodes/subjectId/$subjectId";
+
+    try {
+      BaseOptions options = BaseOptions();
+      options.headers.putIfAbsent("Authorization", () => basicAuth);
+
+      var response = await Dio(options).get(apiUrl);
+      // print("response status code: ${response.statusCode}");
+      if (response.statusCode != 200) {
+        return result;
+      }
+
+      var listDynamic = jsonDecode(jsonEncode(response.data));
+      List<Map<String, dynamic>> listMap = List<Map<String, dynamic>>.from(listDynamic);
+      for (var m in listMap) {
+        result.add(EpisodeCollection.fromJson(m));
+      }
+    } catch (e) {
+      print(e);
+      return result;
+    }
+
+    return result;
   }
 
   Future updateCollection(
