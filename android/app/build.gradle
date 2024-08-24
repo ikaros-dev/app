@@ -30,11 +30,19 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        release {
+            keyAlias 'run_ikaros_app'
+            keyPassword 'ikaros.run'
+            storeFile file('run_ikaros_app_keystore.jks')
+            storePassword 'ikaros.run'
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig = signingConfigs.release
             minifyEnabled true
             // useProguard true
             proguardFiles getDefaultProguardFile(

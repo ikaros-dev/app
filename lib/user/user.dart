@@ -4,14 +4,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:getwidget/components/accordion/gf_accordion.dart';
-import 'package:getwidget/components/alert/gf_alert.dart';
 import 'package:getwidget/components/button/gf_button.dart';
 import 'package:getwidget/components/toast/gf_toast.dart';
-import 'package:getwidget/components/typography/gf_typography.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/layout.dart';
 import 'package:ikaros/main.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -75,19 +70,22 @@ class _UserPageState extends State<UserPage> {
       body: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          FutureBuilder(future: _fetchAppVersion(), builder: (context, snapshot){
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError) {
-                return Text("Load app version error: ${snapshot.error}");
-              } else {
-                return Text("当前版本：$_appVersion");
-              }
-            } else {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            };
-          }),
+          FutureBuilder(
+              future: _fetchAppVersion(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (snapshot.hasError) {
+                    return Text("Load app version error: ${snapshot.error}");
+                  } else {
+                    return Text("当前版本：$_appVersion");
+                  }
+                } else {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                ;
+              }),
         ],
       ),
     );
@@ -155,12 +153,13 @@ class _UserPageState extends State<UserPage> {
     return '';
   }
 
-  void _checkAppUpdate() async{
-    final response = await Dio().get<String>("https://api.github.com/repos/ikaros-dev/app/releases/latest");
+  void _checkAppUpdate() async {
+    final response = await Dio().get<String>(
+        "https://api.github.com/repos/ikaros-dev/app/releases/latest");
     if (response.statusCode == 200) {
       final data = json.decode(response.data ?? "{}");
       String latestVersion = data['tag_name'];
-      String downloadUrl  = _getDownloadUrl(data['assets']);
+      String downloadUrl = _getDownloadUrl(data['assets']);
       if ('v$_appVersion' == latestVersion) {
         GFToast.showToast("当前已经是最新版本:$_appVersion", context);
         return;
@@ -170,7 +169,8 @@ class _UserPageState extends State<UserPage> {
         return;
       }
       // 更新确认框
-      bool? cancel = await showDialog<bool>(context: context,
+      bool? cancel = await showDialog<bool>(
+          context: context,
           builder: (context) {
             return AlertDialog(
               title: const Text("更新确认"),
@@ -200,7 +200,8 @@ class _UserPageState extends State<UserPage> {
       GFToast.showToast("将要执行更新逻辑, 请耐心等待！完成后会自动重启应用！", context);
       _downloadUpdate(downloadUrl);
     } else {
-      GFToast.showToast("获取GitHub的Release信息失败，请检查网络是否可以直连api.github.com.", context);
+      GFToast.showToast(
+          "获取GitHub的Release信息失败，请检查网络是否可以直连api.github.com.", context);
     }
   }
 
@@ -211,7 +212,8 @@ class _UserPageState extends State<UserPage> {
     String fileName = downloadUrl.substring(index + 1, downloadUrl.length);
 
     final directory = await getApplicationCacheDirectory();
-    final String filePath = directory.path + (Platform.isWindows ? "\\" : "/") + fileName;
+    final String filePath =
+        directory.path + (Platform.isWindows ? "\\" : "/") + fileName;
 
     File tmpUpdateFile = File(filePath);
     if (!tmpUpdateFile.existsSync()) {
@@ -221,7 +223,8 @@ class _UserPageState extends State<UserPage> {
     // 安卓直接打开apk文件即可跳转安装逻辑
     if (Platform.isAndroid) {
       if (await Permission.requestInstallPackages.request().isGranted) {
-        final OpenResult result = await OpenFile.open(filePath, type: 'application/vnd.android.package-archive');
+        final OpenResult result = await OpenFile.open(filePath,
+            type: 'application/vnd.android.package-archive');
         if (result.type != ResultType.done) {
           GFToast.showToast("错误：${result.message}", context);
         }
@@ -230,7 +233,6 @@ class _UserPageState extends State<UserPage> {
         print('Install packages permission denied');
         openAppSettings();
       }
-
     }
     // windows需要起一个powershell，然后退出应用，让powershell执行解压命令覆盖指定目录，最后再启动目录
     if (Platform.isWindows) {
@@ -242,7 +244,7 @@ class _UserPageState extends State<UserPage> {
     if (kDebugMode) {
       GFToast.showToast("操作取消，Windows的DEBUG模式不支持更新", context);
       print("操作取消，Windows的DEBUG模式不支持更新");
-      return;
+      // return;
     }
     // 需要更新的应用程序路径
     final appPath = Platform.resolvedExecutable;
@@ -252,7 +254,8 @@ class _UserPageState extends State<UserPage> {
     Directory parentDirectory = appFile.parent;
     String parentPath = parentDirectory.absolute.path;
 
-    String scriptPath = parentPath + r'\data\flutter_assets\assets\scripts\windows_update.ps1';
+    String scriptPath =
+        parentPath + r'\data\flutter_assets\assets\scripts\windows_update.ps1';
 
     // ZIP 文件路径
     String zipFilePath = zipPath;
@@ -269,5 +272,4 @@ class _UserPageState extends State<UserPage> {
     // 退出 Flutter 应用
     exit(0);
   }
-
 }
