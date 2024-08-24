@@ -52,14 +52,14 @@ class CollectionsState extends State<CollectionPage> {
     }
 
     print("load data for page=1 size=$_size type=$_type");
-    PagingWrap pagingWrap =
+    PagingWrap? pagingWrap =
         await SubjectCollectionApi().fetchSubjectCollections(1, _size, _type);
-    _page = pagingWrap.page;
-    _size = pagingWrap.size;
-    _total = pagingWrap.total;
+    _page = pagingWrap?.page ?? 0;
+    _size = pagingWrap?.size ?? 0;
+    _total = pagingWrap?.total ?? 0;
     if (mounted) {
       setState(() {
-        subjectCollections = _convertItems(pagingWrap.items);
+        subjectCollections = _convertItems(pagingWrap?.items ?? List.empty());
         _page = 2;
       });
     }
@@ -82,14 +82,14 @@ class CollectionsState extends State<CollectionPage> {
       return;
     }
     print("load data for page=1 size=$_size type=$_type");
-    PagingWrap pagingWrap = await SubjectCollectionApi()
+    PagingWrap? pagingWrap = await SubjectCollectionApi()
         .fetchSubjectCollections(_page, _size, _type);
-    _page = pagingWrap.page;
-    _size = pagingWrap.size;
-    _total = pagingWrap.total;
+    _page = pagingWrap?.page ?? 0;
+    _size = pagingWrap?.size ?? 0;
+    _total = pagingWrap?.total ?? 0;
     if (mounted) {
       setState(() {
-        subjectCollections.addAll(_convertItems(pagingWrap.items));
+        subjectCollections.addAll(_convertItems(pagingWrap?.items ?? List.empty()));
       });
     }
     _page++;
@@ -189,7 +189,7 @@ class CollectionsState extends State<CollectionPage> {
     }
 
     Subject subject = await SubjectApi().findById(subjectId);
-    SubjectCollection collection =
+    SubjectCollection? collection =
     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
     Navigator.of(context).push(MaterialPageRoute(

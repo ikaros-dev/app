@@ -1,14 +1,18 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:getwidget/getwidget.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/url_utils.dart';
 
@@ -28,8 +32,9 @@ class SubjectPage extends StatefulWidget {
 class _SubjectState extends State<SubjectPage> {
   late String _apiBaseUrl;
   late Subject _subject;
-  late SubjectCollection _subjectCollection;
+  late SubjectCollection? _subjectCollection;
   late CollectionType _collectionType;
+  bool _subjectCollectButtonLoading = false;
 
   var _loadSubjectWithIdFuture;
   var _loadApiBaseUrlFuture;
@@ -47,6 +52,7 @@ class _SubjectState extends State<SubjectPage> {
     super.initState();
     _loadSubjectWithIdFuture = _loadSubjectWithId();
     _loadApiBaseUrlFuture = _loadBaseUrl();
+    _fetchSubjectCollection();
   }
 
   @override
@@ -248,7 +254,7 @@ class _SubjectState extends State<SubjectPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        ElevatedButton(
+        GFButton(
           onPressed: _episodesHasResource()
               ? () async {
                   bool? cancel = await showEpisodesDialog();
@@ -263,12 +269,54 @@ class _SubjectState extends State<SubjectPage> {
           child: const Text("选集"),
         ),
         const SizedBox(width: 2),
-        const ElevatedButton(
-          onPressed: null,
-          child: Text("收藏"),
-        )
+        _buildCollectOperateWidget(),
+        _buildCollectTypeOperateWidget(),
       ],
     );
+  }
+
+  Widget _buildCollectOperateWidget() {
+    if (_subjectCollection == null) {
+      return GFButton(
+        onPressed: () {
+          _postCollectSubject();
+        },
+        color: Colors.blue,
+        child: const Text("收藏"),
+      );
+    } else {
+      return GFButton(
+        onPressed: () {
+          _postUnCollectSubject();
+        },
+        color: Colors.redAccent,
+        child: const Text("取消收藏"),
+      );
+    }
+    ;
+  }
+
+  Widget _buildCollectTypeOperateWidget() {
+    if (_subjectCollection != null) {
+      return GFDropdown(
+        borderRadius: BorderRadius.circular(5),
+        value: _collectionType,
+        onChanged: (newValue) {
+          if (newValue == null) return;
+          setState(() {
+            _collectionType = newValue;
+          });
+          _postCollectSubjectWithoutRefresh(newValue);
+        },
+        items: CollectionType.values
+            .map((type) => DropdownMenuItem(
+                  value: type,
+                  child: Text(CollectionConst.typeCnMap[type.name] ?? "未知"),
+                ))
+            .toList(),
+      );
+    }
+    return Container();
   }
 
   Row _buildDetailsRow() {
@@ -361,7 +409,8 @@ class _SubjectState extends State<SubjectPage> {
                       ? null
                       : () => {
                             Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => SubjectEpisodePage(episode: ep,
+                                builder: (context) => SubjectEpisodePage(
+                                      episode: ep,
                                     )))
                           },
                   child: Text(
@@ -391,6 +440,48 @@ class _SubjectState extends State<SubjectPage> {
     }
     return TabBarView(
       children: tabViews,
+    );
+  }
+
+  Future<void> _fetchSubjectCollection() async {
+    _subjectCollection = await SubjectCollectionApi()
+        .findCollectionBySubjectId(int.parse(widget.id.toString()));
+    if (_subjectCollection?.type != null) {
+      _collectionType = _subjectCollection!.type;
+    }
+    if (_subjectCollection == null && kDebugMode) {
+      print("获取条目收藏信息失败");
+    }
+  }
+
+  String? _getSubjectName() {
+    if (_subject.nameCn != null && _subject.nameCn != "")
+      return _subject.nameCn;
+    return _subject.name;
+  }
+
+  Future<void> _postCollectSubject() async {
+    await _postCollectSubjectWithoutRefresh(CollectionType.WISH);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+          builder: (context) => SubjectPage(id: _subject.id.toString())),
+    );
+  }
+
+  Future<void> _postCollectSubjectWithoutRefresh(CollectionType type) async {
+    await SubjectCollectionApi()
+        .updateCollection(_subject.id, type, _subject.nsfw);
+    GFToast.showToast("收藏番剧[${_getSubjectName()}]成功.", context);
+  }
+
+  Future<void> _postUnCollectSubject() async {
+    await SubjectCollectionApi().removeCollection(_subject.id);
+    GFToast.showToast("取消收藏番剧[${_getSubjectName()}]成功.", context);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+          builder: (context) => SubjectPage(id: _subject.id.toString())),
     );
   }
 }

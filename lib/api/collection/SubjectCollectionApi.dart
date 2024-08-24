@@ -6,25 +6,14 @@ import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 
 class SubjectCollectionApi {
-  SubjectCollection error = SubjectCollection(
-      id: -1,
-      userId: -1,
-      subjectId: -1,
-      type: CollectionType.WISH,
-      isPrivate: false,
-      name: "name",
-      nsfw: false,
-      cover: "cover");
-  PagingWrap errors =
-      PagingWrap(page: -1, size: -1, total: -1, items: List.empty());
 
-  Future<PagingWrap> fetchSubjectCollections(
+  Future<PagingWrap?> fetchSubjectCollections(
       int? page, int? size, CollectionType? type) async {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
         authParams.basicAuth == '') {
-      return errors;
+      return null;
     }
 
     page ??= 1;
@@ -46,22 +35,22 @@ class SubjectCollectionApi {
       var response = await Dio(options).get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
-        return errors;
+        return null;
       }
       return PagingWrap.fromJson(response.data);
     } catch (e) {
       print(e);
-      return errors;
+      return null;
     }
   }
 
-  Future<SubjectCollection> findCollectionBySubjectId(int subjectId) async {
+  Future<SubjectCollection?> findCollectionBySubjectId(int subjectId) async {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
         authParams.basicAuth == '' ||
         authParams.userId == '') {
-      return error;
+      return null;
     }
 
     String baseUrl = authParams.baseUrl;
@@ -76,29 +65,32 @@ class SubjectCollectionApi {
       var response = await Dio(options).get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
-        return error;
+        return null;
       }
       return SubjectCollection.fromJson(response.data);
     } catch (e) {
       print(e);
-      return error;
+      return null;
     }
   }
 
-  Future updateCollection(int subjectId, CollectionType type, bool? isPrivate) async {
+  Future<void> updateCollection(int subjectId, CollectionType? type, bool? isPrivate) async {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
         authParams.basicAuth == '' ||
         authParams.userId == '') {
-      return error;
+      return;
     }
 
     String baseUrl = authParams.baseUrl;
     String basicAuth = authParams.basicAuth;
     String userId = authParams.userId;
     String apiUrl = "$baseUrl/api/v1alpha1/collection/subject/collect"
-    "?subjectId=$subjectId&type=${type.name}";
+    "?subjectId=$subjectId";
+    if (type != null) {
+      apiUrl += "&type=${type.name}";
+    }
 
     if(isPrivate != null) {
       apiUrl = "$apiUrl&isPrivate=$isPrivate";
@@ -111,22 +103,22 @@ class SubjectCollectionApi {
       var response = await Dio(options).post(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
-        return error;
+        return;
       }
       return ;
     } catch (e) {
       print(e);
-      return error;
+      return;
     }
   }
 
-  Future removeCollection(int subjectId,) async {
+  Future<void> removeCollection(int subjectId,) async {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
         authParams.basicAuth == '' ||
         authParams.userId == '') {
-      return error;
+      return;
     }
 
     String baseUrl = authParams.baseUrl;
@@ -141,12 +133,12 @@ class SubjectCollectionApi {
       var response = await Dio(options).delete(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
-        return error;
+        return;
       }
       return ;
     } catch (e) {
       print(e);
-      return error;
+      return;
     }
   }
 }

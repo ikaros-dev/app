@@ -33,8 +33,8 @@ class SubjectDetailsPage extends StatefulWidget {
 }
 
 class _SubjectDetailsView extends State<SubjectDetailsPage> {
-  late SubjectCollection _subjectCollection;
-  late CollectionType _collectionType;
+  late SubjectCollection? _subjectCollection;
+  late CollectionType? _collectionType;
 
   List<Video> videoList = <Video>[];
   late int _currentEpisodeId = 0;
@@ -174,7 +174,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     super.initState();
 
     _subjectCollection = widget.collection;
-    _collectionType = _subjectCollection.type;
+    _collectionType = _subjectCollection?.type;
     _childKey = GlobalKey<VlcPlayerWithControlsState>();
 
     // _getBaseUrl();
@@ -473,7 +473,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     return Row(
       children: [
         GFButton(
-          onPressed: (_subjectCollection.id != -1)
+          onPressed: (_subjectCollection?.id != -1)
               ? () async {
             // 取消收藏
             await SubjectCollectionApi()
@@ -506,7 +506,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
               _loadSubjectCollection();
             });
           },
-          text: (_subjectCollection.id != -1) ? '取消收藏' : '收藏',
+          text: (_subjectCollection?.id != -1) ? '取消收藏' : '收藏',
           textColor: Colors.black,
           // disabledColor: Colors.grey,
           color: Colors.white70,
@@ -518,7 +518,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
         DropdownButton(
           borderRadius: BorderRadius.circular(5),
           value: _collectionType,
-          onChanged: (_subjectCollection.id != -1)
+          onChanged: (_subjectCollection?.id != -1)
               ? (newValue) async {
             if (mounted) {
               setState(() {
@@ -548,8 +548,8 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
   Future<String> _loadSubjectCollection() async {
     _subjectCollection = await SubjectCollectionApi()
         .findCollectionBySubjectId(widget.subject.id);
-    _collectionType = _subjectCollection.type;
-    return "";
+    _collectionType = _subjectCollection?.type;
+    return _subjectCollection?.name ?? "";
   }
 
   _updateSubjectCollection() async {
