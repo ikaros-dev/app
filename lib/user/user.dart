@@ -267,7 +267,7 @@ class _UserPageState extends State<UserPage> {
     String command = '$scriptPath "$zipFilePath" "$destinationDir" "$appPath"';
 
     // 启动 PowerShell 执行脚本
-    await Process.run('powershell', ['-Command', command]);
+    await Process.start('powershell', ['-Command', command], mode: ProcessStartMode.detached);
 
     // 退出 Flutter 应用
     exit(0);
