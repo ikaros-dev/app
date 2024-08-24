@@ -60,8 +60,6 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,6 +73,10 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
                 tooltip: "Back",
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
+                  if (_dartVlcPlayer.position.position != null &&
+                      _dartVlcPlayer.position.position! > Duration.zero) {
+                    _dartVlcPlayer.dispose();
+                  }
                   Navigator.pop(context);
                 },
               ),
@@ -86,9 +88,8 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
         ));
   }
 
-  Widget _buildEpisodePage(){
-    if (_episode.resources == null ||
-        _episode.resources!.isEmpty) {
+  Widget _buildEpisodePage() {
+    if (_episode.resources == null || _episode.resources!.isEmpty) {
       return const Text("Current Episode Not Bind Attachment Resources.");
     }
     return Column(
@@ -102,9 +103,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   "资源",
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                 ),
               ),
               _buildResourceSelectListView(),
@@ -122,23 +121,24 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     }
     return SizedBox(
       height: _isFullScreen ? MediaQuery.of(context).size.height : 200,
-      child: useDartVlcPlayer ?
-        DartVlc.Video(
-          player: _dartVlcPlayer,
-          showControls: true,
-          onFullScreenChange: _onFullScreenChange,
-        )
-      :
-      VlcPlayerWithControls(
-        key: _childKey,
-        updateIsFullScreen: (val) => _updateIsFullScreen(val),
-        videoTitle: _videoTitle, episodeId: _currentEpisodeId,
-        subtitleUrls: _videoSubtitleUrls, videoUrl: '',
-      ),
+      child: useDartVlcPlayer
+          ? DartVlc.Video(
+              player: _dartVlcPlayer,
+              showControls: true,
+              onFullScreenChange: _onFullScreenChange,
+            )
+          : VlcPlayerWithControls(
+              key: _childKey,
+              updateIsFullScreen: (val) => _updateIsFullScreen(val),
+              videoTitle: _videoTitle,
+              episodeId: _currentEpisodeId,
+              subtitleUrls: _videoSubtitleUrls,
+              videoUrl: '',
+            ),
     );
   }
 
-  _onFullScreenChange(){
+  _onFullScreenChange() {
     setState(() {
       _isFullScreen = !_isFullScreen;
     });
@@ -169,7 +169,8 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
       if (_videoSubtitleUrls.isNotEmpty) {
         setState(() {
           for (var subtitle in _videoSubtitleUrls) {
-            _dartVlcPlayer.addSlave(DartVlc.MediaSlaveType.subtitle, subtitle, true);
+            _dartVlcPlayer.addSlave(
+                DartVlc.MediaSlaveType.subtitle, subtitle, true);
           }
         });
       }

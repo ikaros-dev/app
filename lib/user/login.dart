@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:ikaros/layout.dart';
+import 'package:ikaros/main.dart';
 import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 
@@ -174,10 +175,10 @@ class LoginState extends State<LoginView> {
     AuthApi()
         .login(_baseUrl, _username, _password)
         .then((value) => {
-              Navigator.push(
+              Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const MobileLayout()))
+                      builder: (context) => const MyApp()))
             })
         .onError((error, stackTrace) => {
               Fluttertoast.showToast(

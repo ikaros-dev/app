@@ -19,27 +19,14 @@ class _UserPageState extends State<UserPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: const Text("用户", style: TextStyle(color: Colors.black, fontSize: 25)),
-        // centerTitle: true,
-        // leading: const Icon(
-        //   Icons.account_circle,
-        //   color: Colors.black,
-        //   size: 35,
-        // ),
         actionsIconTheme: const IconThemeData(
           color: Colors.black,
           size: 35,
         ),
         actions: <Widget>[
-          // 非隐藏的菜单
-          // IconButton(
-          //   icon: const Icon(Icons.add_alarm),
-          //   onPressed: () {},
-          //   color: Colors.black,
-          //
-          // ),
-          // 隐藏的菜单
           PopupMenuButton<String>(
             itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
+              _selectView(Icons.update, "更新", "app_update"),
               _selectView(Icons.exit_to_app_rounded, '退出', 'user_logout'),
             ],
             onSelected: (String action) {
@@ -47,6 +34,9 @@ class _UserPageState extends State<UserPage> {
               switch (action) {
                 case 'user_logout':
                   _userLogout();
+                  break;
+                case 'app_update':
+                  print("open app updae");
                   break;
               }
             },

@@ -51,6 +51,7 @@ dependencies:
     path: dependencies/dart_vlc
   audio_video_progress_bar: ^2.0.3
   url_launcher: ^6.3.0
+  package_info_plus: ^8.0.2
 
 #dependency_overrides:
 #  dart_vlc:
