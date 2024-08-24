@@ -15,6 +15,7 @@ import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/url_utils.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'episode.dart';
 
@@ -105,14 +106,14 @@ class _SubjectState extends State<SubjectPage> {
           }
           var url =
               "$_apiBaseUrl/console/#/subjects/subject/details/${widget.id}";
-          // if (await canLaunchUrl(Uri.parse(url))) {
-          //   await launchUrl(Uri.parse(url));
-          // } else {
-          //   throw 'Could not launch $url';
-          // }
+          if (await canLaunchUrl(Uri.parse(url))) {
+            await launchUrl(Uri.parse(url));
+          } else {
+            GFToast.showToast("无法启动外部链接：$url", context);
+          }
         },
         icon: const Icon(
-          Icons.ac_unit_sharp,
+          Icons.link,
           color: Colors.black,
         ));
   }
