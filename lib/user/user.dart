@@ -161,7 +161,7 @@ class _UserPageState extends State<UserPage> {
       final data = json.decode(response.data ?? "{}");
       String latestVersion = data['tag_name'];
       String downloadUrl  = _getDownloadUrl(data['assets']);
-      if (_appVersion == latestVersion) {
+      if ('v$_appVersion' == latestVersion) {
         GFToast.showToast("当前已经是最新版本:$_appVersion", context);
         return;
       }
