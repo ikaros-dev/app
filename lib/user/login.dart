@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:getwidget/components/toast/gf_toast.dart';
 import 'package:ikaros/layout.dart';
 import 'package:ikaros/main.dart';
 import 'package:ikaros/subject/subjects.dart';
@@ -103,6 +104,10 @@ class LoginState extends State<LoginView> {
             return '请输入密码';
           }
         },
+        onFieldSubmitted: (value) {
+          _password = value;
+          login();
+        },
         decoration: InputDecoration(
             labelText: "密码",
             suffixIcon: IconButton(
@@ -146,39 +151,28 @@ class LoginState extends State<LoginView> {
         width: 270,
         child: ElevatedButton(
           style: ButtonStyle(
-              // 设置圆角
-              shape: MaterialStateProperty.all(const StadiumBorder(
+              shape: WidgetStateProperty.all(const StadiumBorder(
                   side: BorderSide(style: BorderStyle.none)))),
-          child:
-              Text('登录', style: Theme.of(context).primaryTextTheme.headlineSmall),
-          onPressed: () {
-            // 表单校验通过才会继续执行
-            if ((_formKey.currentState as FormState).validate()) {
-              (_formKey.currentState as FormState).save();
-              login();
-            }
-          },
+          onPressed: login,
+          child: const Text('登录', style: TextStyle(color: Colors.blue)),
         ),
       ),
     );
   }
 
   void login() {
-    // Fluttertoast.showToast(
-    //     msg: "exec login username: $_username, password: $_password",
-    //     toastLength: Toast.LENGTH_SHORT,
-    //     gravity: ToastGravity.CENTER,
-    //     timeInSecForIosWeb: 1,
-    //     backgroundColor: Colors.blue,
-    //     textColor: Colors.white,
-    //     fontSize: 16.0);
+    var state = (_formKey.currentState as FormState);
+    bool result = state.validate();
+    if (!result) {
+      GFToast.showToast("服务地址或用户名或密码错误", context);
+      return;
+    }
+    state.save();
     AuthApi()
         .login(_baseUrl, _username, _password)
         .then((value) => {
-              Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const MyApp()))
+              Navigator.pushReplacement(context,
+                  MaterialPageRoute(builder: (context) => const MyApp()))
             })
         .onError((error, stackTrace) => {
               Fluttertoast.showToast(

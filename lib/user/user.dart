@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:getwidget/components/alert/gf_alert.dart';
+import 'package:getwidget/components/button/gf_button.dart';
+import 'package:getwidget/components/toast/gf_toast.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/layout.dart';
+import 'package:ikaros/main.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -18,7 +22,8 @@ class _UserPageState extends State<UserPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text("用户", style: TextStyle(color: Colors.black, fontSize: 25)),
+        title: const Text("用户",
+            style: TextStyle(color: Colors.black, fontSize: 25)),
         actionsIconTheme: const IconThemeData(
           color: Colors.black,
           size: 35,
@@ -60,11 +65,38 @@ class _UserPageState extends State<UserPage> {
         ));
   }
 
-  void _userLogout()async {
-    await AuthApi().logout();
-    if(mounted) {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => const MobileLayout()));
+  void _userLogout() async {
+    if (mounted) {
+      bool? cancel = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text("登出确认"),
+              content: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.8,
+                child: const Text("您确定要登出嘛？"),
+              ),
+              actions: [
+                GFButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  color: Colors.green,
+                  child: const Text("取消"),
+                ),
+                GFButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  color: Colors.red,
+                  child: const Text("确认"),
+                ),
+              ],
+            );
+          });
+      if (cancel == null) {
+        return;
+      }
+      await AuthApi().logout();
+      GFToast.showToast("已成功登出", context);
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const MyApp()));
     }
   }
 }
