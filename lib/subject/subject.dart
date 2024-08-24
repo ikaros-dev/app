@@ -419,21 +419,30 @@ class _SubjectState extends State<SubjectPage> {
               margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
               child: SizedBox(
                 height: 40,
-                child: GFButton(
-                  color: _episodeIsFinish(ep.id) ? Colors.green : Colors.lightBlueAccent,
-                  onPressed: (ep.resources == null || ep.resources!.isEmpty)
-                      ? null
-                      : () => {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => SubjectEpisodePage(
-                                      episode: ep,
-                                    )))
-                          },
-                  child: Text(
-                    "${ep.sequence} : ${ep.name}",
-                    overflow: TextOverflow.ellipsis,
+                child: GestureDetector(
+                  onLongPress: ()async{
+                    bool isFinish = _episodeIsFinish(ep.id);
+                    await EpisodeCollectionApi().updateCollectionFinish(ep.id, !isFinish);
+                    GFToast.showToast("更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}", context);
+                    Navigator.pop(context);
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>SubjectPage(id: widget.id.toString())), );
+                  },
+                  child: GFButton(
+                    color: _episodeIsFinish(ep.id) ? Colors.green : Colors.lightBlueAccent,
+                    onPressed: (ep.resources == null || ep.resources!.isEmpty)
+                        ? null
+                        : () => {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => SubjectEpisodePage(
+                            episode: ep,
+                          )))
+                    },
+                    child: Text(
+                      "${ep.sequence} : ${ep.name}",
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
+                )
               ),
             ))
         .toList();

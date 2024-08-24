@@ -112,4 +112,38 @@ class EpisodeCollectionApi {
         " and currentTime:${seek.inMilliseconds} and duration:${duration.inMilliseconds}");
     return;
   }
+
+  Future updateCollectionFinish(
+      int episodeId, bool isFinish) async {
+    AuthParams authParams = await AuthApi().getAuthParams();
+    if (authParams.baseUrl == '' ||
+        authParams.username == '' ||
+        authParams.basicAuth == '') {
+      return;
+    }
+
+    String baseUrl = authParams.baseUrl;
+    String basicAuth = authParams.basicAuth;
+    String apiUrl =
+        "$baseUrl/api/v1alpha1/collection/episode/finish/$episodeId/$isFinish";
+
+    BaseOptions options = BaseOptions();
+    options.headers.putIfAbsent("Authorization", () => basicAuth);
+    print("apiUrl:$apiUrl   basicAuth:$basicAuth");
+    var response = await Dio(options).put(apiUrl);
+    if (response.statusCode != 200) {
+      print("response status code: ${response.statusCode}");
+      return;
+    }
+    return;
+  }
+
+
+
+
+
+
+
+
+
 }
