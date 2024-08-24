@@ -255,20 +255,12 @@ class _UserPageState extends State<UserPage> {
     Directory parentDirectory = appFile.parent;
     String parentPath = parentDirectory.absolute.path;
 
-    String scriptPath =
-        parentPath + r'\data\flutter_assets\assets\scripts\windows_update.ps1';
 
     // ZIP 文件路径
     String zipFilePath = zipPath;
 
     // 目标目录路径
     String destinationDir = parentPath;
-
-    // 构建 PowerShell 命令
-    // String command = '$scriptPath "$zipFilePath" "$destinationDir" "$appPath"';
-
-    // 启动 PowerShell 执行脚本
-    // await Process.start('powershell', ['-Command', command], mode: ProcessStartMode.detached);
 
     // 创建 CMD 文件的路径
     String cmdFilePath = path.join(parentDirectory.path, 'install.cmd');
