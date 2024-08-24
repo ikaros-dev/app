@@ -12,6 +12,7 @@ import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path/path.dart' as path;
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -264,12 +265,96 @@ class _UserPageState extends State<UserPage> {
     String destinationDir = parentPath;
 
     // 构建 PowerShell 命令
-    String command = '$scriptPath "$zipFilePath" "$destinationDir" "$appPath"';
+    // String command = '$scriptPath "$zipFilePath" "$destinationDir" "$appPath"';
 
     // 启动 PowerShell 执行脚本
-    await Process.start('powershell', ['-Command', command], mode: ProcessStartMode.detached);
+    // await Process.start('powershell', ['-Command', command], mode: ProcessStartMode.detached);
 
-    // 退出 Flutter 应用
-    exit(0);
+    // 创建 CMD 文件的路径
+    String cmdFilePath = path.join(parentDirectory.path, 'install.cmd');
+
+    // 写入 CMD 文件内容
+    File cmdFile = File(cmdFilePath);
+    await cmdFile.writeAsString('setlocal\n'
+        '\n'
+        '\n'
+        'echo Delete old update dir'
+        '\n'
+        'rmdir /S /Q .\\update'
+        '\n'
+        '\n'
+        'echo Extracting update.zip to the update folder'
+        '\n'
+        "powershell -Command \"Expand-Archive -Path '"
+        '$zipFilePath'
+        "' -DestinationPath '.\\update' -Force\""
+        '\n'
+        '\n'
+        'echo Waiting until ikaros.exe ends'
+        '\n'
+        ':waitloop'
+        '\n'
+        'tasklist /FI "IMAGENAME eq ikaros.exe" 2>NUL '
+        '\n'
+        'if "%ERRORLEVEL%"=="0" ('
+        '\n'
+        '    taskkill /F /IM "ikaros.exe" >NUL'
+        '\n'
+        '    echo Process ikaros.exe killed.'
+        '\n'
+        ')'
+        '\n'
+        '\n'
+        '\n'
+        '\n'
+        'echo Deleting the specified files and directories'
+        '\n'
+        'del /F /Q "ikaros.exe"'
+        '\n'
+        'del /F /Q "*.ddl"'
+        '\n'
+        'rmdir /S /Q "data"'
+        '\n'
+        'rmdir /S /Q "plugins"'
+        '\n'
+        '\n'
+        'echo Copying everything from ./update to ./'
+        '\n'
+    'xcopy /E /H /R /Y ".\\update\\*" "."'
+        '\n'
+        '\n'
+    'echo Deleting the extracted Ani directory'
+        '\n'
+    'rmdir /S /Q ".\\update"'
+        '\n'
+        '\n'
+    'echo Deleting the update zip file'
+        '\n'
+    'del /F /Q \"'
+    '$zipPath'
+        '\"'
+        '\n'
+        '\n'
+        '\n'
+    'echo Launching ikaros.exe'
+        '\n'
+    'start "" ".\\ikaros.exe"'
+        '\n'
+        '\n'
+    'echo Exiting script'
+        '\n'
+    'exit'
+    );
+
+    await Process.run('icacls', [cmdFilePath, '/grant', 'Everyone:F']);
+
+    // 在当前应用退出前启动 CMD 文件
+    Process.start(
+        'cmd.exe',
+        ['/c', cmdFilePath],
+        mode: ProcessStartMode.detached
+    ).timeout(const Duration(milliseconds: 500), onTimeout: () {
+      exit(0);
+    });
   }
 }
