@@ -256,6 +256,7 @@ class _SubjectState extends State<SubjectPage> {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         GFButton(
+          disabledColor: Colors.grey,
           onPressed: _episodesHasResource()
               ? () async {
                   bool? cancel = await showEpisodesDialog();
