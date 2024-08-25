@@ -4,10 +4,13 @@ import 'dart:io';
 import 'package:dart_vlc/dart_vlc.dart' as DartVlc;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:getwidget/components/toast/gf_toast.dart';
 import 'package:ikaros/api/attachment/AttachmentRelationApi.dart';
 import 'package:ikaros/api/attachment/model/VideoSubtitle.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
+import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
@@ -36,6 +39,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   String _videoTitle = '';
   String _episodeTitle = '';
   late int _currentEpisodeId = 0;
+  int _episodeLastPosition = 0;
   List<Video> _videoList = <Video>[];
   late EpisodeResource? _currentResource = null;
 
@@ -55,9 +59,44 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     if (Platform.isWindows || Platform.isLinux) {
       _dartVlcPlayer = DartVlc.Player(id: hashCode);
     }
+
+    _videoTitle = "${_episode.sequence}: ${(_episode.nameCn != null && _episode.nameCn != '') ? _episode.nameCn! : _episode.name}";
+
     if (_episode.resources != null && _episode.resources!.isNotEmpty) {
+      _videoUrl = _episode.resources!.first.url;
       _loadEpisodeResource(_episode.resources!.first);
     }
+    GFToast.showToast("已自动加载第一个附件，剧集加载比较耗时，请耐心等待", context);
+  }
+
+  void release() {
+    int current = 0;
+    int duration = 0;
+
+    if (Platform.isWindows || Platform.isLinux) {
+      current = _dartVlcPlayer.position.position?.inMilliseconds ?? 0;
+      duration = _dartVlcPlayer.position.duration?.inMilliseconds ?? 0;
+      _dartVlcPlayer.stop();
+      _dartVlcPlayer.dispose();
+    }
+    if (Platform.isAndroid || Platform.isIOS) {
+      current = int.parse(_childKey.currentState?.position ?? "0");
+      duration = int.parse(_childKey.currentState?.duration ?? "0");
+    }
+
+    if (current > 0) {
+      EpisodeCollectionApi().updateCollection(
+          widget.episode.id, Duration(milliseconds: current), Duration(milliseconds: duration));
+      print("保存剧集进度成功");
+    }
+
+  }
+
+
+  @override
+  void dispose() {
+    release();
+    super.dispose();
   }
 
   @override
@@ -73,15 +112,10 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
                 tooltip: "Back",
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
-                  if (Platform.isWindows || Platform.isLinux) {
-                    if (_dartVlcPlayer.position.position != null &&
-                        _dartVlcPlayer.position.position! > Duration.zero) {
-                      _dartVlcPlayer.dispose();
-                    }
-                  }
                   Navigator.pop(context);
                 },
               ),
+              title: Text(widget.episode.name),
             ),
           ),
         ),
@@ -175,6 +209,11 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
                 DartVlc.MediaSlaveType.subtitle, subtitle, true);
           }
         });
+      }
+      if (_episodeLastPosition > 0) {
+        _dartVlcPlayer.seek(Duration(milliseconds: _episodeLastPosition));
+        print("seek video to : $_episodeLastPosition");
+        GFToast.showToast("已请求跳转到上次的进度", context);
       }
       return;
     }
@@ -289,6 +328,20 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
       });
       print("video subtitle urls: $_videoSubtitleUrls");
     }
+
+    // seek to
+    EpisodeCollection episodeCollection =
+    await EpisodeCollectionApi().findCollection(episodeResource.episodeId);
+    if (episodeCollection.progress != null &&
+        episodeCollection.progress! > 0) {
+
+      print(
+          "find episode collection progress:${episodeCollection.progress}");
+      _episodeLastPosition = episodeCollection.progress!;
+    }
+
+
+
     await setVideoUrl();
     return episodeResource;
   }
