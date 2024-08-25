@@ -45,15 +45,17 @@ class _SubjectState extends State<SubjectPage> {
 
   Future<Subject> _loadSubjectWithId() async {
     _subject = await SubjectApi().findById(int.parse(widget.id.toString()));
-    _episodeCollections = await EpisodeCollectionApi().findListBySubjectId(int.parse(widget.id.toString()));
+    _episodeCollections = await EpisodeCollectionApi()
+        .findListBySubjectId(int.parse(widget.id.toString()));
     return _subject;
   }
 
-  bool _episodeIsFinish(int episodeId)  {
+  bool _episodeIsFinish(int episodeId) {
     if (_episodeCollections.isEmpty) {
       return false;
     }
-    EpisodeCollection epColl = _episodeCollections.where((ep)=>ep.episodeId == episodeId).first;
+    EpisodeCollection epColl =
+        _episodeCollections.where((ep) => ep.episodeId == episodeId).first;
     return epColl.finish ?? false;
   }
 
@@ -395,6 +397,7 @@ class _SubjectState extends State<SubjectPage> {
               key: Key(g.toString()),
               SubjectConst.episodeGroupCnMap[g.name]!,
               style: const TextStyle(fontSize: 14),
+              overflow: TextOverflow.ellipsis,
             ))
         .map((text) => Tab(
               key: text.key,
@@ -418,32 +421,41 @@ class _SubjectState extends State<SubjectPage> {
         ?.map((ep) => Container(
               margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
               child: SizedBox(
-                height: 40,
-                child: GestureDetector(
-                  onLongPress: ()async{
-                    bool isFinish = _episodeIsFinish(ep.id);
-                    await EpisodeCollectionApi().updateCollectionFinish(ep.id, !isFinish);
-                    GFToast.showToast("更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}", context);
-                    Navigator.pop(context);
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>SubjectPage(id: widget.id.toString())), );
-                  },
-                  child: GFButton(
-                    color: _episodeIsFinish(ep.id) ? Colors.green : Colors.lightBlueAccent,
-                    onPressed: (ep.resources == null || ep.resources!.isEmpty)
-                        ? null
-                        : () => {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => SubjectEpisodePage(
-                            episode: ep,
-                          )))
+                  height: 40,
+                  child: GestureDetector(
+                    onLongPress: () async {
+                      bool isFinish = _episodeIsFinish(ep.id);
+                      await EpisodeCollectionApi()
+                          .updateCollectionFinish(ep.id, !isFinish);
+                      GFToast.showToast(
+                          "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}", context);
+                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                SubjectPage(id: widget.id.toString())),
+                      );
                     },
-                    child: Text(
-                      "${ep.sequence} : ${ep.name}",
-                      overflow: TextOverflow.ellipsis,
+                    child: GFButton(
+                      disabledColor: Colors.grey,
+                      color: _episodeIsFinish(ep.id)
+                          ? Colors.green
+                          : Colors.lightBlueAccent,
+                      onPressed: (ep.resources == null || ep.resources!.isEmpty)
+                          ? null
+                          : () => {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => SubjectEpisodePage(
+                                          episode: ep,
+                                        )))
+                              },
+                      child: Text(
+                        "${ep.sequence} : ${ep.name}",
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                )
-              ),
+                  )),
             ))
         .toList();
 
