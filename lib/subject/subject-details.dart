@@ -61,7 +61,7 @@ class _SubjectDetailsView extends State<SubjectDetailsPage> {
     final childState = _childKey.currentState;
     if (childState != null) {
       await childState.changeDatasource(_currentEpisodeId, _videoUrl,
-          _videoSubtitleUrls, _videoTitle, _episodeTitle);
+          _videoSubtitleUrls, _videoTitle, _episodeTitle, 0);
     } else {
       print("child state is null");
     }

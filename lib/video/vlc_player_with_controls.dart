@@ -70,6 +70,9 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   String _videoSubhead = "";
   late int _episodeId = 0;
 
+  bool _progressIsLoaded = false;
+  int _progress = 0;
+
   late Future _showControlFuture;
   bool _showControlFutureInit = false;
 
@@ -161,9 +164,30 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
         });
       }
 
+      // // seek to  once
+      // if (!_progressIsLoaded && _progress > 0) {
+      //   _controller.seekTo(Duration(milliseconds: _progress));
+      //   print("seek to $_progress");
+      //   setState(() {
+      //     _progressIsLoaded = true;
+      //   });
+      // }
+
       _updateWakeLock();
 
       widget.onPlayerInitialized?.call();
+    }
+
+    if (_controller.value.isPlaying) {
+      // print("isPlaying");
+      // seek to  once
+      if (!_progressIsLoaded && _progress > 0) {
+        _controller.seekTo(Duration(milliseconds: _progress));
+        print("seek to $_progress");
+        setState(() {
+          _progressIsLoaded = true;
+        });
+      }
     }
   }
 
@@ -223,7 +247,8 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       String videoUrl,
       List<String>? subtitleUrls,
       String? videoTitle,
-      String? videoSubhead) async {
+      String? videoSubhead,
+      int? progress) async {
     if (videoUrl == _videoUrl) {
       return;
     }
@@ -244,6 +269,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
         _episodeId = episodeId;
         _videoUrl = videoUrl;
         _subtitleUrls = subtitleUrls;
+        _progress = progress ?? 0;
         if (videoTitle != null) {
           _videoTitle = videoTitle;
         }
@@ -266,21 +292,22 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       }
 
       // seek to
-      EpisodeCollection episodeCollection =
-          await EpisodeCollectionApi().findCollection(episodeId);
-      if (episodeCollection.progress != null &&
-          episodeCollection.progress! > 0) {
-        print(
-            "seek to episode collection progress:${episodeCollection.progress}");
-        // await _controller.seekTo(Duration(milliseconds: episodeCollection.progress!));
-        //convert to Milliseconds since VLC requires MS to set time
-        await _controller.setTime(episodeCollection.progress!);
-      }
+      // EpisodeCollection episodeCollection =
+      //     await EpisodeCollectionApi().findCollection(episodeId);
+      // if (episodeCollection.progress != null &&
+      //     episodeCollection.progress! > 0) {
+      //   print(
+      //       "seek to episode collection progress:${episodeCollection.progress}");
+      //   // await _controller.seekTo(Duration(milliseconds: episodeCollection.progress!));
+      //   //convert to Milliseconds since VLC requires MS to set time
+      //   await _controller.setTime(episodeCollection.progress!);
+      // }
 
       print("set datasource for video "
           "title: [$videoTitle] "
           "and subhead: [$videoSubhead]"
-          "and url: [$videoUrl] ");
+          "and url: [$videoUrl] "
+      "and progress: [$progress]");
     }
 
     // if(_controller.value.isInitialized) {

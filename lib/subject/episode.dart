@@ -39,7 +39,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   String _videoTitle = '';
   String _episodeTitle = '';
   late int _currentEpisodeId = 0;
-  int _episodeLastPosition = 0;
+  int _progress = 0;
   List<Video> _videoList = <Video>[];
   late EpisodeResource? _currentResource = null;
 
@@ -190,7 +190,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     final childState = _childKey.currentState;
     if (childState != null) {
       await childState.changeDatasource(_episode.id, _videoUrl,
-          _videoSubtitleUrls, _videoTitle, _episodeTitle);
+          _videoSubtitleUrls, _videoTitle, _episodeTitle, _progress);
     } else {
       print("child state is null when callChildMethod2ChangePlayerDatasource");
     }
@@ -210,9 +210,9 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
           }
         });
       }
-      if (_episodeLastPosition > 0) {
-        _dartVlcPlayer.seek(Duration(milliseconds: _episodeLastPosition));
-        print("seek video to : $_episodeLastPosition");
+      if (_progress > 0) {
+        _dartVlcPlayer.seek(Duration(milliseconds: _progress));
+        print("seek video to : $_progress");
         GFToast.showToast("已请求跳转到上次的进度", context);
       }
       return;
@@ -337,7 +337,9 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
 
       print(
           "find episode collection progress:${episodeCollection.progress}");
-      _episodeLastPosition = episodeCollection.progress!;
+      setState(() {
+        _progress = episodeCollection.progress!;
+      });
     }
 
 
