@@ -73,9 +73,11 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
                 tooltip: "Back",
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
-                  if (_dartVlcPlayer.position.position != null &&
-                      _dartVlcPlayer.position.position! > Duration.zero) {
-                    _dartVlcPlayer.dispose();
+                  if (Platform.isWindows || Platform.isLinux) {
+                    if (_dartVlcPlayer.position.position != null &&
+                        _dartVlcPlayer.position.position! > Duration.zero) {
+                      _dartVlcPlayer.dispose();
+                    }
                   }
                   Navigator.pop(context);
                 },
