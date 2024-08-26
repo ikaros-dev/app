@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
+import 'package:getwidget/components/toast/gf_toast.dart';
+import 'package:getwidget/getwidget.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -15,7 +17,13 @@ class VlcPlayerWithControls extends StatefulWidget {
   final List<String>? subtitleUrls;
 
   const VlcPlayerWithControls(
-      {super.key, this.updateIsFullScreen, this.onPlayerInitialized, required this.videoUrl, this.subtitleUrls, required this.videoTitle, required this.episodeId});
+      {super.key,
+      this.updateIsFullScreen,
+      this.onPlayerInitialized,
+      required this.videoUrl,
+      this.subtitleUrls,
+      required this.videoTitle,
+      required this.episodeId});
 
   @override
   VlcPlayerWithControlsState createState() => VlcPlayerWithControlsState();
@@ -132,7 +140,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
         validPosition = oDuration.compareTo(oPosition) >= 0;
         sliderValue = validPosition ? oPosition.inSeconds.toDouble() : 0;
       });
-          setState(() {
+      setState(() {
         numberOfCaptions = _controller.value.spuTracksCount;
         numberOfAudioTracks = _controller.value.audioTracksCount;
       });
@@ -302,7 +310,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
           "title: [$videoTitle] "
           "and subhead: [$videoSubhead]"
           "and url: [$videoUrl] "
-      "and progress: [$progress]");
+          "and progress: [$progress]");
     }
 
     // if(_controller.value.isInitialized) {
@@ -407,7 +415,7 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                     Stack(
                       children: [
                         IconButton(
-                          tooltip: 'Get Audio Tracks',
+                          tooltip: '音频轨道',
                           icon: const Icon(Icons.audiotrack),
                           color: Colors.white,
                           onPressed: _getAudioTracks,
@@ -426,7 +434,8 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
                                 horizontal: 2,
                               ),
                               child: Text(
-                                '$numberOfAudioTracks',
+                                // 去掉音频的Disable轨道
+                                '${numberOfAudioTracks - 1}',
                                 style: const TextStyle(
                                   color: Colors.black,
                                   fontSize: 10,
@@ -704,31 +713,34 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     if (!_controller.value.isPlaying) return;
 
     final subtitleTracks = await _controller.getSpuTracks();
+    final int? spuTrack = await _controller.getSpuTrack();
 
-    if (subtitleTracks != null && subtitleTracks.isNotEmpty) {
+    if (subtitleTracks.isNotEmpty) {
       if (!mounted) return;
-      final int selectedSubId = await showDialog(
+      final int? selectedSubId = await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Select Subtitle'),
+            title: const Text('选择字幕轨道'),
             content: SizedBox(
               width: double.maxFinite,
               height: 250,
               child: ListView.builder(
                 itemCount: subtitleTracks.keys.length + 1,
                 itemBuilder: (context, index) {
+                  final MapEntry<int, String>? entry = index < subtitleTracks.length ? subtitleTracks.entries.elementAt(index) : null;
                   return ListTile(
+                    selected: spuTrack != null && spuTrack == (entry?.key ?? -1),
                     title: Text(
                       index < subtitleTracks.keys.length
-                          ? subtitleTracks.values.elementAt(index).toString()
+                          ? entry?.value.toString() ?? 'Disable'
                           : 'Disable',
                     ),
                     onTap: () {
                       Navigator.pop(
                         context,
                         index < subtitleTracks.keys.length
-                            ? subtitleTracks.keys.elementAt(index)
+                            ? (entry?.key ?? -1)
                             : -1,
                       );
                     },
@@ -739,7 +751,17 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
           );
         },
       );
-      if (selectedSubId != null) await _controller.setSpuTrack(selectedSubId);
+      if (selectedSubId != null &&
+          selectedSubId > -2 &&
+          selectedSubId != spuTrack) {
+        await _controller.setSpuTrack(selectedSubId);
+        print("set spu track with id:$selectedSubId");
+        GFToast.showToast("已切换到字幕轨道: $selectedSubId ,生效需要等下一句字幕。", context, toastPosition: GFToastPosition.CENTER);
+      }else {
+        if (selectedSubId == spuTrack) {
+          GFToast.showToast("操作取消，请不要选择已选中的字幕轨道。", context, toastPosition: GFToastPosition.CENTER);
+        }
+      }
     }
   }
 
@@ -747,32 +769,28 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     if (!_controller.value.isPlaying) return;
 
     final audioTracks = await _controller.getAudioTracks();
-    //
-    if (audioTracks != null && audioTracks.isNotEmpty) {
+    final int? audioTrack = await _controller.getAudioTrack();
+    if (audioTracks.isNotEmpty) {
       if (!mounted) return;
-      final int selectedAudioTrackId = await showDialog(
+      final int? selectedAudioTrackId = await showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Select Audio'),
+            title: const Text('选择音频轨道'),
             content: SizedBox(
               width: double.maxFinite,
               height: 250,
               child: ListView.builder(
-                itemCount: audioTracks.keys.length + 1,
+                itemCount: audioTracks.length,
                 itemBuilder: (context, index) {
+                  final entry = audioTracks.entries.elementAt(index);
                   return ListTile(
-                    title: Text(
-                      index < audioTracks.keys.length
-                          ? audioTracks.values.elementAt(index).toString()
-                          : 'Disable',
-                    ),
+                    selected: audioTrack != null && audioTrack == entry.key,
+                    title: Text(entry.value.toString()),
                     onTap: () {
                       Navigator.pop(
                         context,
-                        index < audioTracks.keys.length
-                            ? audioTracks.keys.elementAt(index)
-                            : -1,
+                        entry.key,
                       );
                     },
                   );
@@ -782,8 +800,16 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
           );
         },
       );
-      if (selectedAudioTrackId != null) {
+      if (selectedAudioTrackId != null &&
+          selectedAudioTrackId >= 0 &&
+          selectedAudioTrackId != audioTrack) {
         await _controller.setAudioTrack(selectedAudioTrackId);
+        print("set audio track with id:$selectedAudioTrackId");
+        GFToast.showToast("已切换到音频轨道: $selectedAudioTrackId", context, toastPosition: GFToastPosition.CENTER);
+      } else {
+        if (selectedAudioTrackId == audioTrack) {
+          GFToast.showToast("操作取消，请不要选择已选中的音频。", context, toastPosition: GFToastPosition.CENTER);
+        }
       }
     }
   }
@@ -833,5 +859,4 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
       );
     }
   }
-
 }
