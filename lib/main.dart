@@ -6,9 +6,6 @@ import 'package:ikaros/layout.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 
 void main() {
-  if (Platform.isWindows || Platform.isLinux) {
-    DartVLC.initialize();
-  }
   runApp(const MyApp());
 }
 
