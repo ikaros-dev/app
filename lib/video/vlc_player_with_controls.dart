@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
-import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:path_provider/path_provider.dart';
 
 typedef OnStopRecordingCallback = void Function(String);
@@ -37,8 +36,6 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
   final double initSnapshotBottomPosition = 10;
 
   late VlcPlayerController _controller;
-
-  late OverlayEntry _overlayEntry;
 
   double sliderValue = 0.0;
   double volumeValue = 50;
@@ -116,28 +113,26 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     if (_controller.value.isInitialized) {
       final oPosition = _controller.value.position;
       final oDuration = _controller.value.duration;
-      if (oPosition != null && oDuration != null) {
-        if (oDuration.inHours == 0) {
-          final strPosition = oPosition.toString().split('.').first;
-          final strDuration = oDuration.toString().split('.').first;
-          setState(() {
-            position =
-                "${strPosition.split(':')[1]}:${strPosition.split(':')[2]}";
-            duration =
-                "${strDuration.split(':')[1]}:${strDuration.split(':')[2]}";
-          });
-        } else {
-          setState(() {
-            position = oPosition.toString().split('.').first;
-            duration = oDuration.toString().split('.').first;
-          });
-        }
+      if (oDuration.inHours == 0) {
+        final strPosition = oPosition.toString().split('.').first;
+        final strDuration = oDuration.toString().split('.').first;
         setState(() {
-          validPosition = oDuration.compareTo(oPosition) >= 0;
-          sliderValue = validPosition ? oPosition.inSeconds.toDouble() : 0;
+          position =
+              "${strPosition.split(':')[1]}:${strPosition.split(':')[2]}";
+          duration =
+              "${strDuration.split(':')[1]}:${strDuration.split(':')[2]}";
+        });
+      } else {
+        setState(() {
+          position = oPosition.toString().split('.').first;
+          duration = oDuration.toString().split('.').first;
         });
       }
       setState(() {
+        validPosition = oDuration.compareTo(oPosition) >= 0;
+        sliderValue = validPosition ? oPosition.inSeconds.toDouble() : 0;
+      });
+          setState(() {
         numberOfCaptions = _controller.value.spuTracksCount;
         numberOfAudioTracks = _controller.value.audioTracksCount;
       });
@@ -839,70 +834,4 @@ class VlcPlayerWithControlsState extends State<VlcPlayerWithControls>
     }
   }
 
-  Future<void> _createCameraImage() async {
-    final snapshot = await _controller.takeSnapshot();
-    _overlayEntry?.remove();
-    _overlayEntry = _createSnapshotThumbnail(snapshot);
-    if (!mounted) return;
-    Overlay.of(context).insert(_overlayEntry);
-  }
-
-  OverlayEntry _createSnapshotThumbnail(Uint8List snapshot) {
-    double right = initSnapshotRightPosition;
-    double bottom = initSnapshotBottomPosition;
-
-    return OverlayEntry(
-      builder: (context) => Positioned(
-        right: right,
-        bottom: bottom,
-        width: _overlayWidth,
-        child: Material(
-          elevation: _elevation,
-          child: GestureDetector(
-            onTap: () async {
-              _overlayEntry?.remove();
-              // _overlayEntry = null;
-              await showDialog<void>(
-                context: context,
-                builder: (ctx) {
-                  return AlertDialog(
-                    contentPadding: EdgeInsets.zero,
-                    content: Image.memory(snapshot),
-                  );
-                },
-              );
-            },
-            onVerticalDragUpdate: (dragUpdateDetails) {
-              bottom -= dragUpdateDetails.delta.dy;
-              _overlayEntry.markNeedsBuild();
-            },
-            onHorizontalDragUpdate: (dragUpdateDetails) {
-              right -= dragUpdateDetails.delta.dx;
-              _overlayEntry.markNeedsBuild();
-            },
-            onHorizontalDragEnd: (dragEndDetails) {
-              if ((initSnapshotRightPosition - right).abs() >= _overlayWidth) {
-                _overlayEntry?.remove();
-                // _overlayEntry = null;
-              } else {
-                right = initSnapshotRightPosition;
-                _overlayEntry.markNeedsBuild();
-              }
-            },
-            onVerticalDragEnd: (dragEndDetails) {
-              if ((initSnapshotBottomPosition - bottom).abs() >=
-                  _overlayWidth) {
-                _overlayEntry?.remove();
-                // _overlayEntry = null;
-              } else {
-                bottom = initSnapshotBottomPosition;
-                _overlayEntry.markNeedsBuild();
-              }
-            },
-            child: Image.memory(snapshot),
-          ),
-        ),
-      ),
-    );
-  }
 }

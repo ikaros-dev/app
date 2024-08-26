@@ -66,7 +66,6 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
       _videoUrl = _episode.resources!.first.url;
       _loadEpisodeResource(_episode.resources!.first);
     }
-    GFToast.showToast("已自动加载第一个附件，剧集加载比较耗时，请耐心等待", context);
   }
 
   void release() {
@@ -319,7 +318,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
         if (element.url.startsWith("http")) {
           subUrl = element.url;
         } else {
-          subUrl = _apiBaseUrl + episodeResource.url;
+          subUrl = _apiBaseUrl + element.url;
         }
         subtitleUrls.add(subUrl);
       }

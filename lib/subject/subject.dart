@@ -444,11 +444,12 @@ class _SubjectState extends State<SubjectPage> {
                           : Colors.lightBlueAccent,
                       onPressed: (ep.resources == null || ep.resources!.isEmpty)
                           ? null
-                          : () => {
+                          : () {
+                                GFToast.showToast("已自动加载第一个附件，剧集加载比较耗时，请耐心等待", context);
                                 Navigator.of(context).push(MaterialPageRoute(
                                     builder: (context) => SubjectEpisodePage(
                                           episode: ep,
-                                        )))
+                                        )));
                               },
                       child: Text(
                         "${ep.sequence} : ${ep.name}",
