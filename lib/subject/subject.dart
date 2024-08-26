@@ -54,11 +54,11 @@ class _SubjectState extends State<SubjectPage> {
     if (_episodeCollections.isEmpty) {
       return false;
     }
-    EpisodeCollection epColl =
+    EpisodeCollection? epColl =
         _episodeCollections
             .where((ep) => ep.episodeId == episodeId)
-            .first;
-    return epColl.finish ?? false;
+            .firstOrNull;
+    return epColl?.finish ?? false;
   }
 
   Future<AuthParams> _loadBaseUrl() async {
