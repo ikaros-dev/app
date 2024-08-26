@@ -156,6 +156,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     }
     return SizedBox(
       height: _isFullScreen ? MediaQuery.of(context).size.height : 200,
+      width: MediaQuery.of(context).size.width,
       child: useDartVlcPlayer
           ? DartVlc.Video(
               player: _dartVlcPlayer,
