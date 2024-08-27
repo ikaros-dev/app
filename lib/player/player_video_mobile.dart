@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,7 +7,7 @@ import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:getwidget/components/toast/gf_toast.dart';
 import 'package:getwidget/position/gf_toast_position.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// basic on flutter_vlc_player.
@@ -213,11 +215,23 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
         // 捕获视频截图
         Uint8List pngBytes = await _player.takeSnapshot();
 
-        // 保存到相册
-        final result = await ImageGallerySaver.saveImage(pngBytes);
-        print(result);
-        GFToast.showToast("截图已保存到相册", context,
-            toastPosition: GFToastPosition.CENTER);
+        // 获取临时目录
+        final directory = await getTemporaryDirectory();
+        // 创建图片文件
+        final imageFile = File('${directory.path}/temp_image.png');
+        // 写入图片数据
+        await imageFile.writeAsBytes(pngBytes);
+
+        // 保存图片到相册
+        // await GallerySaver.saveImage(imageFile.path).then((bool? success) {
+        //   if (success == true) {
+        //     GFToast.showToast("截图已保存到相册", context,
+        //         toastPosition: GFToastPosition.CENTER);
+        //   } else {
+        //     GFToast.showToast("保存图片失败", context,
+        //         toastPosition: GFToastPosition.CENTER);
+        //   }
+        // });
       } catch (e) {
         print(e);
       }
@@ -521,12 +535,12 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                         }),
 
                   const SizedBox(width: 20),
-                  IconButton(
-                    color: Colors.white,
-                    iconSize: 24,
-                    icon: const Icon(Icons.photo_camera),
-                    onPressed: (_takeSnapshot),
-                  ),
+                  // IconButton(
+                  //   color: Colors.white,
+                  //   iconSize: 24,
+                  //   icon: const Icon(Icons.photo_camera),
+                  //   onPressed: (_takeSnapshot),
+                  // ),
                   // 倍速按钮
                   if (_isFullScreen)
                     IconButton(
