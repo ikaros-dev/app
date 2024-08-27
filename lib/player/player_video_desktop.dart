@@ -66,6 +66,12 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       _duration = data.duration ?? Duration.zero;
       setState(() {});
     });
+
+    _player.playbackStream.listen((data){
+      if (data.isCompleted) {
+        EpisodeCollectionApi().updateCollectionFinish(_episodeId, true);
+      }
+    });
   }
 
   @override

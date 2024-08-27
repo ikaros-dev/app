@@ -80,6 +80,10 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       }
     }
 
+    if (_player.value.isEnded) {
+      EpisodeCollectionApi().updateCollectionFinish(_episodeId, true);
+    }
+
     setState(() {});
   }
 
