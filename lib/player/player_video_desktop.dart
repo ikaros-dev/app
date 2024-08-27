@@ -50,7 +50,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     _player = Player(id: hashCode);
 
     playPauseController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 400));
+        AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
 
     playPauseStream = _player.playbackStream
         .listen((event) => setPlaybackMode(event.isPlaying));

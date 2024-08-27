@@ -70,7 +70,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     if (_player.value.isPlaying) {
       // print("isPlaying");
       // seek to  once
-      if (!_progressIsLoaded && _progress > 0) {
+      if (!_progressIsLoaded && _progress > 0 && _duration > const Duration(minutes: 5)) {
         _player.seekTo(Duration(milliseconds: _progress));
         print("seek to $_progress");
         GFToast.showToast("已请求跳转到上次的进度: $_progress", context);
