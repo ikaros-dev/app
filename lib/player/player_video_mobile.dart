@@ -2,15 +2,17 @@ import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
-import 'package:getwidget/components/button/gf_button.dart';
 import 'package:getwidget/components/toast/gf_toast.dart';
 import 'package:getwidget/position/gf_toast_position.dart';
+import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 /// basic on flutter_vlc_player.
 class MobileVideoPlayer extends StatefulWidget {
-  const MobileVideoPlayer({super.key});
+  Function? onFullScreenChange;
+
+  MobileVideoPlayer({super.key, this.onFullScreenChange});
 
   @override
   State<StatefulWidget> createState() {
@@ -20,15 +22,16 @@ class MobileVideoPlayer extends StatefulWidget {
 
 class MobileVideoPlayerState extends State<MobileVideoPlayer>
     with SingleTickerProviderStateMixin {
-  late VlcPlayerController player;
+  late VlcPlayerController _player;
   bool _isPlaying = false;
   bool _displayTapped = true;
   bool _isFullScreen = false; // 全屏控制
   ValueNotifier<bool> isLoading = ValueNotifier(false);
-  Duration duration = Duration.zero;
-  Duration position = Duration.zero;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
   late String _title = "主标题剧集信息";
   late String _subTitle = "副标题加载的附件名称";
+  late int _episodeId = -1;
   late AnimationController playPauseController;
   double _playbackSpeed = 1.0;
   final List<double> _speedOptions = [0.5, 1.0, 1.5, 2.0, 3.0];
@@ -36,12 +39,12 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   void listener() {
     if (!mounted) return;
 
-    if (player.value.isInitialized) {
-      position = player.value.position;
-      duration = player.value.duration;
+    if (_player.value.isInitialized) {
+      _position = _player.value.position;
+      _duration = _player.value.duration;
     }
 
-    if (player.value.isPlaying) {
+    if (_player.value.isPlaying) {
       _isPlaying = true;
       playPauseController.forward();
     } else {
@@ -49,12 +52,12 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       playPauseController.reverse();
     }
 
-    if (player.value.isBuffering) {
+    if (_player.value.isBuffering) {
       if (!isLoading.value) {
         isLoading.value = true;
       }
     } else {
-      if (player.value.isPlaying && isLoading.value) {
+      if (_player.value.isPlaying && isLoading.value) {
         isLoading.value = false;
       }
     }
@@ -64,32 +67,57 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   @override
   void initState() {
     super.initState();
-    player = VlcPlayerController.network(
+    _player = VlcPlayerController.network(
       '', // 初始时不设置视频源
       autoPlay: false,
       hwAcc: HwAcc.full,
     );
-    player.addListener(listener);
+    _player.addListener(listener);
     playPauseController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 400));
   }
 
   @override
   void dispose() {
+    if (_episodeId > 0) {
+      EpisodeCollectionApi().updateCollection(
+          _episodeId, _player.value.position, _player.value.duration);
+      print("保存剧集进度成功");
+    }
+
     playPauseController.dispose();
-    player.dispose();
+    _player.dispose();
     super.dispose();
+  }
+
+  void setTitle(String title) {
+    _title = title;
+    setState(() {});
+  }
+
+  void setSubTitle(String subTitle) {
+    _subTitle = subTitle;
+    setState(() {});
+  }
+
+  void setEpisodeId(int episodeId) {
+    _episodeId = episodeId;
+    setState(() {});
   }
 
   void open(String url, {autoPlay = false}) async {
     print("open for autPlay=$autoPlay and url=$url");
-    print("player.isReadyToInitialize=${player.isReadyToInitialize}");
+    print("player.isReadyToInitialize=${_player.isReadyToInitialize}");
     setState(() {
       isLoading.value = true;
     });
-    await player.setMediaFromNetwork(url, autoPlay: autoPlay); // 设置视频源
+    await _player.setMediaFromNetwork(url, autoPlay: autoPlay); // 设置视频源
     _isPlaying = true;
     setState(() {});
+  }
+
+  void addSlave(String url, bool select) {
+    _player.addSubtitleFromNetwork(url, isSelected: select);
   }
 
   void _toggleDisplayTap() {
@@ -101,6 +129,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   void _updateFullScreen() async {
     setState(() {
       _isFullScreen = !_isFullScreen;
+      widget.onFullScreenChange?.call();
     });
     if (_isFullScreen) {
       _forceLandscape();
@@ -144,9 +173,8 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
     if (status.isGranted) {
       try {
-
         // 捕获视频截图
-        Uint8List pngBytes = await player.takeSnapshot();
+        Uint8List pngBytes = await _player.takeSnapshot();
 
         // 保存到相册
         final result = await ImageGallerySaver.saveImage(pngBytes);
@@ -165,13 +193,13 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   void seek(Duration dest) {
     isLoading.value = true;
     setState(() {});
-    player.seekTo(dest);
+    _player.seekTo(dest);
   }
 
   void seekPlus(bool isPlus, Duration len) {
-    int durationInMilliseconds = duration.inMilliseconds;
+    int durationInMilliseconds = _duration.inMilliseconds;
 
-    int positionInMilliseconds = position.inMilliseconds;
+    int positionInMilliseconds = _position.inMilliseconds;
 
     if (isPlus) {
       if ((positionInMilliseconds + len.inMilliseconds) <=
@@ -190,10 +218,10 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   void _switchPlayerPauseOrPlay() {
     if (_isPlaying) {
-      player.pause();
+      _player.pause();
       playPauseController.reverse();
     } else {
-      player.play();
+      _player.play();
       playPauseController.forward();
     }
   }
@@ -204,14 +232,14 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       currentIndex = (currentIndex + 1) % _speedOptions.length;
       _playbackSpeed = _speedOptions[currentIndex];
     });
-    player.setPlaybackSpeed(_playbackSpeed);
+    _player.setPlaybackSpeed(_playbackSpeed);
   }
 
   Future<void> _getAudioTracks() async {
-    if (!player.value.isPlaying) return;
+    if (!_player.value.isPlaying) return;
 
-    final audioTracks = await player.getAudioTracks();
-    final int? audioTrack = await player.getAudioTrack();
+    final audioTracks = await _player.getAudioTracks();
+    final int? audioTrack = await _player.getAudioTrack();
     if (audioTracks.isNotEmpty) {
       if (!mounted) return;
       final int? selectedAudioTrackId = await showDialog(
@@ -245,7 +273,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       if (selectedAudioTrackId != null &&
           selectedAudioTrackId >= 0 &&
           selectedAudioTrackId != audioTrack) {
-        await player.setAudioTrack(selectedAudioTrackId);
+        await _player.setAudioTrack(selectedAudioTrackId);
         print("set audio track with id:$selectedAudioTrackId");
         GFToast.showToast("已切换到音频轨道: $selectedAudioTrackId", context,
             toastPosition: GFToastPosition.CENTER);
@@ -259,10 +287,10 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   }
 
   Future<void> _getSubtitleTracks() async {
-    if (!player.value.isPlaying) return;
+    if (!_player.value.isPlaying) return;
 
-    final subtitleTracks = await player.getSpuTracks();
-    final int? spuTrack = await player.getSpuTrack();
+    final subtitleTracks = await _player.getSpuTracks();
+    final int? spuTrack = await _player.getSpuTrack();
 
     if (subtitleTracks.isNotEmpty) {
       if (!mounted) return;
@@ -307,7 +335,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       if (selectedSubId != null &&
           selectedSubId > -2 &&
           selectedSubId != spuTrack) {
-        await player.setSpuTrack(selectedSubId);
+        await _player.setSpuTrack(selectedSubId);
         print("set spu track with id:$selectedSubId");
         GFToast.showToast("已切换到字幕轨道: $selectedSubId ,生效需要等下一句字幕。", context,
             toastPosition: GFToastPosition.CENTER);
@@ -332,7 +360,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
             onTap: _toggleDisplayTap,
             onDoubleTap: _switchPlayerPauseOrPlay,
             child: VlcPlayer(
-              controller: player,
+              controller: _player,
               aspectRatio: 16 / 9,
               placeholder: const Center(child: CircularProgressIndicator()),
             ),
@@ -421,8 +449,8 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                   child: Theme(
                     data: ThemeData.dark(),
                     child: ProgressBar(
-                      progress: position,
-                      total: duration,
+                      progress: _position,
+                      total: _duration,
                       barHeight: 3,
                       thumbRadius: 10.0,
                       thumbGlowRadius: 30.0,
@@ -514,7 +542,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                       ),
 
                     /// 音频轨道按钮
-                    if (player.value.audioTracksCount > 1)
+                    if (_player.value.audioTracksCount > 1)
                       IconButton(
                         tooltip: '音频轨道',
                         icon: const Icon(Icons.audiotrack),
@@ -523,7 +551,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                       ),
 
                     // 字幕轨道按钮
-                    if (player.value.spuTracksCount > 0)
+                    if (_player.value.spuTracksCount > 0)
                       IconButton(
                         tooltip: '字幕轨道',
                         icon: const Icon(Icons.subtitles),
@@ -558,7 +586,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
         //           }, // 动态设置资源地址
         //           child: const Text("Load Video"),
         //         ),
-        //         GFButton(
+        //         ElevatedButton(
         //           onPressed: _toggleDisplayTap,
         //           child: const Text("tap"),
         //         ),
@@ -572,7 +600,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 }
 
 // void main() {
-//   runApp(const MaterialApp(
+//   runApp(MaterialApp(
 //     home: MobileVideoPlayer(),
 //   ));
 // }

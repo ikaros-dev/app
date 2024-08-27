@@ -9,11 +9,13 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:win32/win32.dart';
 
 /// basic on dart_vlc.
 class DesktopVideoPlayer extends StatefulWidget {
-  const DesktopVideoPlayer({super.key});
+  Function? onFullScreenChange;
+  DesktopVideoPlayer({super.key, this.onFullScreenChange});
 
   @override
   State<StatefulWidget> createState() {
@@ -23,7 +25,7 @@ class DesktopVideoPlayer extends StatefulWidget {
 
 class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     with SingleTickerProviderStateMixin {
-  late Player player;
+  late Player _player;
   late AnimationController playPauseController;
   late StreamSubscription<PlaybackState> playPauseStream;
   bool _displayTapped = false;
@@ -34,6 +36,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   final List<double> _speedOptions = [0.5, 1.0, 1.5, 2.0, 3.0];
   late String _title = "主标题剧集信息";
   late String _subTitle = "副标题加载的附件名称";
+  late int _episodeId = -1;
+  Duration _duration = Duration.zero;
+  Duration _position = Duration.zero;
 
   @override
   void initState() {
@@ -42,27 +47,53 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     WidgetsFlutterBinding.ensureInitialized();
 
     DartVLC.initialize();
-    player = Player(id: hashCode);
+    _player = Player(id: hashCode);
 
     playPauseController =
         AnimationController(vsync: this, duration: Duration(milliseconds: 400));
 
-    playPauseStream = player.playbackStream
+    playPauseStream = _player.playbackStream
         .listen((event) => setPlaybackMode(event.isPlaying));
-    if (player.playback.isPlaying) playPauseController.forward();
-    player.bufferingProgressStream.listen((buffer) {
+    if (_player.playback.isPlaying) playPauseController.forward();
+    _player.bufferingProgressStream.listen((buffer) {
       if (buffer > 0) {
         isLoading.value = false;
       }
+    });
+
+    _player.positionStream.listen((data){
+      _position = data.position ?? Duration.zero;
+      _duration = data.duration ?? Duration.zero;
+      setState(() {});
     });
   }
 
   @override
   void dispose() {
+    if (_episodeId > 0) {
+      EpisodeCollectionApi().updateCollection(
+          _episodeId, _position, _duration);
+      print("保存剧集进度成功");
+    }
     playPauseStream.cancel();
     playPauseController.dispose();
-    player.dispose();
+    _player.dispose();
     super.dispose();
+  }
+
+  void setTitle(String title) {
+    _title = title;
+    setState(() {});
+  }
+
+  void setSubTitle(String subTitle) {
+    _subTitle = subTitle;
+    setState(() {});
+  }
+
+  void setEpisodeId(int episodeId) {
+    _episodeId = episodeId;
+    setState(() {});
   }
 
   void setPlaybackMode(bool isPlaying) {
@@ -76,20 +107,25 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   void open(String url, {autoStart: false}) {
     isLoading.value = true;
-    player.open(
+    _player.open(
       Media.network(url),
       autoStart: autoStart,
     );
   }
 
+  void addSlave(MediaSlaveType type, String url, bool select) {
+    _player.addSlave(type, url, select);
+  }
+
   void seek(Duration dest) {
     isLoading.value = true;
-    player.seek(dest);
+    _player.seek(dest);
   }
 
   void _updateFullScreen() async {
     setState(() {
       _isFullScreen = !_isFullScreen;
+      widget.onFullScreenChange?.call();
     });
     if (Platform.isWindows) {
       if (_isFullScreen) {
@@ -182,11 +218,11 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   }
 
   void _switchPlayerPauseOrPlay() {
-    if (player.playback.isPlaying) {
-      player.pause();
+    if (_player.playback.isPlaying) {
+      _player.pause();
       playPauseController.reverse();
     } else {
-      player.play();
+      _player.play();
       playPauseController.forward();
     }
   }
@@ -197,7 +233,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       currentIndex = (currentIndex + 1) % _speedOptions.length;
       _playbackSpeed = _speedOptions[currentIndex];
     });
-    player.setRate(_playbackSpeed);
+    _player.setRate(_playbackSpeed);
   }
 
   void _handleKeyEvent(KeyEvent event) {
@@ -213,9 +249,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   }
 
   void seekPlus(bool isPlus, Duration len) {
-    int durationInMilliseconds = player.position.duration?.inMilliseconds ?? 0;
+    int durationInMilliseconds = _player.position.duration?.inMilliseconds ?? 0;
 
-    int positionInMilliseconds = player.position.position?.inMilliseconds ?? 0;
+    int positionInMilliseconds = _player.position.position?.inMilliseconds ?? 0;
 
     if (isPlus) {
       if ((positionInMilliseconds + len.inMilliseconds) <=
@@ -260,15 +296,15 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     if (kDebugMode) {
       print("take snapshot to file: ${file.path}");
     }
-    player.takeSnapshot(
-        file, player.videoDimensions.width, player.videoDimensions.height);
+    _player.takeSnapshot(
+        file, _player.videoDimensions.width, _player.videoDimensions.height);
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        if (player.playback.isPlaying) {
+        if (_player.playback.isPlaying) {
           if (_displayTapped) {
             setState(() {
               _displayTapped = false;
@@ -290,7 +326,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                 onTap: _switchPlayerPauseOrPlay,
                 onDoubleTap: _updateFullScreen,
                 child: Video(
-                  player: player,
+                  player: _player,
                   showControls: false,
                 ),
               ),
@@ -379,7 +415,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                         padding: const EdgeInsets.only(
                             bottom: 60, right: 20, left: 20),
                         child: StreamBuilder<PositionState>(
-                          stream: player.positionStream,
+                          stream: _player.positionStream,
                           builder: (BuildContext context,
                               AsyncSnapshot<PositionState> snapshot) {
                             final durationState = snapshot.data;
@@ -409,7 +445,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                       ),
                     ),
                     StreamBuilder<CurrentState>(
-                      stream: player.currentStream,
+                      stream: _player.currentStream,
                       builder: (context, snapshot) {
                         return Positioned(
                             left: 0,
@@ -425,7 +461,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                                     color: Colors.white,
                                     iconSize: 30,
                                     icon: const Icon(Icons.skip_previous),
-                                    onPressed: () => player.previous(),
+                                    onPressed: () => _player.previous(),
                                   ),
                                 const SizedBox(width: 50),
                                 IconButton(
@@ -466,7 +502,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                                     color: Colors.white,
                                     iconSize: 30,
                                     icon: const Icon(Icons.skip_next),
-                                    onPressed: () => player.next(),
+                                    onPressed: () => _player.next(),
                                   ),
                               ],
                             ));
@@ -505,7 +541,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
                           /// 音量控制
                           VolumeControl(
-                            player: player,
+                            player: _player,
                             thumbColor: Colors.lightGreen,
                             inactiveColor: Colors.grey,
                             activeColor: Colors.blue,
@@ -513,7 +549,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                           ),
 
                           /// 音频轨道按钮
-                          if (player.audioTrackCount > 1)
+                          if (_player.audioTrackCount > 1)
                             PopupMenuButton(
                               iconSize: 24,
                               tooltip: "音频轨道",
@@ -522,11 +558,11 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                               onSelected: (String trackDesc) {
                                 int? id = _getTrackDescId(trackDesc);
                                 if (id == null) return;
-                                player.setAudioTrack(id);
+                                _player.setAudioTrack(id);
                               },
                               itemBuilder: (context) {
-                                final audioTrack = player.audioTrack();
-                                return player
+                                final audioTrack = _player.audioTrack();
+                                return _player
                                     .audioTrackDescription()
                                     .where((track) => !track.startsWith("-1"))
                                     .map(
@@ -546,7 +582,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                             ),
 
                           // 字幕轨道按钮
-                          if (player.spuCount() > 0)
+                          if (_player.spuCount() > 0)
                             PopupMenuButton(
                               iconSize: 24,
                               tooltip: "字幕轨道",
@@ -556,11 +592,11 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                                   return;
                                 var trackProps = trackDesc.split(":");
                                 var trackId = int.parse(trackProps[0]);
-                                player.setSpu(trackId);
+                                _player.setSpu(trackId);
                               },
                               itemBuilder: (context) {
-                                final spu = player.spu();
-                                return player
+                                final spu = _player.spu();
+                                return _player
                                     .spuTrackDescription()
                                     .map(
                                       (track) => PopupMenuItem(

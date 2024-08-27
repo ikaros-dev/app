@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:dart_vlc/dart_vlc.dart' as DartVlc;
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:getwidget/components/toast/gf_toast.dart';
 import 'package:ikaros/api/attachment/AttachmentRelationApi.dart';
 import 'package:ikaros/api/attachment/model/VideoSubtitle.dart';
@@ -11,11 +10,10 @@ import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
-import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
-import 'package:ikaros/api/subject/model/Video.dart';
-import 'package:ikaros/video/vlc_player_with_controls.dart';
+import 'package:ikaros/player/player_video_desktop.dart';
+import 'package:ikaros/player/player_video_mobile.dart';
 
 class SubjectEpisodePage extends StatefulWidget {
   final Episode episode;
@@ -33,18 +31,15 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   late Episode _episode;
 
   bool _isFullScreen = false;
-  late GlobalKey<VlcPlayerWithControlsState> _childKey;
-  String _videoUrl = "http://";
+  String _videoUrl = '';
   List<String> _videoSubtitleUrls = [];
   String _videoTitle = '';
-  String _episodeTitle = '';
-  late int _currentEpisodeId = 0;
+  String _episodeResName = '';
   int _progress = 0;
-  List<Video> _videoList = <Video>[];
   late EpisodeResource? _currentResource = null;
 
-  // Windows and Linux Dart Vlc Player
-  late DartVlc.Player _dartVlcPlayer;
+  late GlobalKey<MobileVideoPlayerState> _mobilePlayer;
+  late GlobalKey<DesktopVideoPlayerState> _desktopPlayer;
 
   Future<AuthParams> _loadBaseUrl() async {
     return AuthApi().getAuthParams();
@@ -54,48 +49,42 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   void initState() {
     super.initState();
     _episode = widget.episode;
-    _childKey = GlobalKey<VlcPlayerWithControlsState>();
+    _mobilePlayer = GlobalKey<MobileVideoPlayerState>();
+    _desktopPlayer = GlobalKey<DesktopVideoPlayerState>();
 
-    if (Platform.isWindows || Platform.isLinux) {
-      _dartVlcPlayer = DartVlc.Player(id: hashCode);
-    }
-
-    _videoTitle = "${_episode.sequence}: ${(_episode.nameCn != null && _episode.nameCn != '') ? _episode.nameCn! : _episode.name}";
+    _videoTitle =
+        "${_episode.sequence}: ${(_episode.nameCn != null && _episode.nameCn != '') ? _episode.nameCn! : _episode.name}";
 
     if (_episode.resources != null && _episode.resources!.isNotEmpty) {
       _videoUrl = _episode.resources!.first.url;
-      _loadEpisodeResource(_episode.resources!.first);
+      // _loadEpisodeResource(_episode.resources!.first);
     }
   }
 
-  void release() {
-    int current = 0;
-    int duration = 0;
+  // void release() {
+  //   Duration current = Duration.zero;
+  //   Duration duration = Duration.zero;
+  //
+  //   if (Platform.isAndroid || Platform.isIOS) {
+  //     current = _mobilePlayer.currentState?.getPosition() ?? Duration.zero;
+  //     duration = _mobilePlayer.currentState?.getDuration() ?? Duration.zero;
+  //   } else {
+  //     current = _desktopPlayer.currentState?.getPosition() ?? Duration.zero;
+  //     duration = _desktopPlayer.currentState?.getDuration() ?? Duration.zero;
+  //   }
+  //
+  //   if (current.inMilliseconds.toInt() > 0) {
+  //     EpisodeCollectionApi().updateCollection(
+  //         widget.episode.id, current, duration);
+  //     print("保存剧集进度成功");
+  //   }
+  //
+  // }
 
-    if (Platform.isWindows || Platform.isLinux) {
-      current = _dartVlcPlayer.position.position?.inMilliseconds ?? 0;
-      duration = _dartVlcPlayer.position.duration?.inMilliseconds ?? 0;
-      _dartVlcPlayer.stop();
-      _dartVlcPlayer.dispose();
-    }
-    if (Platform.isAndroid || Platform.isIOS) {
-      current = int.parse(_childKey.currentState?.position ?? "0");
-      duration = int.parse(_childKey.currentState?.duration ?? "0");
-    }
-
-    if (current > 0) {
-      EpisodeCollectionApi().updateCollection(
-          widget.episode.id, Duration(milliseconds: current), Duration(milliseconds: duration));
-      print("保存剧集进度成功");
-    }
-
-  }
-
-
-  @override
-  void dispose() {
-    release();
-    super.dispose();
+  void _onFullScreenChange() {
+    setState(() {
+      _isFullScreen = !_isFullScreen;
+    });
   }
 
   @override
@@ -150,86 +139,68 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   }
 
   Widget _buildVideoPlayer() {
-    bool useDartVlcPlayer = Platform.isWindows || Platform.isLinux;
-    if (_currentResource == null) {
-      return const CircularProgressIndicator();
-    }
-    return SizedBox(
+    bool useMobileVideoPlayer = Platform.isAndroid || Platform.isIOS;
+    return Container(
+      color: Colors.black,
       height: _isFullScreen ? MediaQuery.of(context).size.height : 200,
       width: MediaQuery.of(context).size.width,
-      child: useDartVlcPlayer
-          ? DartVlc.Video(
-              player: _dartVlcPlayer,
-              showControls: true,
+      child: useMobileVideoPlayer
+          ? MobileVideoPlayer(
+              key: _mobilePlayer,
               onFullScreenChange: _onFullScreenChange,
             )
-          : VlcPlayerWithControls(
-              key: _childKey,
-              updateIsFullScreen: (val) => _updateIsFullScreen(val),
-              videoTitle: _videoTitle,
-              episodeId: _currentEpisodeId,
-              subtitleUrls: _videoSubtitleUrls,
-              videoUrl: '',
+          : DesktopVideoPlayer(
+              key: _desktopPlayer,
+              onFullScreenChange: _onFullScreenChange,
             ),
     );
   }
 
-  _onFullScreenChange() {
-    setState(() {
-      _isFullScreen = !_isFullScreen;
-    });
-  }
-
-  _updateIsFullScreen(bool val) {
-    setState(() {
-      _isFullScreen = val;
-    });
-  }
-
-  Future callChildMethod2ChangePlayerDatasource() async {
-    final childState = _childKey.currentState;
-    if (childState != null) {
-      await childState.changeDatasource(_episode.id, _videoUrl,
-          _videoSubtitleUrls, _videoTitle, _episodeTitle, _progress);
-    } else {
-      print("child state is null when callChildMethod2ChangePlayerDatasource");
-    }
-  }
-
   Future setVideoUrl() async {
-    if (Platform.isWindows || Platform.isLinux) {
-      _dartVlcPlayer.open(
-        DartVlc.Media.network(_videoUrl),
-        autoStart: true, // default
-      );
+    /// 移动端
+    if (Platform.isAndroid || Platform.isIOS) {
+      _mobilePlayer.currentState?.open(_videoUrl, autoPlay: true);
       if (_videoSubtitleUrls.isNotEmpty) {
         setState(() {
           for (var subtitle in _videoSubtitleUrls) {
-            _dartVlcPlayer.addSlave(
-                DartVlc.MediaSlaveType.subtitle, subtitle, true);
+            _mobilePlayer.currentState?.addSlave(subtitle, true);
           }
         });
       }
+
+      _mobilePlayer.currentState?.setTitle(_videoTitle);
+      _mobilePlayer.currentState?.setSubTitle(_episodeResName);
+      _mobilePlayer.currentState?.setEpisodeId(widget.episode.id);
+
       if (_progress > 0) {
-        _dartVlcPlayer.seek(Duration(milliseconds: _progress));
+        _mobilePlayer.currentState?.seek(Duration(milliseconds: _progress));
         print("seek video to : $_progress");
         GFToast.showToast("已请求跳转到上次的进度", context);
       }
+
       return;
     }
-    try {
-      print("update video url: $_videoUrl");
-      await callChildMethod2ChangePlayerDatasource();
-    } catch (error) {
-      Fluttertoast.showToast(
-          msg: "Video play exception: $error",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0);
-      print("播放-异常: $error");
+
+    /// 桌面端
+    _desktopPlayer.currentState?.open(_videoUrl, autoStart: true);
+
+    if (_videoSubtitleUrls.isNotEmpty) {
+      setState(() {
+        for (var subtitle in _videoSubtitleUrls) {
+          _desktopPlayer.currentState
+              ?.addSlave(DartVlc.MediaSlaveType.subtitle, subtitle, true);
+        }
+      });
+    }
+
+    _desktopPlayer.currentState?.setTitle(_videoTitle);
+    _desktopPlayer.currentState?.setSubTitle(_episodeResName);
+    _desktopPlayer.currentState?.setEpisodeId(widget.episode.id);
+
+    if (_progress > 0) {
+      _desktopPlayer.currentState?.seek(Duration(milliseconds: _progress));
+      print("seek video to : $_progress");
+      GFToast.showToast("已请求跳转到上次的进度", context);
     }
   }
 
@@ -237,48 +208,6 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     if (_apiBaseUrl.isEmpty) {
       _apiBaseUrl = (await AuthApi().getAuthParams()).baseUrl;
     }
-  }
-
-  Future _initVideoList() async {
-    if (_videoList.isNotEmpty) {
-      return;
-    }
-
-    await _loadApiBaseUrl();
-
-    String episodeTitle =
-        "${_episode.sequence}: ${(_episode.nameCn != null && _episode.nameCn != '') ? _episode.nameCn! : _episode.name}";
-    if (_episode.resources!.isNotEmpty) {
-      List<Video> videos = [];
-      for (int i = 0; i < _episode.resources!.length; i++) {
-        EpisodeResource resource = _episode.resources![i];
-        String resourceName = resource.name;
-        String url = _apiBaseUrl + resource.url;
-        List<VideoSubtitle> videoSubtitles = await AttachmentRelationApi()
-            .findByAttachmentId(resource.attachmentId);
-        List<String> subtitleUrls = [];
-        for (var element in videoSubtitles) {
-          var subUrl = _apiBaseUrl + element.url;
-          subtitleUrls.add(subUrl);
-        }
-
-        Video video = Video(
-            episodeId: _episode.id,
-            subjectId: _episode.subjectId,
-            url: url,
-            title: episodeTitle,
-            subhead: resourceName,
-            subtitleUrls: subtitleUrls);
-        videos.add(video);
-      }
-
-      if (mounted) {
-        setState(() {
-          _videoList.addAll(videos);
-        });
-      }
-    }
-    return;
   }
 
   Future<List<VideoSubtitle>> _loadVideoSubtitlesByAttId(int attId) async {
@@ -302,7 +231,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     _videoTitle =
         "${_episode.sequence}: ${(_episode.nameCn != null && _episode.nameCn != '') ? _episode.nameCn! : _episode.name}";
     print("_episode video title: $_videoTitle");
-    _episodeTitle = episodeResource.name;
+    _episodeResName = episodeResource.name;
     print("episode title: $_videoTitle");
     if (episodeResource.url.startsWith("http")) {
       _videoUrl = episodeResource.url;
@@ -331,18 +260,13 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
 
     // seek to
     EpisodeCollection episodeCollection =
-    await EpisodeCollectionApi().findCollection(episodeResource.episodeId);
-    if (episodeCollection.progress != null &&
-        episodeCollection.progress! > 0) {
-
-      print(
-          "find episode collection progress:${episodeCollection.progress}");
+        await EpisodeCollectionApi().findCollection(episodeResource.episodeId);
+    if (episodeCollection.progress != null && episodeCollection.progress! > 0) {
+      print("find episode collection progress:${episodeCollection.progress}");
       setState(() {
         _progress = episodeCollection.progress!;
       });
     }
-
-
 
     await setVideoUrl();
     return episodeResource;
@@ -388,9 +312,6 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
       child: ListView(
         children: items,
       ),
-    );
-    return ListView(
-      children: items,
     );
   }
 }
