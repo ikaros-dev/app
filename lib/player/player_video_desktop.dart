@@ -3,6 +3,8 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+import 'package:canvas_danmaku/canvas_danmaku.dart';
+import 'package:canvas_danmaku/danmaku_controller.dart';
 import 'package:dart_vlc/dart_vlc.dart';
 import 'package:desktop_window/desktop_window.dart';
 import 'package:ffi/ffi.dart';
@@ -10,6 +12,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
+import 'package:ikaros/api/subject/model/Episode.dart';
+import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:win32/win32.dart';
 
 /// basic on dart_vlc.
@@ -39,6 +43,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late int _episodeId = -1;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  late DanmakuController _danmuku;
+  late Episode _episode;
+  late Subject _subject;
 
   @override
   void initState() {
@@ -637,6 +644,11 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                 ),
               ),
 
+              DanmakuScreen(
+                createdController: (e) {
+                _danmuku = e;
+              }, option: DanmakuOption()),
+              
               // Row(
               //   mainAxisAlignment: MainAxisAlignment.start,
               //   children: [
