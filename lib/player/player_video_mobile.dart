@@ -35,6 +35,9 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   late AnimationController playPauseController;
   double _playbackSpeed = 1.0;
   final List<double> _speedOptions = [0.5, 1.0, 1.5, 2.0, 3.0];
+  List<String> _subtitleUrls = [];
+  bool _progressIsLoaded = false;
+  int _progress = 0;
 
   void listener() {
     if (!mounted) return;
@@ -61,6 +64,20 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
         isLoading.value = false;
       }
     }
+
+    if (_player.value.isPlaying) {
+      // print("isPlaying");
+      // seek to  once
+      if (!_progressIsLoaded && _progress > 0) {
+        _player.seekTo(Duration(milliseconds: _progress));
+        print("seek to $_progress");
+        GFToast.showToast("已请求跳转到上次的进度: $_progress", context);
+        setState(() {
+          _progressIsLoaded = true;
+        });
+      }
+    }
+
     setState(() {});
   }
 
@@ -105,6 +122,14 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     setState(() {});
   }
 
+  void setSubtitleUrls(List<String> subtitles) {
+    _subtitleUrls = subtitles;
+  }
+
+  void setProgress(int progress) {
+    _progress = progress;
+  }
+
   void open(String url, {autoPlay = false}) async {
     print("open for autPlay=$autoPlay and url=$url");
     print("player.isReadyToInitialize=${_player.isReadyToInitialize}");
@@ -113,11 +138,23 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     });
     await _player.setMediaFromNetwork(url, autoPlay: autoPlay); // 设置视频源
     _isPlaying = true;
+
+    // load new subtitles
+    if (_subtitleUrls != null && _subtitleUrls!.isNotEmpty) {
+      for (int i = 0; i < _subtitleUrls!.length; i++) {
+        print("add subtitle url to video, url: ${_subtitleUrls![i]}");
+        await _player.addSubtitleFromNetwork(_subtitleUrls![i],
+            isSelected: i == 0);
+      }
+    }
+
     setState(() {});
   }
 
   void addSlave(String url, bool select) {
     _player.addSubtitleFromNetwork(url, isSelected: select);
+    print("add subtitle form network for url: $url");
+    setState(() {});
   }
 
   void _toggleDisplayTap() {
@@ -350,103 +387,82 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        SizedBox(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: _toggleDisplayTap,
-            onDoubleTap: _switchPlayerPauseOrPlay,
-            child: VlcPlayer(
-              controller: _player,
-              aspectRatio: 16 / 9,
-              placeholder: const Center(child: CircularProgressIndicator()),
-            ),
-          ),
-        ),
-        ValueListenableBuilder<bool>(
-          valueListenable: isLoading,
-          builder: (context, loading, child) {
-            return loading
-                ? const Center(
-                    child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        color: Colors.white,
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        "正在缓冲中...",
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            decoration: TextDecoration.none),
-                      )
-                    ],
-                  )) // 在视频正中心显示加载指示器
-                : const SizedBox.shrink();
-          },
-        ),
-        AnimatedOpacity(
-          duration: const Duration(milliseconds: 300),
-          opacity: _displayTapped ? 1.0 : 0.0,
-          child: Stack(
-            children: [
-              // 上方中间的标题文本
-              Row(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _toggleDisplayTap,
+      onDoubleTap: _switchPlayerPauseOrPlay,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          // 上方中间的标题文本
+          Visibility(
+            visible: _displayTapped,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: _displayTapped ? 1.0 : 0.0,
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(_title,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              decoration: TextDecoration.none)),
-                      Text(_subTitle,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              decoration: TextDecoration.none)),
-                    ],
+                  ValueListenableBuilder<bool>(
+                    valueListenable: isLoading,
+                    builder: (context, loading, child) {
+                      return loading
+                          ? const Center(
+                              child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                                SizedBox(height: 10),
+                                Text(
+                                  "正在缓冲中...",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      decoration: TextDecoration.none),
+                                )
+                              ],
+                            )) // 在视频正中心显示加载指示器
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Text(_title,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        decoration: TextDecoration.none)),
+                                Text(_subTitle,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        decoration: TextDecoration.none)),
+                              ],
+                            );
+                    },
                   )
                 ],
               ),
+            ),
+          ),
 
-              // 右边的截图按钮
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+          /// 中间的视频
+          Expanded(
+              child: VlcPlayer(
+            controller: _player,
+            aspectRatio: 16 / 9,
+            placeholder: const Center(child: CircularProgressIndicator()),
+          )),
+
+          Visibility(
+            visible: _displayTapped,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: _displayTapped ? 1.0 : 0.0,
+              child: Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 15),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          color: Colors.white,
-                          iconSize: 30,
-                          icon: const Icon(Icons.photo_camera),
-                          onPressed: (_takeSnapshot),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              /// 底部的控制UI
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.only(bottom: 60, right: 20, left: 20),
-                  child: Theme(
+                  Expanded(
+                      child: Theme(
                     data: ThemeData.dark(),
                     child: ProgressBar(
                       progress: _position,
@@ -461,140 +477,115 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                         seek(duration);
                       },
                     ),
-                  ),
-                ),
+                  )),
+                ],
               ),
-              Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 10,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      const SizedBox(width: 20),
-                      if (_isFullScreen)
-                        IconButton(
-                            color: Colors.white,
-                            iconSize: 30,
-                            icon: const Icon(Icons.replay_10),
-                            onPressed: () {
-                              seekPlus(false, const Duration(seconds: 10));
-                            }),
-                      const SizedBox(
-                        width: 20,
-                      ),
-
-                      /// 播放暂停按钮
-                      IconButton(
+            ),
+          ),
+          Visibility(
+            visible: _displayTapped,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: _displayTapped ? 1.0 : 0.0,
+              child: Row(
+                children: [
+                  if (_isFullScreen)
+                    IconButton(
                         color: Colors.white,
                         iconSize: 30,
-                        icon: AnimatedIcon(
-                            icon: AnimatedIcons.play_pause,
-                            progress: playPauseController),
-                        onPressed: _switchPlayerPauseOrPlay,
-                      ),
-                      const SizedBox(width: 20),
-                      if (_isFullScreen)
-                        IconButton(
-                            color: Colors.white,
-                            iconSize: 30,
-                            icon: const Icon(Icons.forward_10),
-                            onPressed: () {
-                              seekPlus(true, const Duration(seconds: 10));
-                            }),
-                      const SizedBox(
-                        width: 20,
-                      ),
-                    ],
-                  )),
+                        icon: const Icon(Icons.replay_10),
+                        onPressed: () {
+                          seekPlus(false, const Duration(seconds: 10));
+                        }),
+                  const SizedBox(
+                    width: 20,
+                  ),
 
-              Positioned(
-                right: 15,
-                bottom: 12.5,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    // 倍速按钮
-                    if (_isFullScreen)
-                      IconButton(
-                        iconSize: 24,
+                  /// 播放暂停按钮
+                  IconButton(
+                    color: Colors.white,
+                    iconSize: 30,
+                    icon: AnimatedIcon(
+                        icon: AnimatedIcons.play_pause,
+                        progress: playPauseController),
+                    onPressed: _switchPlayerPauseOrPlay,
+                  ),
+                  const SizedBox(width: 20),
+                  if (_isFullScreen)
+                    IconButton(
                         color: Colors.white,
-                        icon: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.speed),
-                            const SizedBox(
-                              width: 4,
-                            ),
-                            Text(
-                              'x$_playbackSpeed',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold),
-                            )
-                          ],
-                        ),
-                        onPressed: _updateSpeed,
-                        tooltip: "更改倍速",
-                      ),
+                        iconSize: 30,
+                        icon: const Icon(Icons.forward_10),
+                        onPressed: () {
+                          seekPlus(true, const Duration(seconds: 10));
+                        }),
 
-                    /// 音频轨道按钮
-                    if (_player.value.audioTracksCount > 1)
-                      IconButton(
-                        tooltip: '音频轨道',
-                        icon: const Icon(Icons.audiotrack),
-                        color: Colors.white,
-                        onPressed: _getAudioTracks,
-                      ),
-
-                    // 字幕轨道按钮
-                    if (_player.value.spuTracksCount > 0)
-                      IconButton(
-                        tooltip: '字幕轨道',
-                        icon: const Icon(Icons.subtitles),
-                        color: Colors.white,
-                        onPressed: _getSubtitleTracks,
-                      ),
-
-                    // 全屏控制按钮
+                  const SizedBox(width: 20),
+                  IconButton(
+                    color: Colors.white,
+                    iconSize: 24,
+                    icon: const Icon(Icons.photo_camera),
+                    onPressed: (_takeSnapshot),
+                  ),
+                  // 倍速按钮
+                  if (_isFullScreen)
                     IconButton(
                       iconSize: 24,
-                      icon: Icon(
-                          _isFullScreen
-                              ? Icons.fullscreen_exit
-                              : Icons.fullscreen,
-                          color: Colors.white),
-                      onPressed: _updateFullScreen,
+                      color: Colors.white,
+                      icon: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.speed),
+                          const SizedBox(
+                            width: 4,
+                          ),
+                          Text(
+                            'x$_playbackSpeed',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold),
+                          )
+                        ],
+                      ),
+                      onPressed: _updateSpeed,
+                      tooltip: "更改倍速",
                     ),
-                  ],
-                ),
+
+                  /// 音频轨道按钮
+                  if (_player.value.audioTracksCount > 1)
+                    IconButton(
+                      tooltip: '音频轨道',
+                      icon: const Icon(Icons.audiotrack),
+                      color: Colors.white,
+                      onPressed: _getAudioTracks,
+                    ),
+
+                  // 字幕轨道按钮
+                  if (_player.value.spuTracksCount > 0)
+                    IconButton(
+                      tooltip: '字幕轨道',
+                      icon: const Icon(Icons.subtitles),
+                      color: Colors.white,
+                      onPressed: _getSubtitleTracks,
+                    ),
+
+                  // 全屏控制按钮
+                  IconButton(
+                    iconSize: 24,
+                    icon: Icon(
+                        _isFullScreen
+                            ? Icons.fullscreen_exit
+                            : Icons.fullscreen,
+                        color: Colors.white),
+                    onPressed: _updateFullScreen,
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-        // Row(
-        //   mainAxisAlignment: MainAxisAlignment.start,
-        //   children: [
-        //     Column(
-        //       mainAxisAlignment: MainAxisAlignment.center,
-        //       children: [
-        //         ElevatedButton(
-        //           onPressed: () {
-        //           }, // 动态设置资源地址
-        //           child: const Text("Load Video"),
-        //         ),
-        //         ElevatedButton(
-        //           onPressed: _toggleDisplayTap,
-        //           child: const Text("tap"),
-        //         ),
-        //       ],
-        //     )
-        //   ],
-        // ),
-      ],
+        ],
+      ),
     );
   }
 }

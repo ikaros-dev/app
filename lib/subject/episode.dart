@@ -57,7 +57,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
 
     if (_episode.resources != null && _episode.resources!.isNotEmpty) {
       _videoUrl = _episode.resources!.first.url;
-      // _loadEpisodeResource(_episode.resources!.first);
+      _loadEpisodeResource(_episode.resources!.first);
     }
   }
 
@@ -159,13 +159,8 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   Future setVideoUrl() async {
     /// 移动端
     if (Platform.isAndroid || Platform.isIOS) {
-      _mobilePlayer.currentState?.open(_videoUrl, autoPlay: true);
       if (_videoSubtitleUrls.isNotEmpty) {
-        setState(() {
-          for (var subtitle in _videoSubtitleUrls) {
-            _mobilePlayer.currentState?.addSlave(subtitle, true);
-          }
-        });
+        _mobilePlayer.currentState?.setSubtitleUrls(_videoSubtitleUrls);
       }
 
       _mobilePlayer.currentState?.setTitle(_videoTitle);
@@ -173,11 +168,10 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
       _mobilePlayer.currentState?.setEpisodeId(widget.episode.id);
 
       if (_progress > 0) {
-        _mobilePlayer.currentState?.seek(Duration(milliseconds: _progress));
-        print("seek video to : $_progress");
-        GFToast.showToast("已请求跳转到上次的进度", context);
+        _mobilePlayer.currentState?.setProgress(_progress);
       }
-
+      _mobilePlayer.currentState?.open(_videoUrl, autoPlay: true);
+      setState(() {});
       return;
     }
 
