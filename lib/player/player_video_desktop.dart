@@ -3,8 +3,6 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
-import 'package:canvas_danmaku/canvas_danmaku.dart';
-import 'package:canvas_danmaku/danmaku_controller.dart';
 import 'package:dart_vlc/dart_vlc.dart';
 import 'package:desktop_window/desktop_window.dart';
 import 'package:ffi/ffi.dart';
@@ -19,6 +17,7 @@ import 'package:win32/win32.dart';
 /// basic on dart_vlc.
 class DesktopVideoPlayer extends StatefulWidget {
   Function? onFullScreenChange;
+
   DesktopVideoPlayer({super.key, this.onFullScreenChange});
 
   @override
@@ -43,7 +42,6 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late int _episodeId = -1;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
-  late DanmakuController _danmuku;
   late Episode _episode;
   late Subject _subject;
 
@@ -56,8 +54,8 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     DartVLC.initialize();
     _player = Player(id: hashCode);
 
-    playPauseController =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    playPauseController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
 
     playPauseStream = _player.playbackStream
         .listen((event) => setPlaybackMode(event.isPlaying));
@@ -68,13 +66,13 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       }
     });
 
-    _player.positionStream.listen((data){
+    _player.positionStream.listen((data) {
       _position = data.position ?? Duration.zero;
       _duration = data.duration ?? Duration.zero;
       setState(() {});
     });
 
-    _player.playbackStream.listen((data){
+    _player.playbackStream.listen((data) {
       if (data.isCompleted) {
         EpisodeCollectionApi().updateCollectionFinish(_episodeId, true);
       }
@@ -84,8 +82,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   @override
   void dispose() {
     if (_episodeId > 0) {
-      EpisodeCollectionApi().updateCollection(
-          _episodeId, _position, _duration);
+      EpisodeCollectionApi().updateCollection(_episodeId, _position, _duration);
       print("保存剧集进度成功");
     }
     playPauseStream.cancel();
@@ -386,8 +383,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                                 style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
-                                    decoration: TextDecoration.none)
-                            ),
+                                    decoration: TextDecoration.none)),
                             Text(_subTitle,
                                 style: const TextStyle(
                                     color: Colors.white,
@@ -644,11 +640,6 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                 ),
               ),
 
-              DanmakuScreen(
-                createdController: (e) {
-                _danmuku = e;
-              }, option: DanmakuOption()),
-              
               // Row(
               //   mainAxisAlignment: MainAxisAlignment.start,
               //   children: [
