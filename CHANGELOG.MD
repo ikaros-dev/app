@@ -4,6 +4,9 @@
 
 # 15.2.10
 
+- [X] 优化PC的播放页布局
+- [ ] 修正PC截图的文件名，subjectId_epGroup_epSeq_post.png
+
 # 15.2.9
 
 

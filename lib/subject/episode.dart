@@ -14,6 +14,7 @@ import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/player/player_video_desktop.dart';
 import 'package:ikaros/player/player_video_mobile.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/screen_utils.dart';
 
 class SubjectEpisodePage extends StatefulWidget {
   final Episode episode;
@@ -140,9 +141,10 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
 
   Widget _buildVideoPlayer() {
     bool useMobileVideoPlayer = Platform.isAndroid || Platform.isIOS;
+    bool gt600 = ScreenUtils.screenWidthGt600(context);
     return Container(
       color: Colors.black,
-      height: _isFullScreen ? MediaQuery.of(context).size.height : 200,
+      height: gt600 ? MediaQuery.of(context).size.height : _isFullScreen ? MediaQuery.of(context).size.height : 200,
       width: MediaQuery.of(context).size.width,
       child: useMobileVideoPlayer
           ? MobileVideoPlayer(
