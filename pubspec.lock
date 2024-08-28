@@ -499,6 +499,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.2"
+  ns_danmaku:
+    dependency: "direct main"
+    description:
+      name: ns_danmaku
+      sha256: fd787b5bb83128431318e7209db62230e8e4b7408e8063c460f3783606154eac
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   open_file:
     dependency: "direct main"
     description:

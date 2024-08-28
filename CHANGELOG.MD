@@ -6,6 +6,7 @@
 
 - [X] 优化PC的播放页布局
 - [X] 修正PC截图的文件名，episodeId_post.png
+- [X] PC端弹幕加载，从dandanplay获取
 - [ ] 调整移动端播放器底部控制按钮
 
 # 15.2.9

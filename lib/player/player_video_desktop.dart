@@ -10,8 +10,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
+import 'package:ikaros/api/dandanplay/DandanplayCommentApi.dart';
+import 'package:ikaros/api/dandanplay/DandanplaySearchApi.dart';
+import 'package:ikaros/api/dandanplay/model/CommentEpisode.dart';
+import 'package:ikaros/api/dandanplay/model/CommentEpisodeIdResponse.dart';
+import 'package:ikaros/api/dandanplay/model/SearchEpisodeDetails.dart';
+import 'package:ikaros/api/dandanplay/model/SearchEpisodesAnime.dart';
+import 'package:ikaros/api/dandanplay/model/SearchEpisodesResponse.dart';
+import 'package:ikaros/api/subject/EpisodeApi.dart';
+import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ns_danmaku/danmaku_controller.dart';
+import 'package:ns_danmaku/danmaku_view.dart';
+import 'package:ns_danmaku/models/danmaku_item.dart';
+import 'package:ns_danmaku/models/danmaku_option.dart';
 import 'package:win32/win32.dart';
 
 /// basic on dart_vlc.
@@ -42,8 +55,11 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late int _episodeId = -1;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  Duration _lastPosition = Duration.zero;
   late Episode _episode;
   late Subject _subject;
+  late DanmakuController _danmuku;
+  List<CommentEpisode> _commentEpisodes = [];
 
   @override
   void initState() {
@@ -59,7 +75,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
     playPauseStream = _player.playbackStream
         .listen((event) => setPlaybackMode(event.isPlaying));
-    if (_player.playback.isPlaying) playPauseController.forward();
+    if (_player.playback.isPlaying) _play();
     _player.bufferingProgressStream.listen((buffer) {
       if (buffer > 0) {
         isLoading.value = false;
@@ -67,9 +83,11 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     });
 
     _player.positionStream.listen((data) {
+      _lastPosition = _position;
       _position = data.position ?? Duration.zero;
       _duration = data.duration ?? Duration.zero;
       setState(() {});
+      _checkAndAddDanmuku(_lastPosition, _position);
     });
 
     _player.playbackStream.listen((data) {
@@ -103,6 +121,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   void setEpisodeId(int episodeId) {
     _episodeId = episodeId;
+    _initDanmukuPool();
     setState(() {});
   }
 
@@ -113,6 +132,56 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       playPauseController.reverse();
     }
     setState(() {});
+  }
+
+  void _initDanmukuPool() async {
+    _episode = await EpisodeApi().findById(_episodeId);
+    if (_episode.id == -1) return;
+    _subject = await SubjectApi().findById(_episode.subjectId);
+    if (_subject.id == -1) return;
+    SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
+        .searchEpisodes(_subject.name, _episode.sequence.toInt().toString());
+    if (searchEpsResp == null ||
+        !searchEpsResp.success ||
+        searchEpsResp.animes.isEmpty) return;
+    SearchEpisodesAnime searchEpisodesAnime = searchEpsResp.animes.first;
+    if (searchEpisodesAnime.episodes.isEmpty) return;
+    SearchEpisodeDetails searchEpisodeDetails =
+        searchEpisodesAnime.episodes.first;
+    CommentEpisodeIdResponse? commentEpIdResp = await DandanplayCommentApi()
+        .commentEpisodeId(searchEpisodeDetails.episodeId, 1);
+    if (commentEpIdResp == null || commentEpIdResp.count == 0) return;
+    _commentEpisodes.addAll(commentEpIdResp.comments);
+  }
+
+  void _checkAndAddDanmuku(Duration lastPosition, Duration currentPosition) {
+    for (CommentEpisode commentEp in List.from(_commentEpisodes)) {
+      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) continue;
+      String timeStr = commentEp.p.split(",")[0];
+      double timeD = double.parse(timeStr);
+      Duration time = Duration(seconds: timeD.toInt());
+      if (time >= lastPosition - const Duration(milliseconds: 100) && time <= currentPosition + const Duration(milliseconds: 100)) {
+        _commentEpisodes.remove(commentEp);
+        _addDanmuku(commentEp);
+      }
+    }
+  }
+
+  void _addDanmuku(CommentEpisode commentEp) {
+    if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) return;
+    String danmuMode = commentEp.p.split(',')[1];
+    int danmuColor = int.parse(commentEp.p.split(',')[2]);
+    int r = (danmuColor >> 16) & 0xFF; // 提取红色分量
+    int g = (danmuColor >> 8) & 0xFF;  // 提取绿色分量
+    int b = danmuColor & 0xFF;         // 提取蓝色分量
+    Color color = Color.fromARGB(255, r, g, b);
+    DanmakuItemType type = DanmakuItemType.scroll;
+    if (danmuMode == "4") type = DanmakuItemType.bottom;
+    if (danmuMode == "5") type = DanmakuItemType.top;
+    DanmakuItem item = DanmakuItem(commentEp.m, type: type, color: color);
+    List<DanmakuItem> items = [];
+    items.add(item);
+    _danmuku.addItems(items);
   }
 
   void open(String url, {autoStart: false}) {
@@ -227,13 +296,23 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     return int.parse(trackProps[0]);
   }
 
+  void _play() {
+    _player.play();
+    playPauseController.forward();
+    if (!_danmuku.running) _danmuku.resume();
+  }
+
+  void _pause() {
+    _player.pause();
+    playPauseController.reverse();
+    if (_danmuku.running) _danmuku.pause();
+  }
+
   void _switchPlayerPauseOrPlay() {
     if (_player.playback.isPlaying) {
-      _player.pause();
-      playPauseController.reverse();
+      _pause();
     } else {
-      _player.play();
-      playPauseController.forward();
+      _play();
     }
   }
 
@@ -638,6 +717,13 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                     ),
                   ],
                 ),
+              ),
+
+              DanmakuView(
+                createdController: (e) {
+                  _danmuku = e;
+                },
+                option: DanmakuOption(),
               ),
 
               // Row(
