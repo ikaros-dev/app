@@ -630,98 +630,109 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
               duration: const Duration(milliseconds: 300),
               opacity: _displayTapped ? 1.0 : 0.0,
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (_isFullScreen)
-                    IconButton(
+                  Row(
+                    children: [
+                      if (_isFullScreen)
+                        IconButton(
+                            color: Colors.white,
+                            iconSize: 30,
+                            icon: const Icon(Icons.replay_10),
+                            onPressed: () {
+                              seekPlus(false, const Duration(seconds: 10));
+                            }),
+                      const SizedBox(
+                        width: 20,
+                      ),
+
+                      /// 播放暂停按钮
+                      IconButton(
                         color: Colors.white,
                         iconSize: 30,
-                        icon: const Icon(Icons.replay_10),
-                        onPressed: () {
-                          seekPlus(false, const Duration(seconds: 10));
-                        }),
-                  const SizedBox(
-                    width: 20,
+                        icon: AnimatedIcon(
+                            icon: AnimatedIcons.play_pause,
+                            progress: playPauseController),
+                        onPressed: _switchPlayerPauseOrPlay,
+                      ),
+                      const SizedBox(width: 20),
+                      if (_isFullScreen)
+                        IconButton(
+                            color: Colors.white,
+                            iconSize: 30,
+                            icon: const Icon(Icons.forward_10),
+                            onPressed: () {
+                              seekPlus(true, const Duration(seconds: 10));
+                            }),
+                    ],
                   ),
 
-                  /// 播放暂停按钮
-                  IconButton(
-                    color: Colors.white,
-                    iconSize: 30,
-                    icon: AnimatedIcon(
-                        icon: AnimatedIcons.play_pause,
-                        progress: playPauseController),
-                    onPressed: _switchPlayerPauseOrPlay,
-                  ),
-                  const SizedBox(width: 20),
-                  if (_isFullScreen)
-                    IconButton(
-                        color: Colors.white,
-                        iconSize: 30,
-                        icon: const Icon(Icons.forward_10),
-                        onPressed: () {
-                          seekPlus(true, const Duration(seconds: 10));
-                        }),
+                  Row(
+                    children: [
+                      // 倍速按钮
+                      if (_isFullScreen)
+                        IconButton(
+                          iconSize: 24,
+                          color: Colors.white,
+                          icon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.speed),
+                              const SizedBox(
+                                width: 4,
+                              ),
+                              Text(
+                                'x$_playbackSpeed',
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold),
+                              )
+                            ],
+                          ),
+                          onPressed: _updateSpeed,
+                          tooltip: "更改倍速",
+                        ),
 
-                  const SizedBox(width: 20),
+                      /// 音频轨道按钮
+                      if (_player.value.audioTracksCount > 1)
+                        IconButton(
+                          tooltip: '音频轨道',
+                          icon: const Icon(Icons.audiotrack),
+                          color: Colors.white,
+                          onPressed: _getAudioTracks,
+                        ),
+
+                      // 字幕轨道按钮
+                      if (_player.value.spuTracksCount > 0)
+                        IconButton(
+                          tooltip: '字幕轨道',
+                          icon: const Icon(Icons.subtitles),
+                          color: Colors.white,
+                          onPressed: _getSubtitleTracks,
+                        ),
+
+                      // 全屏控制按钮
+                      IconButton(
+                        iconSize: 24,
+                        icon: Icon(
+                            _isFullScreen
+                                ? Icons.fullscreen_exit
+                                : Icons.fullscreen,
+                            color: Colors.white),
+                        onPressed: _updateFullScreen,
+                      ),
+                    ],
+                  ),
+
+                  // const SizedBox(width: 20),
                   // IconButton(
                   //   color: Colors.white,
                   //   iconSize: 24,
                   //   icon: const Icon(Icons.photo_camera),
                   //   onPressed: (_takeSnapshot),
                   // ),
-                  // 倍速按钮
-                  if (_isFullScreen)
-                    IconButton(
-                      iconSize: 24,
-                      color: Colors.white,
-                      icon: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.speed),
-                          const SizedBox(
-                            width: 4,
-                          ),
-                          Text(
-                            'x$_playbackSpeed',
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold),
-                          )
-                        ],
-                      ),
-                      onPressed: _updateSpeed,
-                      tooltip: "更改倍速",
-                    ),
 
-                  /// 音频轨道按钮
-                  if (_player.value.audioTracksCount > 1)
-                    IconButton(
-                      tooltip: '音频轨道',
-                      icon: const Icon(Icons.audiotrack),
-                      color: Colors.white,
-                      onPressed: _getAudioTracks,
-                    ),
-
-                  // 字幕轨道按钮
-                  if (_player.value.spuTracksCount > 0)
-                    IconButton(
-                      tooltip: '字幕轨道',
-                      icon: const Icon(Icons.subtitles),
-                      color: Colors.white,
-                      onPressed: _getSubtitleTracks,
-                    ),
-
-                  // 全屏控制按钮
-                  IconButton(
-                    iconSize: 24,
-                    icon: Icon(
-                        _isFullScreen
-                            ? Icons.fullscreen_exit
-                            : Icons.fullscreen,
-                        color: Colors.white),
-                    onPressed: _updateFullScreen,
-                  ),
                 ],
               ),
             ),
