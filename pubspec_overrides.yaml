@@ -1,0 +1,4 @@
+# melos_managed_dependency_overrides: media_kit
+#dependency_overrides:
+#  flutter_vlc_player_platform_interface:
+#    path: ../../chivehao/flutter_vlc_player/flutter_vlc_player_platform_interface

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
@@ -18,6 +19,7 @@ import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/throttle_utils.dart';
 import 'package:ns_danmaku/danmaku_controller.dart';
 import 'package:ns_danmaku/danmaku_view.dart';
 import 'package:ns_danmaku/models/danmaku_item.dart';
@@ -63,6 +65,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   List<CommentEpisode> _commentEpisodes = [];
   List<CommentEpisode> _commentRomovedEpisodes = [];
   late Lock lock = Lock();
+  final ThrottleController _throttleController = ThrottleController();
 
   void listener() {
     if (!mounted) return;
@@ -70,13 +73,17 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     if (_player.value.isInitialized) {
       _position = _player.value.position;
       _duration = _player.value.duration;
-      _checkAndAddDanmuku(_lastPosition, _position);
+      _throttleController.run(() {
+        _lastPosition = _position;
+        _checkAndAddDanmuku(_lastPosition, _position);
+        if (kDebugMode) {
+          print("check and add danumu for last$_lastPosition curr:$_position");
+        }
+      }, const Duration(milliseconds: 500));
     }
 
     if (_player.value.isPlaying) {
       _play();
-    } else {
-      _pause();
     }
 
     if (_player.value.isBuffering) {
@@ -151,8 +158,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   void setEpisodeId(int episodeId) {
     _episodeId = episodeId;
-    // TODO 安卓端Stack会覆盖，这个问题还没解决，暂时先注释弹幕
-    if (Platform.isIOS) _initDanmukuPool();
+    _initDanmukuPool();
     setState(() {});
   }
 
@@ -166,27 +172,28 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   void _checkAndAddDanmuku(Duration lastPosition, Duration currentPosition) {
     for (CommentEpisode commentEp in List.from(_commentEpisodes)) {
-      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4)
+      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) {
         continue;
+      }
       String timeStr = commentEp.p.split(",")[0];
       double timeD = double.parse(timeStr);
       Duration time = Duration(seconds: timeD.toInt());
       if (lastPosition != Duration.zero &&
-          lastPosition < currentPosition &&
+          lastPosition <= currentPosition &&
           time < lastPosition) {
-        lock.synchronized(() {
-          _commentEpisodes.remove(commentEp);
-          _commentRomovedEpisodes.add(commentEp);
-        });
+        _commentEpisodes.remove(commentEp);
+        _commentRomovedEpisodes.add(commentEp);
         continue;
       }
       if (time >= lastPosition - const Duration(milliseconds: 100) &&
           time <= currentPosition + const Duration(milliseconds: 100)) {
-        lock.synchronized(() {
-          _commentEpisodes.remove(commentEp);
-          _commentRomovedEpisodes.add(commentEp);
-        });
+        _commentEpisodes.remove(commentEp);
+        _commentRomovedEpisodes.add(commentEp);
         _addDanmuku(commentEp);
+        if (kDebugMode) {
+          print(
+              "add danmuku item for last:$lastPosition current:$currentPosition test:${commentEp.m}");
+        }
       }
     }
   }
@@ -340,6 +347,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   void seek(Duration dest) {
     isLoading.value = true;
     setState(() {});
+    _lastPosition = Duration.zero;
     _player.seekTo(dest);
     _danmuku.pause();
     _danmuku.clear();
@@ -516,129 +524,133 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       behavior: HitTestBehavior.opaque,
       onTap: _toggleDisplayTap,
       onDoubleTap: _switchPlayerPauseOrPlay,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
+      child: Stack(
         children: [
-          // 上方中间的标题文本
-          Visibility(
-            visible: _displayTapped,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: _displayTapped ? 1.0 : 0.0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ValueListenableBuilder<bool>(
-                    valueListenable: isLoading,
-                    builder: (context, loading, child) {
-                      return loading
-                          ? const Center(
-                              child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  color: Colors.white,
-                                ),
-                                SizedBox(height: 10),
-                                Text(
-                                  "正在缓冲中...",
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                      decoration: TextDecoration.none),
-                                )
-                              ],
-                            )) // 在视频正中心显示加载指示器
-                          : Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Text(_title,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        decoration: TextDecoration.none)),
-                                Text(_subTitle,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                        decoration: TextDecoration.none)),
-                              ],
-                            );
-                    },
-                  )
-                ],
-              ),
+          /// 视频
+          SizedBox(
+            width: MediaQuery.of(context).size.width,
+            child: VlcPlayer(
+              controller: _player,
+              aspectRatio: 16 / 9,
+              virtualDisplay: true,
+              placeholder: const Center(child: CircularProgressIndicator()),
             ),
           ),
 
-          Expanded(
+          /// 缓冲
+          ValueListenableBuilder<bool>(
+            valueListenable: isLoading,
+            builder: (context, loading, child) {
+              return loading
+                  ? const Center(
+                      child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          "正在缓冲中...",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              decoration: TextDecoration.none),
+                        )
+                      ],
+                    )) // 在视频正中心显示加载指示器
+                  : const SizedBox.shrink();
+            },
+          ),
+
+          /// UI
+          AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: _displayTapped ? 1.0 : 0.0,
             child: Stack(
               children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  child: VlcPlayer(
-                    controller: _player,
-                    aspectRatio: 16 / 9,
-                    virtualDisplay: true,
-                    placeholder: const Center(child: CircularProgressIndicator()),
+                // 上方中间的标题文本
+                if (_isFullScreen)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(_title,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  decoration: TextDecoration.none)),
+                          Text(_subTitle,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  decoration: TextDecoration.none)),
+                        ],
+                      )
+                    ],
+                  ),
+
+                // 右边的截图按钮
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(right: 15),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            color: Colors.white,
+                            iconSize: 30,
+                            icon: Icon(Icons.photo_camera),
+                            onPressed: null,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                /// 底部的控制UI
+                /// 进度条
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.only(bottom: 60, right: 20, left: 20),
+                    child: Theme(
+                      data: ThemeData.dark(),
+                      child: ProgressBar(
+                        progress: _position,
+                        total: _duration,
+                        barHeight: 3,
+                        thumbRadius: 10.0,
+                        thumbGlowRadius: 30.0,
+                        timeLabelLocation: TimeLabelLocation.sides,
+                        timeLabelType: TimeLabelType.totalTime,
+                        timeLabelTextStyle:
+                            const TextStyle(color: Colors.white),
+                        onSeek: (duration) {
+                          seek(duration);
+                        },
+                      ),
+                    ),
                   ),
                 ),
 
-                DanmakuView(
-                  createdController: (e) {
-                    _danmuku = e;
-                  },
-                  option: DanmakuOption(),
-                ),
-              ],
-            ),
-          ),
-
-          /// 中间的视频
-          // Expanded(
-          //     child: VlcPlayer(
-          //   controller: _player,
-          //   aspectRatio: 16 / 9,
-          //   placeholder: const Center(child: CircularProgressIndicator()),
-          // )),
-
-          Visibility(
-            visible: _displayTapped,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: _displayTapped ? 1.0 : 0.0,
-              child: Row(
-                children: [
-                  Expanded(
-                      child: Theme(
-                    data: ThemeData.dark(),
-                    child: ProgressBar(
-                      progress: _position,
-                      total: _duration,
-                      barHeight: 3,
-                      thumbRadius: 10.0,
-                      thumbGlowRadius: 30.0,
-                      timeLabelLocation: TimeLabelLocation.sides,
-                      timeLabelType: TimeLabelType.totalTime,
-                      timeLabelTextStyle: const TextStyle(color: Colors.white),
-                      onSeek: (duration) {
-                        seek(duration);
-                      },
-                    ),
-                  )),
-                ],
-              ),
-            ),
-          ),
-          Visibility(
-            visible: _displayTapped,
-            child: AnimatedOpacity(
-              duration: const Duration(milliseconds: 300),
-              opacity: _displayTapped ? 1.0 : 0.0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+                /// 底部按钮
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 10,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       if (_isFullScreen)
                         IconButton(
@@ -672,8 +684,13 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                             }),
                     ],
                   ),
+                ),
 
-                  Row(
+                Positioned(
+                  right: 15,
+                  bottom: 12.5,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       // 倍速按钮
                       if (_isFullScreen)
@@ -730,17 +747,17 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                       ),
                     ],
                   ),
-
-                  // const SizedBox(width: 20),
-                  // IconButton(
-                  //   color: Colors.white,
-                  //   iconSize: 24,
-                  //   icon: const Icon(Icons.photo_camera),
-                  //   onPressed: (_takeSnapshot),
-                  // ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+
+          /// 弹幕层
+          DanmakuView(
+            createdController: (e) {
+              _danmuku = e;
+            },
+            option: DanmakuOption(),
           ),
         ],
       ),

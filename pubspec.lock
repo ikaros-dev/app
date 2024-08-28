@@ -170,10 +170,10 @@ packages:
     dependency: transitive
     description:
       name: coverage
-      sha256: "576aaab8b1abdd452e0f656c3e73da9ead9d7880e15bdc494189d9c1a1baf0db"
+      sha256: "7b594a150942e0d3be99cd45a1d0b5caff27ba5a27f292ed8e8d904ba3f167b5"
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.0"
+    version: "1.9.1"
   crypto:
     dependency: transitive
     description:
@@ -297,19 +297,17 @@ packages:
   flutter_vlc_player:
     dependency: "direct main"
     description:
-      name: flutter_vlc_player
-      sha256: "5e846156687e5a3911355916dc06558e0e827a91ef245ac59993ed74bec3ec97"
-      url: "https://pub.dev"
-    source: hosted
+      path: "dependencies/flutter_vlc_player/flutter_vlc_player"
+      relative: true
+    source: path
     version: "7.4.2"
   flutter_vlc_player_platform_interface:
     dependency: transitive
     description:
-      name: flutter_vlc_player_platform_interface
-      sha256: b161dde841368d330be82c5ee6f40b29dadc4227167bf2770d949f576ae2d9b1
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.3"
+      path: "dependencies/flutter_vlc_player/flutter_vlc_player_platform_interface"
+      relative: true
+    source: path
+    version: "2.0.4"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -351,10 +349,10 @@ packages:
     dependency: transitive
     description:
       name: http
-      sha256: "5895291c13fa8a3bd82e76d5627f69e0d85ca6a30dcac95c4ea19a5d555879c2"
+      sha256: b9c29a161230ee03d3ccf545097fccd9b87a5264228c5d348202e0f0c28f9010
       url: "https://pub.dev"
     source: hosted
-    version: "0.13.6"
+    version: "1.2.2"
   http_multi_server:
     dependency: transitive
     description:
@@ -511,10 +509,66 @@ packages:
     dependency: "direct main"
     description:
       name: open_file
-      sha256: "0ebdc2ad29df46e4b1dcb92edb369e3066efe195349170c830fdf2cb669f0eb8"
+      sha256: ef75e05a43b2a84e890877ba7eb5a6792a95d61ef5fc83aa9eb00c5c55d9f6c6
       url: "https://pub.dev"
     source: hosted
-    version: "3.4.0"
+    version: "3.5.1"
+  open_file_android:
+    dependency: transitive
+    description:
+      name: open_file_android
+      sha256: "43f9ddb0e2eb76e560f44c83ea1959962699526b6f59ec88f87eca009271c56f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  open_file_ios:
+    dependency: transitive
+    description:
+      name: open_file_ios
+      sha256: "9f019f10045dc88c0c01acdac9ee038cbaa0dc898e756aa336d6b015cdb8ddb9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  open_file_linux:
+    dependency: transitive
+    description:
+      name: open_file_linux
+      sha256: "2c7c8e6a9ce430b2fae8cbc5551466369d657402c1527eef49be5c9cc9c92944"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
+  open_file_mac:
+    dependency: transitive
+    description:
+      name: open_file_mac
+      sha256: f878b6863af99e6abae4cde8c4c1fe2e58e1e7f3f0c4c5e4c65fb2e697cbd28d
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  open_file_platform_interface:
+    dependency: transitive
+    description:
+      name: open_file_platform_interface
+      sha256: e410d18264a0f3166f0c7f5460e931920a14f680ec38e2a25c8e0a8a901da838
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
+  open_file_web:
+    dependency: transitive
+    description:
+      name: open_file_web
+      sha256: "34d1da10b30911066c939f11b79f420ecb85e0c3372eefa7c1adb37693dc930e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
+  open_file_windows:
+    dependency: transitive
+    description:
+      name: open_file_windows
+      sha256: a13e754c131eabf3a8e5dce0adb2fff4e3827fe3acd71219da3a57f65a22920c
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   package_config:
     dependency: transitive
     description:

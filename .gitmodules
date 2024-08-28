@@ -1,3 +1,6 @@
 [submodule "dependencies/dart_vlc"]
 	path = dependencies/dart_vlc
 	url = https://github.com/chivehao/dart_vlc.git
+[submodule "dependencies/flutter_vlc_player"]
+	path = dependencies/flutter_vlc_player
+	url = https://github.com/chivehao/flutter_vlc_player.git

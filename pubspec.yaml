@@ -16,7 +16,8 @@ dependencies:
   flutter_easyrefresh: ^2.2.2
   path_provider: ^2.0.15
   uuid: ^3.0.7
-  flutter_vlc_player: ^7.4.2
+  flutter_vlc_player:
+    path: dependencies/flutter_vlc_player/flutter_vlc_player
   provider: ^6.0.5
   dart_vlc:
     path: dependencies/dart_vlc

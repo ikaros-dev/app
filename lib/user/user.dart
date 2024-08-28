@@ -159,7 +159,6 @@ class _UserPageState extends State<UserPage> {
       String latestVersion = data['tag_name'];
       String downloadUrl = _getDownloadUrl(data['assets']);
       if ('v$_appVersion' == latestVersion) {
-
         Toast.show(context, "当前已经是最新版本:$_appVersion");
         return;
       }
@@ -219,12 +218,8 @@ class _UserPageState extends State<UserPage> {
     // 安卓直接打开apk文件即可跳转安装逻辑
     if (Platform.isAndroid) {
       if (await Permission.requestInstallPackages.request().isGranted) {
-        final OpenResult result = await OpenFile.open(filePath,
+        await OpenFile.open(filePath,
             type: 'application/vnd.android.package-archive');
-        if (result.type != ResultType.done) {
-          Toast.show(context, "错误：${result.message}");
-        }
-        print(result.message);
       } else {
         print('Install packages permission denied');
         openAppSettings();
