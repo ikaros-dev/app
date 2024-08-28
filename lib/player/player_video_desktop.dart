@@ -301,7 +301,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         print("create ikaros snapshot dir: ${directory.path}");
       }
     }
-    String fileName = "test_filename.png";
+    String fileName = '${_episodeId}_${_position.inMilliseconds}ms.png';
     File file = File('${directory.path}/$fileName');
     if (kDebugMode) {
       print("take snapshot to file: ${file.path}");

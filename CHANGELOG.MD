@@ -5,7 +5,8 @@
 # 15.2.10
 
 - [X] 优化PC的播放页布局
-- [ ] 修正PC截图的文件名，subjectId_epGroup_epSeq_post.png
+- [X] 修正PC截图的文件名，episodeId_post.png
+- [ ] 调整移动端播放器底部控制按钮
 
 # 15.2.9
 
