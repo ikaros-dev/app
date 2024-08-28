@@ -74,11 +74,9 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     }
 
     if (_player.value.isPlaying) {
-      _isPlaying = true;
-      playPauseController.forward();
+      _play();
     } else {
-      _isPlaying = false;
-      playPauseController.reverse();
+      _pause();
     }
 
     if (_player.value.isBuffering) {
@@ -94,7 +92,9 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     if (_player.value.isPlaying) {
       // print("isPlaying");
       // seek to  once
-      if (!_progressIsLoaded && _progress > 0 && _duration > const Duration(minutes: 5)) {
+      if (!_progressIsLoaded &&
+          _progress > 0 &&
+          _duration > const Duration(minutes: 5)) {
         _player.seekTo(Duration(milliseconds: _progress));
         print("seek to $_progress");
         Toast.show(context, "已请求跳转到上次的进度: $_progress");
@@ -166,19 +166,23 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   void _checkAndAddDanmuku(Duration lastPosition, Duration currentPosition) {
     for (CommentEpisode commentEp in List.from(_commentEpisodes)) {
-      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) continue;
+      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4)
+        continue;
       String timeStr = commentEp.p.split(",")[0];
       double timeD = double.parse(timeStr);
       Duration time = Duration(seconds: timeD.toInt());
-      if (lastPosition != Duration.zero && lastPosition < currentPosition && time < lastPosition) {
-        lock.synchronized((){
+      if (lastPosition != Duration.zero &&
+          lastPosition < currentPosition &&
+          time < lastPosition) {
+        lock.synchronized(() {
           _commentEpisodes.remove(commentEp);
           _commentRomovedEpisodes.add(commentEp);
         });
         continue;
       }
-      if (time >= lastPosition - const Duration(milliseconds: 100) && time <= currentPosition + const Duration(milliseconds: 100)) {
-        lock.synchronized((){
+      if (time >= lastPosition - const Duration(milliseconds: 100) &&
+          time <= currentPosition + const Duration(milliseconds: 100)) {
+        lock.synchronized(() {
           _commentEpisodes.remove(commentEp);
           _commentRomovedEpisodes.add(commentEp);
         });
@@ -188,12 +192,13 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   }
 
   void _addDanmuku(CommentEpisode commentEp) {
-    if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) return;
+    if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4)
+      return;
     String danmuMode = commentEp.p.split(',')[1];
     int danmuColor = int.parse(commentEp.p.split(',')[2]);
     int r = (danmuColor >> 16) & 0xFF; // 提取红色分量
-    int g = (danmuColor >> 8) & 0xFF;  // 提取绿色分量
-    int b = danmuColor & 0xFF;         // 提取蓝色分量
+    int g = (danmuColor >> 8) & 0xFF; // 提取绿色分量
+    int b = danmuColor & 0xFF; // 提取蓝色分量
     Color color = Color.fromARGB(255, r, g, b);
     DanmakuItemType type = DanmakuItemType.scroll;
     if (danmuMode == "4") type = DanmakuItemType.bottom;
@@ -244,7 +249,6 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     if (commentEpIdResp == null || commentEpIdResp.count == 0) return;
     _commentEpisodes.addAll(commentEpIdResp.comments);
   }
-
 
   void addSlave(String url, bool select) {
     _player.addSubtitleFromNetwork(url, isSelected: select);
@@ -339,7 +343,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     _player.seekTo(dest);
     _danmuku.pause();
     _danmuku.clear();
-    lock.synchronized((){
+    lock.synchronized(() {
       _commentEpisodes.addAll(_commentRomovedEpisodes);
       _commentRomovedEpisodes.clear();
     });
@@ -367,18 +371,18 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   }
 
   void _play() {
-    _player.play();
+    if (!_player.value.isPlaying) _player.play();
+    _isPlaying = true;
     playPauseController.forward();
     if (!_danmuku.running) _danmuku.resume();
   }
 
   void _pause() {
-    _player.pause();
+    if (_player.value.isPlaying) _player.pause();
+    _isPlaying = false;
     playPauseController.reverse();
     if (_danmuku.running) _danmuku.pause();
   }
-
-
 
   void _switchPlayerPauseOrPlay() {
     if (_isPlaying) {
@@ -575,6 +579,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                   child: VlcPlayer(
                     controller: _player,
                     aspectRatio: 16 / 9,
+                    virtualDisplay: true,
                     placeholder: const Center(child: CircularProgressIndicator()),
                   ),
                 ),
@@ -588,6 +593,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
               ],
             ),
           ),
+
           /// 中间的视频
           // Expanded(
           //     child: VlcPlayer(
@@ -732,7 +738,6 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                   //   icon: const Icon(Icons.photo_camera),
                   //   onPressed: (_takeSnapshot),
                   // ),
-
                 ],
               ),
             ),
