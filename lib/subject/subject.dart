@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:getwidget/getwidget.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
@@ -16,6 +15,7 @@ import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
+import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -126,7 +126,7 @@ class _SubjectState extends State<SubjectPage> {
           if (await canLaunchUrl(Uri.parse(url))) {
             await launchUrl(Uri.parse(url));
           } else {
-            GFToast.showToast("无法启动外部链接：$url", context);
+            Toast.show(context, "无法启动外部链接：$url");
           }
         },
         icon: const Icon(
@@ -275,8 +275,7 @@ class _SubjectState extends State<SubjectPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        GFButton(
-          disabledColor: Colors.grey,
+        ElevatedButton(
           onPressed: _episodesHasResource()
               ? () async {
             bool? cancel = await showEpisodesDialog();
@@ -299,19 +298,17 @@ class _SubjectState extends State<SubjectPage> {
 
   Widget _buildCollectOperateWidget() {
     if (_subjectCollection == null) {
-      return GFButton(
+      return ElevatedButton(
         onPressed: () {
           _postCollectSubject();
         },
-        color: Colors.blue,
         child: const Text("收藏"),
       );
     } else {
-      return GFButton(
+      return ElevatedButton(
         onPressed: () {
           _postUnCollectSubject();
         },
-        color: Colors.redAccent,
         child: const Text("取消收藏"),
       );
     }
@@ -320,7 +317,7 @@ class _SubjectState extends State<SubjectPage> {
 
   Widget _buildCollectTypeOperateWidget() {
     if (_subjectCollection != null) {
-      return GFDropdown(
+      return DropdownButton(
         borderRadius: BorderRadius.circular(5),
         value: _collectionType,
         onChanged: (newValue) {
@@ -439,9 +436,9 @@ class _SubjectState extends State<SubjectPage> {
                   bool isFinish = _episodeIsFinish(ep.id);
                   await EpisodeCollectionApi()
                       .updateCollectionFinish(ep.id, !isFinish);
-                  GFToast.showToast(
-                      "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}",
-                      context);
+                  Toast.show(context,
+                      "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}"
+                  );
                   Navigator.pop(context);
                   Navigator.pushReplacement(
                     context,
@@ -450,19 +447,18 @@ class _SubjectState extends State<SubjectPage> {
                             SubjectPage(id: widget.id.toString())),
                   );
                 },
-                child: GFButton(
-                  disabledColor: Colors.grey,
-                  color: _episodeIsFinish(ep.id)
-                      ? Colors.green
-                      : Colors.lightBlueAccent,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: _episodeIsFinish(ep.id)
+                          ? Colors.green
+                          : Colors.lightBlueAccent,
+                      disabledBackgroundColor: Colors.grey[400],
+                      disabledForegroundColor: Colors.grey[600],
+                  ),
                   onPressed: (ep.resources == null || ep.resources!.isEmpty)
                       ? null
                       : () {
-                    GFToast.showToast(
-                        "已自动加载第一个附件，剧集加载比较耗时，请耐心等待",
-                        context,
-                        toastDuration: 3,
-                        toastPosition: GFToastPosition.CENTER);
+                    Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
                     Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) =>
                             SubjectEpisodePage(
@@ -528,12 +524,12 @@ class _SubjectState extends State<SubjectPage> {
   Future<void> _postCollectSubjectWithoutRefresh(CollectionType type) async {
     await SubjectCollectionApi()
         .updateCollection(_subject.id, type, _subject.nsfw);
-    GFToast.showToast("收藏番剧[${_getSubjectName()}]成功.", context);
+    Toast.show(context, "收藏番剧[${_getSubjectName()}]成功.");
   }
 
   Future<void> _postUnCollectSubject() async {
     await SubjectCollectionApi().removeCollection(_subject.id);
-    GFToast.showToast("取消收藏番剧[${_getSubjectName()}]成功.", context);
+    Toast.show(context, "取消收藏番剧[${_getSubjectName()}]成功.");
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(

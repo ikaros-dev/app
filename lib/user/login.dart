@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:getwidget/components/toast/gf_toast.dart';
-import 'package:ikaros/layout.dart';
-import 'package:ikaros/main.dart';
-import 'package:ikaros/subject/subjects.dart';
+import 'package:fluttertoast/fluttertoast.dart' as FlToast;
 import 'package:ikaros/api/auth/AuthApi.dart';
+import 'package:ikaros/main.dart';
+import 'package:ikaros/utils/message_utils.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -97,7 +95,8 @@ class LoginState extends State<LoginView> {
 
   Widget buildPasswordTextField(BuildContext context) {
     return TextFormField(
-        obscureText: _isObscure, // 是否显示文字
+        obscureText: _isObscure,
+        // 是否显示文字
         onSaved: (v) => _password = v!,
         validator: (v) {
           if (v!.isEmpty) {
@@ -164,7 +163,7 @@ class LoginState extends State<LoginView> {
     var state = (_formKey.currentState as FormState);
     bool result = state.validate();
     if (!result) {
-      GFToast.showToast("服务地址或用户名或密码错误", context);
+      Toast.show(context, "服务地址或用户名或密码错误");
       return;
     }
     state.save();
@@ -175,11 +174,11 @@ class LoginState extends State<LoginView> {
                   MaterialPageRoute(builder: (context) => const MyApp()))
             })
         .onError((error, stackTrace) => {
-              Fluttertoast.showToast(
+              FlToast.Fluttertoast.showToast(
                   msg:
-                      "exec login error by username: $_username, password: $_password, error: $error",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.CENTER,
+                      "登录失败 by username: $_username, password: $_password, error: $error",
+                  toastLength: FlToast.Toast.LENGTH_SHORT,
+                  gravity: FlToast.ToastGravity.CENTER,
                   timeInSecForIosWeb: 5,
                   backgroundColor: Colors.red,
                   textColor: Colors.white,

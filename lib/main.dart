@@ -18,6 +18,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Ikaros',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+      ),
       home: ScreenUtils.screenWidthGt600(context)
           ? const DesktopLayout()
           : const MobileLayout(),

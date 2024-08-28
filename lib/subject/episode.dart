@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:dart_vlc/dart_vlc.dart' as DartVlc;
 import 'package:flutter/material.dart';
-import 'package:getwidget/components/toast/gf_toast.dart';
 import 'package:ikaros/api/attachment/AttachmentRelationApi.dart';
 import 'package:ikaros/api/attachment/model/VideoSubtitle.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
@@ -14,6 +13,7 @@ import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/player/player_video_desktop.dart';
 import 'package:ikaros/player/player_video_mobile.dart';
+import 'package:ikaros/utils/message_utils.dart';
 
 class SubjectEpisodePage extends StatefulWidget {
   final Episode episode;
@@ -194,7 +194,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     if (_progress > 0) {
       _desktopPlayer.currentState?.seek(Duration(milliseconds: _progress));
       print("seek video to : $_progress");
-      GFToast.showToast("已请求跳转到上次的进度", context);
+      Toast.show(context, "已请求跳转到上次的进度");
     }
   }
 

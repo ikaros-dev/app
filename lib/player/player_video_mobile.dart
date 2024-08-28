@@ -1,12 +1,12 @@
 import 'dart:io';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
-import 'package:getwidget/components/toast/gf_toast.dart';
-import 'package:getwidget/position/gf_toast_position.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
+import 'package:ikaros/utils/message_utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -73,7 +73,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       if (!_progressIsLoaded && _progress > 0 && _duration > const Duration(minutes: 5)) {
         _player.seekTo(Duration(milliseconds: _progress));
         print("seek to $_progress");
-        GFToast.showToast("已请求跳转到上次的进度: $_progress", context);
+        Toast.show(context, "已请求跳转到上次的进度: $_progress");
         setState(() {
           _progressIsLoaded = true;
         });
@@ -105,7 +105,9 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     if (_episodeId > 0) {
       EpisodeCollectionApi().updateCollection(
           _episodeId, _player.value.position, _player.value.duration);
-      print("保存剧集进度成功");
+      if (kDebugMode) {
+        print("保存剧集进度成功");
+      }
     }
 
     playPauseController.dispose();
@@ -240,8 +242,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
         print(e);
       }
     } else {
-      GFToast.showToast("存储权限被拒绝", context,
-          toastPosition: GFToastPosition.CENTER);
+      Toast.show(context, "存储权限被拒绝");
     }
   }
 
@@ -330,12 +331,10 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
           selectedAudioTrackId != audioTrack) {
         await _player.setAudioTrack(selectedAudioTrackId);
         print("set audio track with id:$selectedAudioTrackId");
-        GFToast.showToast("已切换到音频轨道: $selectedAudioTrackId", context,
-            toastPosition: GFToastPosition.CENTER);
+        Toast.show(context, "已切换到音频轨道: $selectedAudioTrackId");
       } else {
         if (selectedAudioTrackId == audioTrack) {
-          GFToast.showToast("操作取消，请不要选择已选中的音频。", context,
-              toastPosition: GFToastPosition.CENTER);
+          Toast.show(context, "操作取消，请不要选择已选中的音频。");
         }
       }
     }
@@ -392,12 +391,10 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
           selectedSubId != spuTrack) {
         await _player.setSpuTrack(selectedSubId);
         print("set spu track with id:$selectedSubId");
-        GFToast.showToast("已切换到字幕轨道: $selectedSubId ,生效需要等下一句字幕。", context,
-            toastPosition: GFToastPosition.CENTER);
+        Toast.show(context, "已切换到字幕轨道: $selectedSubId ,生效需要等下一句字幕。");
       } else {
         if (selectedSubId == spuTrack) {
-          GFToast.showToast("操作取消，请不要选择已选中的字幕轨道。", context,
-              toastPosition: GFToastPosition.CENTER);
+          Toast.show(context, "操作取消，请不要选择已选中的字幕轨道。");
         }
       }
     }

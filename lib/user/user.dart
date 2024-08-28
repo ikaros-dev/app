@@ -4,15 +4,14 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:getwidget/components/button/gf_button.dart';
-import 'package:getwidget/components/toast/gf_toast.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/main.dart';
+import 'package:ikaros/utils/message_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path/path.dart' as path;
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -117,14 +116,12 @@ class _UserPageState extends State<UserPage> {
                 child: const Text("您确定要登出嘛？"),
               ),
               actions: [
-                GFButton(
+                ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  color: Colors.green,
                   child: const Text("取消"),
                 ),
-                GFButton(
+                ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  color: Colors.red,
                   child: const Text("确认"),
                 ),
               ],
@@ -134,7 +131,7 @@ class _UserPageState extends State<UserPage> {
         return;
       }
       await AuthApi().logout();
-      GFToast.showToast("已成功登出", context);
+      Toast.show(context, "已成功登出");
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => const MyApp()));
     }
@@ -142,7 +139,7 @@ class _UserPageState extends State<UserPage> {
 
   String _getDownloadUrl(List assets) {
     if (!(Platform.isWindows || Platform.isAndroid)) {
-      GFToast.showToast("操作失败：更新功能只支持Windows和Android平台", context);
+      Toast.show(context, "操作失败：更新功能只支持Windows和Android平台");
       return "";
     }
     String platform = Platform.isAndroid ? 'android' : 'windows';
@@ -162,11 +159,12 @@ class _UserPageState extends State<UserPage> {
       String latestVersion = data['tag_name'];
       String downloadUrl = _getDownloadUrl(data['assets']);
       if ('v$_appVersion' == latestVersion) {
-        GFToast.showToast("当前已经是最新版本:$_appVersion", context);
+
+        Toast.show(context, "当前已经是最新版本:$_appVersion");
         return;
       }
       if (downloadUrl == "") {
-        GFToast.showToast("操作取消：获取下载链接失败", context);
+        Toast.show(context, "操作取消：获取下载链接失败");
         return;
       }
       // 更新确认框
@@ -180,29 +178,26 @@ class _UserPageState extends State<UserPage> {
                 child: const Text("发现新版本，您确定要更新嘛？"),
               ),
               actions: [
-                GFButton(
+                ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  color: Colors.green,
                   child: const Text("取消"),
                 ),
-                GFButton(
+                ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  color: Colors.red,
                   child: const Text("确认"),
                 ),
               ],
             );
           });
       if (cancel == null) {
-        GFToast.showToast("已取消更新", context);
+        Toast.show(context, "已取消更新");
         return;
       }
       // 下载更新
-      GFToast.showToast("将要执行更新逻辑, 请耐心等待！完成后会自动重启应用！", context);
+      Toast.show(context, "将要执行更新逻辑, 请耐心等待！完成后会自动重启应用！");
       _downloadUpdate(downloadUrl);
     } else {
-      GFToast.showToast(
-          "获取GitHub的Release信息失败，请检查网络是否可以直连api.github.com.", context);
+      Toast.show(context, "获取GitHub的Release信息失败，请检查网络是否可以直连api.github.com.");
     }
   }
 
@@ -227,7 +222,7 @@ class _UserPageState extends State<UserPage> {
         final OpenResult result = await OpenFile.open(filePath,
             type: 'application/vnd.android.package-archive');
         if (result.type != ResultType.done) {
-          GFToast.showToast("错误：${result.message}", context);
+          Toast.show(context, "错误：${result.message}");
         }
         print(result.message);
       } else {
@@ -243,8 +238,10 @@ class _UserPageState extends State<UserPage> {
 
   void _startUpdateProcess(String zipPath) async {
     if (kDebugMode) {
-      GFToast.showToast("操作取消，Windows的DEBUG模式不支持更新", context);
-      print("操作取消，Windows的DEBUG模式不支持更新");
+      Toast.show(context, "操作取消，Windows的DEBUG模式不支持更新");
+      if (kDebugMode) {
+        print("操作取消，Windows的DEBUG模式不支持更新");
+      }
       // return;
     }
     // 需要更新的应用程序路径
@@ -254,7 +251,6 @@ class _UserPageState extends State<UserPage> {
     File appFile = File(appPath);
     Directory parentDirectory = appFile.parent;
     String parentPath = parentDirectory.absolute.path;
-
 
     // ZIP 文件路径
     String zipFilePath = zipPath;
@@ -312,40 +308,37 @@ class _UserPageState extends State<UserPage> {
         '\n'
         'echo Copying everything from ./update to ./'
         '\n'
-    'xcopy /E /H /R /Y ".\\update\\*" "."'
+        'xcopy /E /H /R /Y ".\\update\\*" "."'
         '\n'
         '\n'
-    'echo Deleting the extracted Ani directory'
+        'echo Deleting the extracted Ani directory'
         '\n'
-    'rmdir /S /Q ".\\update"'
+        'rmdir /S /Q ".\\update"'
         '\n'
         '\n'
-    'echo Deleting the update zip file'
+        'echo Deleting the update zip file'
         '\n'
-    'del /F /Q \"'
-    '$zipPath'
+        'del /F /Q \"'
+        '$zipPath'
         '\"'
         '\n'
         '\n'
         '\n'
-    'echo Launching ikaros.exe'
+        'echo Launching ikaros.exe'
         '\n'
-    'start "" ".\\ikaros.exe"'
+        'start "" ".\\ikaros.exe"'
         '\n'
         '\n'
-    'echo Exiting script'
+        'echo Exiting script'
         '\n'
-    'exit'
-    );
+        'exit');
 
     await Process.run('icacls', [cmdFilePath, '/grant', 'Everyone:F']);
 
     // 在当前应用退出前启动 CMD 文件
-    Process.start(
-        'cmd.exe',
-        ['/c', cmdFilePath],
-        mode: ProcessStartMode.detached
-    ).timeout(const Duration(milliseconds: 500), onTimeout: () {
+    Process.start('cmd.exe', ['/c', cmdFilePath],
+            mode: ProcessStartMode.detached)
+        .timeout(const Duration(milliseconds: 500), onTimeout: () {
       exit(0);
     });
   }
