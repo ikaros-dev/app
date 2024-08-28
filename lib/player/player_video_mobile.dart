@@ -6,9 +6,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
+import 'package:ikaros/api/dandanplay/DandanplayCommentApi.dart';
+import 'package:ikaros/api/dandanplay/DandanplaySearchApi.dart';
+import 'package:ikaros/api/dandanplay/model/CommentEpisode.dart';
+import 'package:ikaros/api/dandanplay/model/CommentEpisodeIdResponse.dart';
+import 'package:ikaros/api/dandanplay/model/SearchEpisodeDetails.dart';
+import 'package:ikaros/api/dandanplay/model/SearchEpisodesAnime.dart';
+import 'package:ikaros/api/dandanplay/model/SearchEpisodesResponse.dart';
+import 'package:ikaros/api/subject/EpisodeApi.dart';
+import 'package:ikaros/api/subject/SubjectApi.dart';
+import 'package:ikaros/api/subject/model/Episode.dart';
+import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:ns_danmaku/danmaku_controller.dart';
+import 'package:ns_danmaku/danmaku_view.dart';
+import 'package:ns_danmaku/models/danmaku_item.dart';
+import 'package:ns_danmaku/models/danmaku_option.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:synchronized/synchronized.dart';
 
 /// basic on flutter_vlc_player.
 class MobileVideoPlayer extends StatefulWidget {
@@ -31,6 +47,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   ValueNotifier<bool> isLoading = ValueNotifier(false);
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
+  Duration _lastPosition = Duration.zero;
   late String _title = "主标题剧集信息";
   late String _subTitle = "副标题加载的附件名称";
   late int _episodeId = -1;
@@ -40,6 +57,12 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   List<String> _subtitleUrls = [];
   bool _progressIsLoaded = false;
   int _progress = 0;
+  late Episode _episode;
+  late Subject _subject;
+  late DanmakuController _danmuku;
+  List<CommentEpisode> _commentEpisodes = [];
+  List<CommentEpisode> _commentRomovedEpisodes = [];
+  late Lock lock = Lock();
 
   void listener() {
     if (!mounted) return;
@@ -47,6 +70,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     if (_player.value.isInitialized) {
       _position = _player.value.position;
       _duration = _player.value.duration;
+      _checkAndAddDanmuku(_lastPosition, _position);
     }
 
     if (_player.value.isPlaying) {
@@ -127,6 +151,8 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   void setEpisodeId(int episodeId) {
     _episodeId = episodeId;
+    // TODO 安卓端Stack会覆盖，这个问题还没解决，暂时先注释弹幕
+    if (Platform.isIOS) _initDanmukuPool();
     setState(() {});
   }
 
@@ -136,6 +162,46 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   void setProgress(int progress) {
     _progress = progress;
+  }
+
+  void _checkAndAddDanmuku(Duration lastPosition, Duration currentPosition) {
+    for (CommentEpisode commentEp in List.from(_commentEpisodes)) {
+      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) continue;
+      String timeStr = commentEp.p.split(",")[0];
+      double timeD = double.parse(timeStr);
+      Duration time = Duration(seconds: timeD.toInt());
+      if (lastPosition != Duration.zero && lastPosition < currentPosition && time < lastPosition) {
+        lock.synchronized((){
+          _commentEpisodes.remove(commentEp);
+          _commentRomovedEpisodes.add(commentEp);
+        });
+        continue;
+      }
+      if (time >= lastPosition - const Duration(milliseconds: 100) && time <= currentPosition + const Duration(milliseconds: 100)) {
+        lock.synchronized((){
+          _commentEpisodes.remove(commentEp);
+          _commentRomovedEpisodes.add(commentEp);
+        });
+        _addDanmuku(commentEp);
+      }
+    }
+  }
+
+  void _addDanmuku(CommentEpisode commentEp) {
+    if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) return;
+    String danmuMode = commentEp.p.split(',')[1];
+    int danmuColor = int.parse(commentEp.p.split(',')[2]);
+    int r = (danmuColor >> 16) & 0xFF; // 提取红色分量
+    int g = (danmuColor >> 8) & 0xFF;  // 提取绿色分量
+    int b = danmuColor & 0xFF;         // 提取蓝色分量
+    Color color = Color.fromARGB(255, r, g, b);
+    DanmakuItemType type = DanmakuItemType.scroll;
+    if (danmuMode == "4") type = DanmakuItemType.bottom;
+    if (danmuMode == "5") type = DanmakuItemType.top;
+    DanmakuItem item = DanmakuItem(commentEp.m, type: type, color: color);
+    List<DanmakuItem> items = [];
+    items.add(item);
+    _danmuku.addItems(items);
   }
 
   void open(String url, {autoPlay = false}) async {
@@ -158,6 +224,27 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
     setState(() {});
   }
+
+  void _initDanmukuPool() async {
+    _episode = await EpisodeApi().findById(_episodeId);
+    if (_episode.id == -1) return;
+    _subject = await SubjectApi().findById(_episode.subjectId);
+    if (_subject.id == -1) return;
+    SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
+        .searchEpisodes(_subject.name, _episode.sequence.toInt().toString());
+    if (searchEpsResp == null ||
+        !searchEpsResp.success ||
+        searchEpsResp.animes.isEmpty) return;
+    SearchEpisodesAnime searchEpisodesAnime = searchEpsResp.animes.first;
+    if (searchEpisodesAnime.episodes.isEmpty) return;
+    SearchEpisodeDetails searchEpisodeDetails =
+        searchEpisodesAnime.episodes.first;
+    CommentEpisodeIdResponse? commentEpIdResp = await DandanplayCommentApi()
+        .commentEpisodeId(searchEpisodeDetails.episodeId, 1);
+    if (commentEpIdResp == null || commentEpIdResp.count == 0) return;
+    _commentEpisodes.addAll(commentEpIdResp.comments);
+  }
+
 
   void addSlave(String url, bool select) {
     _player.addSubtitleFromNetwork(url, isSelected: select);
@@ -250,6 +337,13 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     isLoading.value = true;
     setState(() {});
     _player.seekTo(dest);
+    _danmuku.pause();
+    _danmuku.clear();
+    lock.synchronized((){
+      _commentEpisodes.addAll(_commentRomovedEpisodes);
+      _commentRomovedEpisodes.clear();
+    });
+    _danmuku.resume();
   }
 
   void seekPlus(bool isPlus, Duration len) {
@@ -272,13 +366,25 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     setState(() {});
   }
 
+  void _play() {
+    _player.play();
+    playPauseController.forward();
+    if (!_danmuku.running) _danmuku.resume();
+  }
+
+  void _pause() {
+    _player.pause();
+    playPauseController.reverse();
+    if (_danmuku.running) _danmuku.pause();
+  }
+
+
+
   void _switchPlayerPauseOrPlay() {
     if (_isPlaying) {
-      _player.pause();
-      playPauseController.reverse();
+      _pause();
     } else {
-      _player.play();
-      playPauseController.forward();
+      _play();
     }
   }
 
@@ -461,13 +567,34 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
             ),
           ),
 
-          /// 中间的视频
           Expanded(
-              child: VlcPlayer(
-            controller: _player,
-            aspectRatio: 16 / 9,
-            placeholder: const Center(child: CircularProgressIndicator()),
-          )),
+            child: Stack(
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  child: VlcPlayer(
+                    controller: _player,
+                    aspectRatio: 16 / 9,
+                    placeholder: const Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+
+                DanmakuView(
+                  createdController: (e) {
+                    _danmuku = e;
+                  },
+                  option: DanmakuOption(),
+                ),
+              ],
+            ),
+          ),
+          /// 中间的视频
+          // Expanded(
+          //     child: VlcPlayer(
+          //   controller: _player,
+          //   aspectRatio: 16 / 9,
+          //   placeholder: const Center(child: CircularProgressIndicator()),
+          // )),
 
           Visibility(
             visible: _displayTapped,
