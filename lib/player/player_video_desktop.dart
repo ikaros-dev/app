@@ -25,6 +25,7 @@ import 'package:ns_danmaku/danmaku_controller.dart';
 import 'package:ns_danmaku/danmaku_view.dart';
 import 'package:ns_danmaku/models/danmaku_item.dart';
 import 'package:ns_danmaku/models/danmaku_option.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:win32/win32.dart';
 
 /// basic on dart_vlc.
@@ -60,6 +61,8 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late Subject _subject;
   late DanmakuController _danmuku;
   List<CommentEpisode> _commentEpisodes = [];
+  List<CommentEpisode> _commentRomovedEpisodes = [];
+  late Lock lock = Lock();
 
   @override
   void initState() {
@@ -160,8 +163,18 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       String timeStr = commentEp.p.split(",")[0];
       double timeD = double.parse(timeStr);
       Duration time = Duration(seconds: timeD.toInt());
+      if (lastPosition != Duration.zero && lastPosition < currentPosition && time < lastPosition) {
+        lock.synchronized((){
+          _commentEpisodes.remove(commentEp);
+          _commentRomovedEpisodes.add(commentEp);
+        });
+        continue;
+      }
       if (time >= lastPosition - const Duration(milliseconds: 100) && time <= currentPosition + const Duration(milliseconds: 100)) {
-        _commentEpisodes.remove(commentEp);
+        lock.synchronized((){
+          _commentEpisodes.remove(commentEp);
+          _commentRomovedEpisodes.add(commentEp);
+        });
         _addDanmuku(commentEp);
       }
     }
@@ -198,7 +211,15 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   void seek(Duration dest) {
     isLoading.value = true;
+    _lastPosition = Duration.zero;
     _player.seek(dest);
+    _danmuku.pause();
+    _danmuku.clear();
+    lock.synchronized((){
+      _commentEpisodes.addAll(_commentRomovedEpisodes);
+      _commentRomovedEpisodes.clear();
+    });
+    _danmuku.resume();
   }
 
   void _updateFullScreen() async {
