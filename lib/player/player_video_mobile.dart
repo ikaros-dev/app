@@ -572,7 +572,10 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                     ButtonSegment(value: 31.0, label: Text("超级大")),
                   ],
                   onSelectionChanged: (Set<double> newSelection) {
-                    _danmuConfig.fontSize = newSelection.first;
+                    if (_danmuConfig.fontSize != newSelection.first) {
+                      _danmuConfig.fontSize = newSelection.first;
+                      _danmuConfigChange = true;
+                    }
                     Navigator.of(context).pop();
                   },
                 ),
