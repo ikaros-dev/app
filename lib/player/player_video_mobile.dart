@@ -21,6 +21,7 @@ import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/throttle_utils.dart';
+import 'package:ikaros/utils/time_utils.dart';
 import 'package:ns_danmaku/danmaku_controller.dart';
 import 'package:ns_danmaku/danmaku_view.dart';
 import 'package:ns_danmaku/models/danmaku_item.dart';
@@ -106,9 +107,13 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       if (!_progressIsLoaded &&
           _progress > 0 &&
           _duration > const Duration(minutes: 5)) {
-        _player.seekTo(Duration(milliseconds: _progress));
-        print("seek to $_progress");
-        Toast.show(context, "已请求跳转到上次的进度: $_progress");
+        _player.seekTo(Duration(milliseconds: _progress))
+        .then((v){
+          if (kDebugMode) {
+            print("seek to $_progress");
+          }
+          Toast.show(context, "已跳转到上次的进度: ${TimeUtils.convertMinSec(_progress)}");
+        });
         setState(() {
           _progressIsLoaded = true;
         });
@@ -533,6 +538,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     _danmuConfig = await SharedPrefsUtils.getDanmuConfig();
     _danmuku.updateOption(_danmuConfig.toOption());
     Toast.show(context, "更新弹幕样式成功");
+    _danmuConfigChange = false;
     setState(() {});
   }
 

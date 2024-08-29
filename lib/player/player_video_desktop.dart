@@ -137,6 +137,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     _danmuConfig = await SharedPrefsUtils.getDanmuConfig();
     _danmuku.updateOption(_danmuConfig.toOption());
     Toast.show(context, "更新弹幕样式成功");
+    _danmuConfigChange = false;
     setState(() {});
   }
 
