@@ -26,6 +26,7 @@ import 'package:ns_danmaku/danmaku_view.dart';
 import 'package:ns_danmaku/models/danmaku_item.dart';
 import 'package:ns_danmaku/models/danmaku_option.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:win32/win32.dart';
 
 /// basic on dart_vlc.
@@ -67,6 +68,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
 
     WidgetsFlutterBinding.ensureInitialized();
 
@@ -102,6 +104,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   @override
   void dispose() {
+    WakelockPlus.disable();
     if (_episodeId > 0) {
       EpisodeCollectionApi().updateCollection(_episodeId, _position, _duration);
       if (kDebugMode) {

@@ -27,6 +27,7 @@ import 'package:ns_danmaku/models/danmaku_option.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:synchronized/synchronized.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 /// basic on flutter_vlc_player.
 class MobileVideoPlayer extends StatefulWidget {
@@ -121,6 +122,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     _player = VlcPlayerController.network(
       '', // 初始时不设置视频源
       autoPlay: false,
@@ -133,6 +135,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   @override
   void dispose() {
+    WakelockPlus.disable();
     if (_episodeId > 0) {
       EpisodeCollectionApi().updateCollection(
           _episodeId, _player.value.position, _player.value.duration);

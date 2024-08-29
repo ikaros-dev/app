@@ -32,6 +32,7 @@ dependencies:
   ns_danmaku: ^0.0.1
   synchronized: ^3.2.0
   crypto: ^3.0.5
+  wakelock_plus: ^1.2.8
 
 dev_dependencies:
   flutter_test:
