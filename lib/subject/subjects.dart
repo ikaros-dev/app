@@ -243,17 +243,17 @@ class SubjectListState extends State<SubjectsPage> {
                   ),
                 ),
               ),
-              Text(
+              Expanded(child: Text(
                 ((subjectList[index].nameCn == null ||
-                        subjectList[index].nameCn == '')
+                    subjectList[index].nameCn == '')
                     ? subjectList[index].name
                     : subjectList[index].nameCn)!,
                 maxLines: 2,
                 style:
-                    const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                const TextStyle(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-              ),
+              )),
             ],
           ),
         );

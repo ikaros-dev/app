@@ -233,17 +233,16 @@ class CollectionsState extends State<CollectionPage> {
                   ),
                 ),
               ),
-              Text(
+              Expanded(child: Text(
                 ((subjectCollections[index].nameCn == null ||
-                        subjectCollections[index].nameCn == '')
+                    subjectCollections[index].nameCn == '')
                     ? subjectCollections[index].name
                     : subjectCollections[index].nameCn)!,
                 maxLines: 2,
-                style: const TextStyle(
-                    fontSize: 10.0, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-              ),
+              )),
             ],
           ),
         );
