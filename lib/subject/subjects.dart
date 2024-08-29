@@ -85,7 +85,7 @@ class SubjectListState extends State<SubjectsPage> {
     }
     if (kDebugMode) {
       print(
-        "load more data for page=$_page size=$_size nameCn=$_keyword, nsfw=$_nsfw");
+          "load more data for page=$_page size=$_size nameCn=$_keyword, nsfw=$_nsfw");
     }
     PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
         _page, _size, '', _keyword, _nsfw, SubjectType.ANIME);
@@ -207,45 +207,55 @@ class SubjectListState extends State<SubjectsPage> {
 
     Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => SubjectPage(
-            id: subjectId.toString(),)));
+              id: subjectId.toString(),
+            )));
   }
 
   Widget buildSubjectsGridView() {
     return GridView.builder(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: ScreenUtils.screenWidthGt600(context)  ? 6 : 3,
+        crossAxisCount: ScreenUtils.screenWidthGt600(context) ? 6 : 3,
         crossAxisSpacing: 2.0,
         mainAxisSpacing: 2.0,
         childAspectRatio: 0.6, // 网格项的宽高比例
       ),
       itemCount: subjectList.length,
       itemBuilder: (context, index) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            GestureDetector(
-              onTap: () {
-                _onSubjectCardTap(subjectList[index]);
-              },
-              child: AspectRatio(
-                aspectRatio: 7 / 10, // 设置图片宽高比例
-                child: Image.network(
-                  UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
-                  fit: BoxFit.fitWidth,
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0), // 设置圆角半径
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  _onSubjectCardTap(subjectList[index]);
+                },
+                child: AspectRatio(
+                  aspectRatio: 7 / 10, // 设置图片宽高比例
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10.0), // 设置圆角半径
+                    child: Image.network(
+                      UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
+                      fit: BoxFit.fitWidth,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            Text(
-              ((subjectList[index].nameCn == null ||
-                      subjectList[index].nameCn == '')
-                  ? subjectList[index].name
-                  : subjectList[index].nameCn)!,
-              style:
-                  const TextStyle(fontSize: 14.0, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+              Text(
+                ((subjectList[index].nameCn == null ||
+                        subjectList[index].nameCn == '')
+                    ? subjectList[index].name
+                    : subjectList[index].nameCn)!,
+                maxLines: 2,
+                style:
+                    const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         );
       },
     );

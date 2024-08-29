@@ -89,7 +89,8 @@ class CollectionsState extends State<CollectionPage> {
     _total = pagingWrap?.total ?? 0;
     if (mounted) {
       setState(() {
-        subjectCollections.addAll(_convertItems(pagingWrap?.items ?? List.empty()));
+        subjectCollections
+            .addAll(_convertItems(pagingWrap?.items ?? List.empty()));
       });
     }
     _page++;
@@ -149,10 +150,11 @@ class CollectionsState extends State<CollectionPage> {
                   CollectionType.DISCARD,
                 ]
                     .map((value) => DropdownMenuItem(
-                  value: value,
-                  child: Text(CollectionConst.typeCnMap[value == null ? 'ALL' : value.name]!),
-                  // child: Text(value == null ? 'ALL' : value.name),
-                ))
+                          value: value,
+                          child: Text(CollectionConst
+                              .typeCnMap[value == null ? 'ALL' : value.name]!),
+                          // child: Text(value == null ? 'ALL' : value.name),
+                        ))
                     .toList(),
               ),
             ],
@@ -190,11 +192,12 @@ class CollectionsState extends State<CollectionPage> {
 
     Subject subject = await SubjectApi().findById(subjectId);
     SubjectCollection? collection =
-    await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
+        await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
     Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => SubjectPage(
-            id: subjectId.toString(),)));
+              id: subjectId.toString(),
+            )));
   }
 
   Widget buildSubjectCollectionsGridView() {
@@ -207,32 +210,42 @@ class CollectionsState extends State<CollectionPage> {
       ),
       itemCount: subjectCollections.length,
       itemBuilder: (context, index) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            GestureDetector(
-              onTap: () {
-                _onSubjectCardTap(subjectCollections[index].subjectId);
-              },
-              child: AspectRatio(
-                aspectRatio: 7 / 10, // 设置图片宽高比例
-                child: Image.network(
-                  UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
-                  fit: BoxFit.fitWidth,
+        return Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10.0), // 设置圆角半径
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  _onSubjectCardTap(subjectCollections[index].subjectId);
+                },
+                child: AspectRatio(
+                  aspectRatio: 7 / 10, // 设置图片宽高比例
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10.0), // 设置圆角半径
+                    child: Image.network(
+                      UrlUtils.getCoverUrl(
+                          _baseUrl, subjectCollections[index].cover),
+                      fit: BoxFit.fitWidth,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            Text(
-              ((subjectCollections[index].nameCn == null ||
-                  subjectCollections[index].nameCn == '')
-                  ? subjectCollections[index].name
-                  : subjectCollections[index].nameCn)!,
-              style: const TextStyle(
-                  fontSize: 14.0, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+              Text(
+                ((subjectCollections[index].nameCn == null ||
+                        subjectCollections[index].nameCn == '')
+                    ? subjectCollections[index].name
+                    : subjectCollections[index].nameCn)!,
+                maxLines: 2,
+                style: const TextStyle(
+                    fontSize: 10.0, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         );
       },
     );
