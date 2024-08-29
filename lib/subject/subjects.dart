@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
@@ -49,16 +50,10 @@ class SubjectListState extends State<SubjectsPage> {
         _baseUrl = authParams.baseUrl;
       }
     }
-    // Fluttertoast.showToast(
-    //     msg: "Load data action! keyword: $keyword , nsfw: $nsfw",
-    //     toastLength: Toast.LENGTH_SHORT,
-    //     gravity: ToastGravity.CENTER,
-    //     timeInSecForIosWeb: 1,
-    //     backgroundColor: Colors.red,
-    //     textColor: Colors.white,
-    //     fontSize: 16.0);
 
-    print("load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
+    if (kDebugMode) {
+      print("load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
+    }
     PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
         1, _size, '', _keyword, _nsfw, SubjectType.ANIME);
     _page = pagingWrap.page;
@@ -88,8 +83,10 @@ class SubjectListState extends State<SubjectsPage> {
     if (!_hasMore) {
       return;
     }
-    print(
+    if (kDebugMode) {
+      print(
         "load more data for page=$_page size=$_size nameCn=$_keyword, nsfw=$_nsfw");
+    }
     PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
         _page, _size, '', _keyword, _nsfw, SubjectType.ANIME);
     _page = pagingWrap.page;
@@ -102,7 +99,9 @@ class SubjectListState extends State<SubjectsPage> {
     }
     _page++;
     // print("update page: $_page");
-    print("length: ${subjectList.length} total: $_total");
+    if (kDebugMode) {
+      print("length: ${subjectList.length} total: $_total");
+    }
     if (subjectList.length >= _total) {
       if (mounted) {
         setState(() {
@@ -180,7 +179,9 @@ class SubjectListState extends State<SubjectsPage> {
           if (!mounted) {
             return;
           }
-          print("noMore: ${!_hasMore}");
+          if (kDebugMode) {
+            print("noMore: ${!_hasMore}");
+          }
           _controller.finishLoad(success: true, noMore: !_hasMore);
           _controller.resetLoadState();
         },
