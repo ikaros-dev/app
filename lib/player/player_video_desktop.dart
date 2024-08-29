@@ -139,7 +139,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   void _initDanmukuPool() async {
     _episode = await EpisodeApi().findById(_episodeId);
-    if (_episode.id == -1) return;
+    if (_episode.id == -1 || _episode.group != "MAIN") return; // 根据条目名和序号只支持查询正片弹幕
     _subject = await SubjectApi().findById(_episode.subjectId);
     if (_subject.id == -1 || _subject.syncs == null || _subject.syncs!.isEmpty) return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
     SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
