@@ -108,11 +108,15 @@ class EpisodeCollectionApi {
     }
     var response = await Dio(options).put(apiUrl, queryParameters: queryParams);
     if (response.statusCode != 200) {
-      print("response status code: ${response.statusCode}");
+      if (kDebugMode) {
+        print("response status code: ${response.statusCode}");
+      }
       return;
     }
-    print("update episode collection. userId=$userId and episodeId=$episodeId"
+    if (kDebugMode) {
+      print("update episode collection. userId=$userId and episodeId=$episodeId"
         " and currentTime:${seek.inMilliseconds} and duration:${duration.inMilliseconds}");
+    }
     return;
   }
 

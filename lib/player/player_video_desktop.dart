@@ -111,9 +111,15 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         print("保存剧集进度成功");
       }
     }
+    _player.pause();
     playPauseStream.cancel();
     playPauseController.dispose();
     _player.dispose();
+
+    if (mounted) {
+      _danmuku.pause();
+      _danmuku.clear();
+    }
     super.dispose();
   }
 
@@ -505,6 +511,43 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                           ],
                         )
                       ],
+                    ),
+                    // 上方左边的返回按钮
+                    Positioned(
+                      left: 15,
+                      top: 12.5,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          IconButton(
+                              onPressed: (){
+                                Navigator.of(context).pop();
+                              },
+                              iconSize: 30,
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                              ))
+                        ],
+                      ),
+                    ),
+
+                    // 上方右边的设置按钮
+                    const Positioned(
+                      right: 15,
+                      top: 12.5,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                              onPressed: null,
+                              iconSize: 30,
+                              icon: Icon(
+                                Icons.settings,
+                                color: Colors.white,
+                              ))
+                        ],
+                      ),
                     ),
 
                     // 右边的截图按钮

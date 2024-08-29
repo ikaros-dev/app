@@ -4,3 +4,6 @@
 [submodule "dependencies/flutter_vlc_player"]
 	path = dependencies/flutter_vlc_player
 	url = https://github.com/chivehao/flutter_vlc_player.git
+[submodule "dependencies/ns_danmaku"]
+	path = dependencies/ns_danmaku
+	url = https://github.com/chivehao/flutter_ns_danmaku.git
