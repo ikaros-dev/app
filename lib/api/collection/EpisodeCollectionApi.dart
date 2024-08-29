@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
@@ -102,7 +103,9 @@ class EpisodeCollectionApi {
 
     BaseOptions options = BaseOptions();
     options.headers.putIfAbsent("Authorization", () => basicAuth);
-    print("apiUrl:$apiUrl   basicAuth:$basicAuth");
+    if (kDebugMode) {
+      print("apiUrl:$apiUrl   basicAuth:$basicAuth");
+    }
     var response = await Dio(options).put(apiUrl, queryParameters: queryParams);
     if (response.statusCode != 200) {
       print("response status code: ${response.statusCode}");

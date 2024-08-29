@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'model/CommentEpisodeIdResponse.dart';
@@ -21,7 +22,9 @@ class DandanplayCommentApi {
 
       // print("queryParams: $queryParams");
       var response = await Dio(options).get(apiUrl, queryParameters: queryParams);
-      // print("response status code: ${response.statusCode}");
+      if (kDebugMode || kProfileMode) {
+        print("request comment episodeId with url:$apiUrl params:$queryParams resp:$response");
+      }
       if (response.statusCode != 200) {
         return null;
       }

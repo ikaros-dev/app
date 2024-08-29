@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'model/SearchEpisodesResponse.dart';
@@ -21,6 +22,9 @@ class DandanplaySearchApi {
 
       // print("queryParams: $queryParams");
       var response = await Dio(options).get(apiUrl, queryParameters: queryParams);
+      if (kDebugMode || kProfileMode) {
+        print("request search episodes with url:$apiUrl params:$queryParams resp:$response");
+      }
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return null;
