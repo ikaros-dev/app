@@ -16,6 +16,7 @@ import 'package:ikaros/player/player_video_desktop.dart';
 import 'package:ikaros/player/player_video_mobile.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
+import 'package:ikaros/utils/time_utils.dart';
 
 class SubjectEpisodePage extends StatefulWidget {
   final Episode episode;
@@ -145,7 +146,11 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     bool gt600 = ScreenUtils.screenWidthGt600(context);
     return Container(
       color: Colors.black,
-      height: gt600 ? MediaQuery.of(context).size.height : _isFullScreen ? MediaQuery.of(context).size.height : 200,
+      height: gt600
+          ? MediaQuery.of(context).size.height
+          : _isFullScreen
+              ? MediaQuery.of(context).size.height
+              : 200,
       width: MediaQuery.of(context).size.width,
       child: useMobileVideoPlayer
           ? MobileVideoPlayer(
@@ -194,15 +199,13 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
       });
     }
 
-
     if (_progress > 0) {
       _desktopPlayer.currentState?.seek(Duration(milliseconds: _progress));
       if (kDebugMode) {
         print("seek video to : $_progress");
       }
-      Toast.show(context, "已请求跳转到上次的进度:$_progress");
+      Toast.show(context, "已请求跳转到上次的进度:${TimeUtils.convertMinSec(_progress)}");
     }
-
   }
 
   Future _loadApiBaseUrl() async {

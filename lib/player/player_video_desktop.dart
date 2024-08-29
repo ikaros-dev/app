@@ -21,10 +21,13 @@ import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ns_danmaku/danmaku_controller.dart';
 import 'package:ns_danmaku/danmaku_view.dart';
 import 'package:ns_danmaku/models/danmaku_item.dart';
 import 'package:ns_danmaku/models/danmaku_option.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:win32/win32.dart';
@@ -64,6 +67,8 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   List<CommentEpisode> _commentEpisodes = [];
   List<CommentEpisode> _commentRomovedEpisodes = [];
   late Lock lock = Lock();
+  late DanmuConfig _danmuConfig = DanmuConfig();
+  late bool _danmuConfigChange = false;
 
   @override
   void initState() {
@@ -100,6 +105,11 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         EpisodeCollectionApi().updateCollectionFinish(_episodeId, true);
       }
     });
+
+    SharedPrefsUtils.getDanmuConfig().then((config) {
+      _danmuConfig = config;
+      if (mounted) _danmuku.updateOption(_danmuConfig.toOption());
+    });
   }
 
   @override
@@ -121,6 +131,13 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       _danmuku.clear();
     }
     super.dispose();
+  }
+
+  Future<void> _reloadDanmukuConfig() async {
+    _danmuConfig = await SharedPrefsUtils.getDanmuConfig();
+    _danmuku.updateOption(_danmuConfig.toOption());
+    Toast.show(context, "更新弹幕样式成功");
+    setState(() {});
   }
 
   void setTitle(String title) {
@@ -150,11 +167,15 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   void _initDanmukuPool() async {
     _episode = await EpisodeApi().findById(_episodeId);
-    if (_episode.id == -1 || _episode.group != "MAIN")
+    if (_episode.id == -1 || _episode.group != "MAIN") {
       return; // 根据条目名和序号只支持查询正片弹幕
+    }
     _subject = await SubjectApi().findById(_episode.subjectId);
-    if (_subject.id == -1 || _subject.syncs == null || _subject.syncs!.isEmpty)
+    if (_subject.id == -1 ||
+        _subject.syncs == null ||
+        _subject.syncs!.isEmpty) {
       return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
+    }
     SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
         .searchEpisodes(_subject.name, _episode.sequence.toInt().toString());
     if (searchEpsResp == null ||
@@ -429,6 +450,134 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         file, _player.videoDimensions.width, _player.videoDimensions.height);
   }
 
+  Future<void> _openSettingsPanel() async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.6,
+          width: MediaQuery.of(context).size.width * 0.8,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(
+                height: 20,
+              ),
+              const Text('弹幕字体大小'),
+              const SizedBox(
+                height: 10,
+              ),
+              SegmentedButton<double>(
+                selected: <double>{_danmuConfig.fontSize},
+                segments: const [
+                  ButtonSegment(value: 11.0, label: Text("小")),
+                  ButtonSegment(value: 16.0, label: Text("中")),
+                  ButtonSegment(value: 21.0, label: Text("大")),
+                  ButtonSegment(value: 26.0, label: Text("特大")),
+                  ButtonSegment(value: 31.0, label: Text("超级大")),
+                ],
+                onSelectionChanged: (Set<double> newSelection) {
+                  _danmuConfig.fontSize = newSelection.first;
+                  Navigator.of(context).pop();
+                },
+              ),
+              const SizedBox(height: 20,),
+              const Text('弹幕显示区域'),
+              const SizedBox(height: 10),
+              SegmentedButton<double>(
+                selected: <double>{_danmuConfig.area},
+                segments: const [
+                  ButtonSegment(value: 0.25, label: Text("小屏")),
+                  ButtonSegment(value: 0.5, label: Text("半屏")),
+                  ButtonSegment(value: 0.75, label: Text("大屏")),
+                  ButtonSegment(value: 1.0, label: Text("全屏")),
+                ],
+                onSelectionChanged: (Set<double> newSelection) {
+                  if (_danmuConfig.area != newSelection.first) {
+                    _danmuConfig.area = newSelection.first;
+                    _danmuConfigChange = true;
+                  }
+                  Navigator.of(context).pop();
+                },
+              ),
+              const SizedBox(height: 20,),
+              const Text('弹幕透明度'),
+              const SizedBox(height: 10),
+              SegmentedButton<double>(
+                selected: <double>{_danmuConfig.opacity},
+                segments: const [
+                  ButtonSegment(value: 0.25, label: Text("0.25")),
+                  ButtonSegment(value: 0.5, label: Text("0.5")),
+                  ButtonSegment(value: 0.75, label: Text("0.75")),
+                  ButtonSegment(value: 1.0, label: Text("1.0")),
+                ],
+                onSelectionChanged: (Set<double> newSelection) {
+                  if (_danmuConfig.opacity != newSelection.first) {
+                    _danmuConfig.opacity = newSelection.first;
+                    _danmuConfigChange = true;
+                  }
+                  Navigator.of(context).pop();
+                },
+              ),
+              const SizedBox(height: 20,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Column(
+                    children: [
+                      const Text('隐藏顶部弹幕'),
+                      const SizedBox(height: 10),
+                      Switch(value: _danmuConfig.hideTop, onChanged: ((bool value){
+                        if (_danmuConfig.hideTop != value) {
+                          _danmuConfig.hideTop = value;
+                          _danmuConfigChange = true;
+                        }
+                        Navigator.of(context).pop();
+                      })),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      const Text('隐藏底部弹幕'),
+                      const SizedBox(height: 10),
+                      Switch(value: _danmuConfig.hideBottom, onChanged: ((bool value){
+                        if (_danmuConfig.hideBottom != value) {
+                          _danmuConfig.hideBottom = value;
+                          _danmuConfigChange = true;
+                        }
+                        Navigator.of(context).pop();
+                      })),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      const Text('隐藏滚动弹幕'),
+                      const SizedBox(height: 10),
+                      Switch(value: _danmuConfig.hideScroll, onChanged: ((bool value){
+                        if (_danmuConfig.hideScroll != value) {
+                          _danmuConfig.hideScroll = value;
+                          _danmuConfigChange = true;
+                        }
+                        Navigator.of(context).pop();
+                      })),
+                    ],
+                  ),
+                ],
+              ),
+
+            ],
+          ),
+        );
+      },
+    );
+    if (_danmuConfigChange) {
+      await SharedPrefsUtils.saveDanmuConfig(_danmuConfig);
+      Toast.show(context, "保存新的弹幕样式配置成功");
+      await _reloadDanmukuConfig();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -520,7 +669,10 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           IconButton(
-                              onPressed: (){
+                              onPressed: () {
+                                if (_isFullScreen) {
+                                  _exitImmersiveFullscreen();
+                                }
                                 Navigator.of(context).pop();
                               },
                               iconSize: 30,
@@ -533,16 +685,16 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                     ),
 
                     // 上方右边的设置按钮
-                    const Positioned(
+                    Positioned(
                       right: 15,
                       top: 12.5,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           IconButton(
-                              onPressed: null,
+                              onPressed: _openSettingsPanel,
                               iconSize: 30,
-                              icon: Icon(
+                              icon: const Icon(
                                 Icons.settings,
                                 color: Colors.white,
                               ))
@@ -800,7 +952,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                 createdController: (e) {
                   _danmuku = e;
                 },
-                option: DanmakuOption(),
+                option: _danmuConfig.toOption(),
               ),
 
               // Row(

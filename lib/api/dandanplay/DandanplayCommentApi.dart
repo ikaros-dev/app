@@ -23,7 +23,7 @@ class DandanplayCommentApi {
       // print("queryParams: $queryParams");
       var response = await Dio(options).get(apiUrl, queryParameters: queryParams);
       if (kDebugMode || kProfileMode) {
-        print("request comment episodeId with url:$apiUrl params:$queryParams resp:$response");
+        print("request comment episodeId with url:$apiUrl params:$queryParams");
       }
       if (response.statusCode != 200) {
         return null;
