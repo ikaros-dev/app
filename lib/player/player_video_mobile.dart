@@ -634,6 +634,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                         })),
                       ],
                     ),
+                    const SizedBox(width: 5),
                     Column(
                       children: [
                         const Text('隐藏底部弹幕'),
@@ -647,6 +648,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                         })),
                       ],
                     ),
+                    const SizedBox(width: 5),
                     Column(
                       children: [
                         const Text('隐藏滚动弹幕'),
