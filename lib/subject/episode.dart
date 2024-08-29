@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dart_vlc/dart_vlc.dart' as DartVlc;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/attachment/AttachmentRelationApi.dart';
 import 'package:ikaros/api/attachment/model/VideoSubtitle.dart';
@@ -178,6 +179,10 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     }
 
     /// 桌面端
+    _desktopPlayer.currentState?.setTitle(_videoTitle);
+    _desktopPlayer.currentState?.setSubTitle(_episodeResName);
+    _desktopPlayer.currentState?.setEpisodeId(widget.episode.id);
+
     _desktopPlayer.currentState?.open(_videoUrl, autoStart: true);
 
     if (_videoSubtitleUrls.isNotEmpty) {
@@ -189,15 +194,15 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
       });
     }
 
-    _desktopPlayer.currentState?.setTitle(_videoTitle);
-    _desktopPlayer.currentState?.setSubTitle(_episodeResName);
-    _desktopPlayer.currentState?.setEpisodeId(widget.episode.id);
 
     if (_progress > 0) {
       _desktopPlayer.currentState?.seek(Duration(milliseconds: _progress));
-      print("seek video to : $_progress");
-      Toast.show(context, "已请求跳转到上次的进度");
+      if (kDebugMode) {
+        print("seek video to : $_progress");
+      }
+      Toast.show(context, "已请求跳转到上次的进度:$_progress");
     }
+
   }
 
   Future _loadApiBaseUrl() async {

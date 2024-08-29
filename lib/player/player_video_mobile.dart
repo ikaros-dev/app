@@ -79,7 +79,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
         if (kDebugMode) {
           print("check and add danumu for last$_lastPosition curr:$_position");
         }
-      }, const Duration(milliseconds: 500));
+      }, const Duration(milliseconds: 300));
     }
 
     if (_player.value.isPlaying) {

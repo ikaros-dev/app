@@ -104,7 +104,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   void dispose() {
     if (_episodeId > 0) {
       EpisodeCollectionApi().updateCollection(_episodeId, _position, _duration);
-      print("保存剧集进度成功");
+      if (kDebugMode) {
+        print("保存剧集进度成功");
+      }
     }
     playPauseStream.cancel();
     playPauseController.dispose();
@@ -139,9 +141,11 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   void _initDanmukuPool() async {
     _episode = await EpisodeApi().findById(_episodeId);
-    if (_episode.id == -1 || _episode.group != "MAIN") return; // 根据条目名和序号只支持查询正片弹幕
+    if (_episode.id == -1 || _episode.group != "MAIN")
+      return; // 根据条目名和序号只支持查询正片弹幕
     _subject = await SubjectApi().findById(_episode.subjectId);
-    if (_subject.id == -1 || _subject.syncs == null || _subject.syncs!.isEmpty) return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
+    if (_subject.id == -1 || _subject.syncs == null || _subject.syncs!.isEmpty)
+      return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
     SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
         .searchEpisodes(_subject.name, _episode.sequence.toInt().toString());
     if (searchEpsResp == null ||
@@ -159,19 +163,23 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   void _checkAndAddDanmuku(Duration lastPosition, Duration currentPosition) {
     for (CommentEpisode commentEp in List.from(_commentEpisodes)) {
-      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) continue;
+      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4)
+        continue;
       String timeStr = commentEp.p.split(",")[0];
       double timeD = double.parse(timeStr);
       Duration time = Duration(seconds: timeD.toInt());
-      if (lastPosition != Duration.zero && lastPosition < currentPosition && time < lastPosition) {
-        lock.synchronized((){
+      if (lastPosition != Duration.zero &&
+          lastPosition < currentPosition &&
+          time < lastPosition) {
+        lock.synchronized(() {
           _commentEpisodes.remove(commentEp);
           _commentRomovedEpisodes.add(commentEp);
         });
         continue;
       }
-      if (time >= lastPosition - const Duration(milliseconds: 100) && time <= currentPosition + const Duration(milliseconds: 100)) {
-        lock.synchronized((){
+      if (time >= lastPosition - const Duration(milliseconds: 100) &&
+          time <= currentPosition + const Duration(milliseconds: 100)) {
+        lock.synchronized(() {
           _commentEpisodes.remove(commentEp);
           _commentRomovedEpisodes.add(commentEp);
         });
@@ -181,12 +189,14 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   }
 
   void _addDanmuku(CommentEpisode commentEp) {
-    if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) return;
+    if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) {
+      return;
+    }
     String danmuMode = commentEp.p.split(',')[1];
     int danmuColor = int.parse(commentEp.p.split(',')[2]);
     int r = (danmuColor >> 16) & 0xFF; // 提取红色分量
-    int g = (danmuColor >> 8) & 0xFF;  // 提取绿色分量
-    int b = danmuColor & 0xFF;         // 提取蓝色分量
+    int g = (danmuColor >> 8) & 0xFF; // 提取绿色分量
+    int b = danmuColor & 0xFF; // 提取蓝色分量
     Color color = Color.fromARGB(255, r, g, b);
     DanmakuItemType type = DanmakuItemType.scroll;
     if (danmuMode == "4") type = DanmakuItemType.bottom;
@@ -215,7 +225,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     _player.seek(dest);
     _danmuku.pause();
     _danmuku.clear();
-    lock.synchronized((){
+    lock.synchronized(() {
       _commentEpisodes.addAll(_commentRomovedEpisodes);
       _commentRomovedEpisodes.clear();
     });
