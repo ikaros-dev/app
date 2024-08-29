@@ -456,117 +456,132 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       isScrollControlled: true,
       builder: (context) {
         return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.6,
+          height:
+              MediaQuery.of(context).size.height * (_isFullScreen ? 0.5 : 0.8),
           width: MediaQuery.of(context).size.width * 0.8,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(
-                height: 20,
-              ),
-              const Text('弹幕字体大小'),
-              const SizedBox(
-                height: 10,
-              ),
-              SegmentedButton<double>(
-                selected: <double>{_danmuConfig.fontSize},
-                segments: const [
-                  ButtonSegment(value: 11.0, label: Text("小")),
-                  ButtonSegment(value: 16.0, label: Text("中")),
-                  ButtonSegment(value: 21.0, label: Text("大")),
-                  ButtonSegment(value: 26.0, label: Text("特大")),
-                  ButtonSegment(value: 31.0, label: Text("超级大")),
-                ],
-                onSelectionChanged: (Set<double> newSelection) {
-                  _danmuConfig.fontSize = newSelection.first;
-                  Navigator.of(context).pop();
-                },
-              ),
-              const SizedBox(height: 20,),
-              const Text('弹幕显示区域'),
-              const SizedBox(height: 10),
-              SegmentedButton<double>(
-                selected: <double>{_danmuConfig.area},
-                segments: const [
-                  ButtonSegment(value: 0.25, label: Text("小屏")),
-                  ButtonSegment(value: 0.5, label: Text("半屏")),
-                  ButtonSegment(value: 0.75, label: Text("大屏")),
-                  ButtonSegment(value: 1.0, label: Text("全屏")),
-                ],
-                onSelectionChanged: (Set<double> newSelection) {
-                  if (_danmuConfig.area != newSelection.first) {
-                    _danmuConfig.area = newSelection.first;
-                    _danmuConfigChange = true;
-                  }
-                  Navigator.of(context).pop();
-                },
-              ),
-              const SizedBox(height: 20,),
-              const Text('弹幕透明度'),
-              const SizedBox(height: 10),
-              SegmentedButton<double>(
-                selected: <double>{_danmuConfig.opacity},
-                segments: const [
-                  ButtonSegment(value: 0.25, label: Text("0.25")),
-                  ButtonSegment(value: 0.5, label: Text("0.5")),
-                  ButtonSegment(value: 0.75, label: Text("0.75")),
-                  ButtonSegment(value: 1.0, label: Text("1.0")),
-                ],
-                onSelectionChanged: (Set<double> newSelection) {
-                  if (_danmuConfig.opacity != newSelection.first) {
-                    _danmuConfig.opacity = newSelection.first;
-                    _danmuConfigChange = true;
-                  }
-                  Navigator.of(context).pop();
-                },
-              ),
-              const SizedBox(height: 20,),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Column(
-                    children: [
-                      const Text('隐藏顶部弹幕'),
-                      const SizedBox(height: 10),
-                      Switch(value: _danmuConfig.hideTop, onChanged: ((bool value){
-                        if (_danmuConfig.hideTop != value) {
-                          _danmuConfig.hideTop = value;
-                          _danmuConfigChange = true;
-                        }
-                        Navigator.of(context).pop();
-                      })),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      const Text('隐藏底部弹幕'),
-                      const SizedBox(height: 10),
-                      Switch(value: _danmuConfig.hideBottom, onChanged: ((bool value){
-                        if (_danmuConfig.hideBottom != value) {
-                          _danmuConfig.hideBottom = value;
-                          _danmuConfigChange = true;
-                        }
-                        Navigator.of(context).pop();
-                      })),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      const Text('隐藏滚动弹幕'),
-                      const SizedBox(height: 10),
-                      Switch(value: _danmuConfig.hideScroll, onChanged: ((bool value){
-                        if (_danmuConfig.hideScroll != value) {
-                          _danmuConfig.hideScroll = value;
-                          _danmuConfigChange = true;
-                        }
-                        Navigator.of(context).pop();
-                      })),
-                    ],
-                  ),
-                ],
-              ),
-
-            ],
+          child: Padding(
+            padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text('弹幕字体大小'),
+                const SizedBox(
+                  height: 10,
+                ),
+                SegmentedButton<double>(
+                  selected: <double>{_danmuConfig.fontSize},
+                  segments: const [
+                    ButtonSegment(value: 11.0, label: Text("小")),
+                    ButtonSegment(value: 16.0, label: Text("中")),
+                    ButtonSegment(value: 21.0, label: Text("大")),
+                    ButtonSegment(value: 26.0, label: Text("特大")),
+                    ButtonSegment(value: 31.0, label: Text("超级大")),
+                  ],
+                  onSelectionChanged: (Set<double> newSelection) {
+                    _danmuConfig.fontSize = newSelection.first;
+                    Navigator.of(context).pop();
+                  },
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text('弹幕显示区域'),
+                const SizedBox(height: 10),
+                SegmentedButton<double>(
+                  selected: <double>{_danmuConfig.area},
+                  segments: const [
+                    ButtonSegment(value: 0.25, label: Text("小屏")),
+                    ButtonSegment(value: 0.5, label: Text("半屏")),
+                    ButtonSegment(value: 0.75, label: Text("大屏")),
+                    ButtonSegment(value: 1.0, label: Text("全屏")),
+                  ],
+                  onSelectionChanged: (Set<double> newSelection) {
+                    if (_danmuConfig.area != newSelection.first) {
+                      _danmuConfig.area = newSelection.first;
+                      _danmuConfigChange = true;
+                    }
+                    Navigator.of(context).pop();
+                  },
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text('弹幕透明度'),
+                const SizedBox(height: 10),
+                SegmentedButton<double>(
+                  selected: <double>{_danmuConfig.opacity},
+                  segments: const [
+                    ButtonSegment(value: 0.25, label: Text("0.25")),
+                    ButtonSegment(value: 0.5, label: Text("0.5")),
+                    ButtonSegment(value: 0.75, label: Text("0.75")),
+                    ButtonSegment(value: 1.0, label: Text("1.0")),
+                  ],
+                  onSelectionChanged: (Set<double> newSelection) {
+                    if (_danmuConfig.opacity != newSelection.first) {
+                      _danmuConfig.opacity = newSelection.first;
+                      _danmuConfigChange = true;
+                    }
+                    Navigator.of(context).pop();
+                  },
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(
+                      children: [
+                        const Text('隐藏顶部弹幕'),
+                        const SizedBox(height: 10),
+                        Switch(
+                            value: _danmuConfig.hideTop,
+                            onChanged: ((bool value) {
+                              if (_danmuConfig.hideTop != value) {
+                                _danmuConfig.hideTop = value;
+                                _danmuConfigChange = true;
+                              }
+                              Navigator.of(context).pop();
+                            })),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text('隐藏底部弹幕'),
+                        const SizedBox(height: 10),
+                        Switch(
+                            value: _danmuConfig.hideBottom,
+                            onChanged: ((bool value) {
+                              if (_danmuConfig.hideBottom != value) {
+                                _danmuConfig.hideBottom = value;
+                                _danmuConfigChange = true;
+                              }
+                              Navigator.of(context).pop();
+                            })),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text('隐藏滚动弹幕'),
+                        const SizedBox(height: 10),
+                        Switch(
+                            value: _danmuConfig.hideScroll,
+                            onChanged: ((bool value) {
+                              if (_danmuConfig.hideScroll != value) {
+                                _danmuConfig.hideScroll = value;
+                                _danmuConfigChange = true;
+                              }
+                              Navigator.of(context).pop();
+                            })),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -671,9 +686,10 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                           IconButton(
                               onPressed: () {
                                 if (_isFullScreen) {
-                                  _exitImmersiveFullscreen();
+                                  _updateFullScreen();
+                                } else {
+                                  Navigator.of(context).pop();
                                 }
-                                Navigator.of(context).pop();
                               },
                               iconSize: 30,
                               icon: const Icon(
