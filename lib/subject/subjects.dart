@@ -57,8 +57,8 @@ class SubjectListState extends State<SubjectsPage> {
     if (kDebugMode) {
       print("load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
     }
-    PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
-        1, _size, '', _keyword, _nsfw, _type);
+    PagingWrap pagingWrap = await SubjectApi()
+        .listSubjectsByCondition(1, _size, '', _keyword, _nsfw, _type);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
@@ -90,8 +90,8 @@ class SubjectListState extends State<SubjectsPage> {
       print(
           "load more data for page=$_page size=$_size nameCn=$_keyword, nsfw=$_nsfw");
     }
-    PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
-        _page, _size, '', _keyword, _nsfw, _type);
+    PagingWrap pagingWrap = await SubjectApi()
+        .listSubjectsByCondition(_page, _size, '', _keyword, _nsfw, _type);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
@@ -149,17 +149,24 @@ class SubjectListState extends State<SubjectsPage> {
           Row(
             children: [
               const Text("类型", style: TextStyle(color: Colors.black)),
-              const SizedBox(width: 5,),
+              const SizedBox(
+                width: 5,
+              ),
               DropdownButton(
                   value: _type,
                   items: SubjectType.values
-                  .map((type)=> DropdownMenuItem(value: type, child: Text(SubjectConst.typeCnMap[type.name] ?? "未知"))).toList(), onChanged: (newType){
-                if (newType == null) return;
-                setState(() {
-                  _type = newType;
-                });
-                _loadSubjects();
-              }),
+                      .map((type) => DropdownMenuItem(
+                          value: type,
+                          child:
+                              Text(SubjectConst.typeCnMap[type.name] ?? "未知")))
+                      .toList(),
+                  onChanged: (newType) {
+                    if (newType == null) return;
+                    setState(() {
+                      _type = newType;
+                    });
+                    _loadSubjects();
+                  }),
               // DropdownMenu(
               //   initialSelection: _type,
               //     dropdownMenuEntries: SubjectType.values
@@ -173,7 +180,9 @@ class SubjectListState extends State<SubjectsPage> {
               //   },
               // ),
 
-              const SizedBox(width: 10,),
+              const SizedBox(
+                width: 10,
+              ),
               const Text("NSFW", style: TextStyle(color: Colors.black)),
               Switch(
                   value: _nsfw,
@@ -234,16 +243,17 @@ class SubjectListState extends State<SubjectsPage> {
     // SubjectCollection collection =
     //     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
-    if (subjectMeta.type == SubjectType.ANIME || subjectMeta.type == SubjectType.REAL) {
+    if (subjectMeta.type == SubjectType.ANIME ||
+        subjectMeta.type == SubjectType.MUSIC ||
+        subjectMeta.type == SubjectType.REAL) {
       Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => SubjectPage(
-            id: subjectId.toString(),
-          )));
+                id: subjectId.toString(),
+              )));
     } else {
-      Toast.show(context, "当前条目类型[${SubjectConst.typeCnMap[subjectMeta.type.name] ?? "未知"}]不支持视频播放");
+      Toast.show(context,
+          "当前条目类型[${SubjectConst.typeCnMap[subjectMeta.type.name] ?? "未知"}]不支持视频播放");
     }
-
-
   }
 
   Widget buildSubjectsGridView() {
@@ -278,14 +288,14 @@ class SubjectListState extends State<SubjectsPage> {
                   ),
                 ),
               ),
-              Expanded(child: Text(
+              Expanded(
+                  child: Text(
                 ((subjectList[index].nameCn == null ||
-                    subjectList[index].nameCn == '')
+                        subjectList[index].nameCn == '')
                     ? subjectList[index].name
                     : subjectList[index].nameCn)!,
                 maxLines: 2,
-                style:
-                const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
               )),

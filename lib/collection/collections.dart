@@ -198,14 +198,16 @@ class CollectionsState extends State<CollectionPage> {
     // SubjectCollection? collection =
     //     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
-
-    if (subject.type == SubjectType.ANIME || subject.type == SubjectType.REAL) {
+    if (subject.type == SubjectType.ANIME ||
+        subject.type == SubjectType.MUSIC ||
+        subject.type == SubjectType.REAL) {
       Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => SubjectPage(
-            id: subjectId.toString(),
-          )));
+                id: subjectId.toString(),
+              )));
     } else {
-      Toast.show(context, "当前条目类型[${SubjectConst.typeCnMap[subject.type.name] ?? "未知"}]不支持视频播放");
+      Toast.show(context,
+          "当前条目类型[${SubjectConst.typeCnMap[subject.type.name] ?? "未知"}]不支持视频播放");
     }
   }
 
@@ -242,9 +244,10 @@ class CollectionsState extends State<CollectionPage> {
                   ),
                 ),
               ),
-              Expanded(child: Text(
+              Expanded(
+                  child: Text(
                 ((subjectCollections[index].nameCn == null ||
-                    subjectCollections[index].nameCn == '')
+                        subjectCollections[index].nameCn == '')
                     ? subjectCollections[index].name
                     : subjectCollections[index].nameCn)!,
                 maxLines: 2,

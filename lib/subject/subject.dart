@@ -54,10 +54,9 @@ class _SubjectState extends State<SubjectPage> {
     if (_episodeCollections.isEmpty) {
       return false;
     }
-    EpisodeCollection? epColl =
-        _episodeCollections
-            .where((ep) => ep.episodeId == episodeId)
-            .firstOrNull;
+    EpisodeCollection? epColl = _episodeCollections
+        .where((ep) => ep.episodeId == episodeId)
+        .firstOrNull;
     return epColl?.finish ?? false;
   }
 
@@ -143,7 +142,7 @@ class _SubjectState extends State<SubjectPage> {
       name,
       overflow: TextOverflow.ellipsis,
       style:
-      const TextStyle(color: Colors.black, backgroundColor: Colors.white),
+          const TextStyle(color: Colors.black, backgroundColor: Colors.white),
     );
   }
 
@@ -235,10 +234,7 @@ class _SubjectState extends State<SubjectPage> {
         return AlertDialog(
           title: const Text("选集播放"),
           content: SizedBox(
-            width: MediaQuery
-                .of(context)
-                .size
-                .width * 0.8,
+            width: MediaQuery.of(context).size.width * 0.8,
             child: _buildEpisodeSelectTabs(),
           ),
           actions: <Widget>[
@@ -278,14 +274,14 @@ class _SubjectState extends State<SubjectPage> {
         ElevatedButton(
           onPressed: _episodesHasResource()
               ? () async {
-            bool? cancel = await showEpisodesDialog();
-            // ignore: unnecessary_null_comparison
-            if (cancel == null) {
-              print("返回");
-            } else {
-              print("确认");
-            }
-          }
+                  bool? cancel = await showEpisodesDialog();
+                  // ignore: unnecessary_null_comparison
+                  if (cancel == null) {
+                    print("返回");
+                  } else {
+                    print("确认");
+                  }
+                }
               : null,
           child: const Text("选集"),
         ),
@@ -328,11 +324,10 @@ class _SubjectState extends State<SubjectPage> {
           _postCollectSubjectWithoutRefresh(newValue);
         },
         items: CollectionType.values
-            .map((type) =>
-            DropdownMenuItem(
-              value: type,
-              child: Text(CollectionConst.typeCnMap[type.name] ?? "未知"),
-            ))
+            .map((type) => DropdownMenuItem(
+                  value: type,
+                  child: Text(CollectionConst.typeCnMap[type.name] ?? "未知"),
+                ))
             .toList(),
       );
     }
@@ -351,10 +346,7 @@ class _SubjectState extends State<SubjectPage> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
+              width: MediaQuery.of(context).size.width,
               child: Text(_subject.summary!),
             )
           ],
@@ -399,18 +391,16 @@ class _SubjectState extends State<SubjectPage> {
   Widget _buildEpisodeSelectTabBar() {
     var groups = _getEpisodeGroupEnums();
     var tabs = groups
-        .map((g) =>
-        Text(
-          key: Key(g.toString()),
-          SubjectConst.episodeGroupCnMap[g.name]!,
-          style: const TextStyle(fontSize: 14),
-          overflow: TextOverflow.ellipsis,
-        ))
-        .map((text) =>
-        Tab(
-          key: text.key,
-          child: text,
-        ))
+        .map((g) => Text(
+              key: Key(g.toString()),
+              SubjectConst.episodeGroupCnMap[g.name]!,
+              style: const TextStyle(fontSize: 14),
+              overflow: TextOverflow.ellipsis,
+            ))
+        .map((text) => Tab(
+              key: text.key,
+              child: text,
+            ))
         .toList();
     if (tabs.isEmpty) return const TabBar(tabs: []);
     return TabBar(
@@ -426,52 +416,49 @@ class _SubjectState extends State<SubjectPage> {
 
   Widget _getEpisodesTabViewByGroup(String group) {
     var buttons = _getEpisodesByGroup(group)
-        ?.map((ep) =>
-        Container(
-          margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
-          child: SizedBox(
-              height: 40,
-              child: GestureDetector(
-                onLongPress: () async {
-                  bool isFinish = _episodeIsFinish(ep.id);
-                  await EpisodeCollectionApi()
-                      .updateCollectionFinish(ep.id, !isFinish);
-                  Toast.show(context,
-                      "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}"
-                  );
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            SubjectPage(id: widget.id.toString())),
-                  );
-                },
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: _episodeIsFinish(ep.id)
-                          ? Colors.green
-                          : Colors.lightBlueAccent,
-                      disabledBackgroundColor: Colors.grey[400],
-                      disabledForegroundColor: Colors.grey[600],
-                  ),
-                  onPressed: (ep.resources == null || ep.resources!.isEmpty)
-                      ? null
-                      : () {
-                    Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
-                    Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) =>
-                            SubjectEpisodePage(
-                              episode: ep,
-                            )));
-                  },
-                  child: Text(
-                    "${ep.sequence} : ${ep.name}",
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              )),
-        ))
+        ?.map((ep) => Container(
+              margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
+              child: SizedBox(
+                  height: 40,
+                  child: GestureDetector(
+                    onLongPress: () async {
+                      bool isFinish = _episodeIsFinish(ep.id);
+                      await EpisodeCollectionApi()
+                          .updateCollectionFinish(ep.id, !isFinish);
+                      Toast.show(
+                          context, "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}");
+                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                SubjectPage(id: widget.id.toString())),
+                      );
+                    },
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _episodeIsFinish(ep.id)
+                            ? Colors.green
+                            : Colors.lightBlueAccent,
+                        disabledBackgroundColor: Colors.grey[400],
+                        disabledForegroundColor: Colors.grey[600],
+                      ),
+                      onPressed: (ep.resources == null || ep.resources!.isEmpty)
+                          ? null
+                          : () {
+                              Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => SubjectEpisodePage(
+                                        episode: ep,
+                                      )));
+                            },
+                      child: Text(
+                        "${ep.sequence} : ${ep.name}",
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )),
+            ))
         .toList();
 
     if (buttons == null) return Container();
@@ -484,7 +471,7 @@ class _SubjectState extends State<SubjectPage> {
   TabBarView _buildEpisodeSelectTabView() {
     var groups = _getEpisodeGroupEnums();
     var tabViews =
-    groups.map((g) => _getEpisodesTabViewByGroup(g.name)).toList();
+        groups.map((g) => _getEpisodesTabViewByGroup(g.name)).toList();
     if (tabViews.isEmpty) {
       return const TabBarView(
         children: [],
