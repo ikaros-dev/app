@@ -71,6 +71,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   final ThrottleController _throttleController = ThrottleController();
   late DanmuConfig _danmuConfig = DanmuConfig();
   late bool _danmuConfigChange = false;
+  late bool _isFullScreenPortraitUp = false;
 
   void listener() {
     if (!mounted) return;
@@ -690,6 +691,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
           /// 视频
           SizedBox(
             width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
             child: VlcPlayer(
               controller: _player,
               aspectRatio: 16 / 9,
@@ -731,7 +733,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
             child: Stack(
               children: [
                 // 上方中间的标题文本
-                if (_isFullScreen)
+                if (_isFullScreen || _isFullScreenPortraitUp)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -855,7 +857,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                     mainAxisAlignment: MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      if (_isFullScreen)
+                      if (_isFullScreen && !_isFullScreenPortraitUp)
                         IconButton(
                             color: Colors.white,
                             iconSize: 30,
@@ -877,7 +879,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                         onPressed: _switchPlayerPauseOrPlay,
                       ),
                       const SizedBox(width: 20),
-                      if (_isFullScreen)
+                      if (_isFullScreen && !_isFullScreenPortraitUp)
                         IconButton(
                             color: Colors.white,
                             iconSize: 30,
@@ -896,7 +898,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       // 倍速按钮
-                      if (_isFullScreen)
+                      if (_isFullScreen && !_isFullScreenPortraitUp)
                         IconButton(
                           iconSize: 24,
                           color: Colors.white,
@@ -938,6 +940,23 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                           onPressed: _getSubtitleTracks,
                         ),
 
+                      if(_isFullScreen)
+                        IconButton(onPressed: ()async {
+                          if (_isFullScreenPortraitUp) {
+                            await SystemChrome.setPreferredOrientations([
+                              DeviceOrientation.landscapeRight,
+                              DeviceOrientation.landscapeLeft,
+                            ]);
+                            _isFullScreenPortraitUp = false;
+                          } else {
+                            await SystemChrome.setPreferredOrientations([
+                              DeviceOrientation.portraitUp
+                            ]);
+                            _isFullScreenPortraitUp = true;
+                          }
+
+                        }, icon: const Icon(Icons.screen_rotation_alt, color: Colors.white,)),
+                      
                       // 全屏控制按钮
                       IconButton(
                         iconSize: 24,
