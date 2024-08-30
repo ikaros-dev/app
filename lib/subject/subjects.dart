@@ -10,6 +10,7 @@ import 'package:ikaros/api/subject/model/SubjectMeta.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
+import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 
@@ -233,10 +234,16 @@ class SubjectListState extends State<SubjectsPage> {
     // SubjectCollection collection =
     //     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => SubjectPage(
-              id: subjectId.toString(),
-            )));
+    if (subjectMeta.type == SubjectType.ANIME || subjectMeta.type == SubjectType.REAL) {
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => SubjectPage(
+            id: subjectId.toString(),
+          )));
+    } else {
+      Toast.show(context, "当前条目类型[${SubjectConst.typeCnMap[subjectMeta.type.name] ?? "未知"}]不支持视频播放");
+    }
+
+
   }
 
   Widget buildSubjectsGridView() {

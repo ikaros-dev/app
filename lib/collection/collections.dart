@@ -7,10 +7,13 @@ import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
+import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
+import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
+import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 
@@ -192,13 +195,18 @@ class CollectionsState extends State<CollectionPage> {
     }
 
     Subject subject = await SubjectApi().findById(subjectId);
-    SubjectCollection? collection =
-        await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
+    // SubjectCollection? collection =
+    //     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
-    Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => SubjectPage(
-              id: subjectId.toString(),
-            )));
+
+    if (subject.type == SubjectType.ANIME || subject.type == SubjectType.REAL) {
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => SubjectPage(
+            id: subjectId.toString(),
+          )));
+    } else {
+      Toast.show(context, "当前条目类型[${SubjectConst.typeCnMap[subject.type.name] ?? "未知"}]不支持视频播放");
+    }
   }
 
   Widget buildSubjectCollectionsGridView() {

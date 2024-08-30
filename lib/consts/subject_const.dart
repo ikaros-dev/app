@@ -23,7 +23,7 @@ class SubjectConst {
     "ANIME": "动漫",
     "COMIC": "漫画",
     "GAME": "游戏",
-    "MUSIC": "音色",
+    "MUSIC": "音声",
     "NOVEL": "小说",
     "REAL": "三次元",
     "OTHER": "其它",
