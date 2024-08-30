@@ -398,6 +398,13 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       } else if (event.logicalKey == LogicalKeyboardKey.space) {
         // 切换播放或暂停
         _switchPlayerPauseOrPlay();
+      } else if (event.logicalKey == LogicalKeyboardKey.escape) {
+        // 如果处于全屏，则退出全屏，否则返回上一级路由
+        if (_isFullScreen) {
+          _updateFullScreen();
+        } else {
+          Navigator.of(context).pop();
+        }
       }
     }
   }
