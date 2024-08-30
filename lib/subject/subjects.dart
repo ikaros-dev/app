@@ -7,6 +7,7 @@ import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/SubjectMeta.dart';
+import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
 import 'package:ikaros/utils/screen_utils.dart';
@@ -28,6 +29,7 @@ class SubjectListState extends State<SubjectsPage> {
   int _total = 0;
 
   bool _nsfw = false;
+  SubjectType _type = SubjectType.ANIME;
   String _keyword = "";
   String _baseUrl = '';
 
@@ -55,7 +57,7 @@ class SubjectListState extends State<SubjectsPage> {
       print("load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
     }
     PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
-        1, _size, '', _keyword, _nsfw, SubjectType.ANIME);
+        1, _size, '', _keyword, _nsfw, _type);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
@@ -88,7 +90,7 @@ class SubjectListState extends State<SubjectsPage> {
           "load more data for page=$_page size=$_size nameCn=$_keyword, nsfw=$_nsfw");
     }
     PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
-        _page, _size, '', _keyword, _nsfw, SubjectType.ANIME);
+        _page, _size, '', _keyword, _nsfw, _type);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
@@ -145,6 +147,32 @@ class SubjectListState extends State<SubjectsPage> {
         actions: [
           Row(
             children: [
+              const Text("类型", style: TextStyle(color: Colors.black)),
+              const SizedBox(width: 5,),
+              DropdownButton(
+                  value: _type,
+                  items: SubjectType.values
+                  .map((type)=> DropdownMenuItem(value: type, child: Text(SubjectConst.typeCnMap[type.name] ?? "未知"))).toList(), onChanged: (newType){
+                if (newType == null) return;
+                setState(() {
+                  _type = newType;
+                });
+                _loadSubjects();
+              }),
+              // DropdownMenu(
+              //   initialSelection: _type,
+              //     dropdownMenuEntries: SubjectType.values
+              // .map((type)=> DropdownMenuEntry(value: type, label: type.name)).toList(),
+              //   onSelected: (newType){
+              //     if (newType == null) return;
+              //     setState(() {
+              //       _type = newType;
+              //     });
+              //     _loadSubjects();
+              //   },
+              // ),
+
+              const SizedBox(width: 10,),
               const Text("NSFW", style: TextStyle(color: Colors.black)),
               Switch(
                   value: _nsfw,
