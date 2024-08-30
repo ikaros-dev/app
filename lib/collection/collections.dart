@@ -138,6 +138,7 @@ class CollectionsState extends State<CollectionPage> {
                 onChanged: (newValue) {
                   setState(() {
                     _type = newValue;
+                    _hasMore = true;
                     _loadSubjectCollections();
                   });
                 },
