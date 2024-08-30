@@ -395,6 +395,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
         // 往前进10s
         seekPlus(true, const Duration(seconds: 10));
+      } else if (event.logicalKey == LogicalKeyboardKey.space) {
+        // 切换播放或暂停
+        _switchPlayerPauseOrPlay();
       }
     }
   }
