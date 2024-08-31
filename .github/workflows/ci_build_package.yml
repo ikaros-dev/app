@@ -90,11 +90,6 @@ jobs:
       - name: Git submodule init
         uses: snickerbockers/submodules-init@v4
 
-      - name: Setup Java to compile Android project
-        uses: actions/setup-java@v1
-        with:
-          java-version: '17.x'
-
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
@@ -118,44 +113,109 @@ jobs:
           asset_name: ikaros-windows-${{  github.ref_name }}.zip
 
 
-#  build_linux:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      - name: Checkout the code
-#        uses: actions/checkout@v2
-#
-#      - name: Git submodule init
-#        uses: snickerbockers/submodules-init@v4
-#
-#      - name: Setup Java to compile Android project
-#        uses: actions/setup-java@v1
-#        with:
-#          java-version: '17.x'
-#
-#      - name: Install and set Flutter version
-#        uses: subosito/flutter-action@v2
-#        with:
-#          flutter-version: '3.24.1'
-#          channel: 'stable'
-#
-#      - name: Restore packages
-#        run: flutter pub get
-#
-#      - name: Enable linux desktop
-#        run: flutter config --enable-linux-desktop
-#
-#      - name: Build Android App Bundle
-#        run: flutter build linux --release
-#
-#      - name: Tar release files
-#        run: tar -czvf output.tar.gz build/linux/x64/release/bundle
-#
-#      - name: Publish Windows Artefacts
-#        uses: svenstaro/upload-release-action@v2
-#        with:
-#          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
-#          file: output.tar.gz
-#          asset_name: ikaros-linux-${{  github.ref_name }}.tar.gz
+  build_macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Git submodule init
+        uses: snickerbockers/submodules-init@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.1'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build macOS app
+        run: flutter build macos --release
+
+      - name: Find the generated .app file
+        id: find_app
+        run: echo "APP_NAME=$(ls build/macos/Build/Products/Release/ | grep .app)" >> $GITHUB_ENV
+
+      - name: Create DMG installer
+        run: |
+          mkdir -p build/macos/Build/Products/Release/dmg
+          hdiutil create build/macos/Build/Products/Release/dmg/${{ env.APP_NAME }}-macOS.dmg \
+            -volname "IkarosApp Installer" \
+            -srcfolder build/macos/Build/Products/Release/${{ env.APP_NAME }} \
+            -ov -format UDZO
+
+      - name: Publish Macos Artefacts
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
+          file: build/macos/Build/Products/Release/dmg/${{ env.APP_NAME }}-macOS.dmg
+          asset_name: ikaros-macOS-${{ github.ref_name }}.dmg
+
+
+  build_linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3
+
+      - name: Git submodule init
+        uses: snickerbockers/submodules-init@v4
+
+      - name: Install and set Flutter version
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.1'
+          channel: 'stable'
+
+      - name: Restore packages
+        run: flutter pub get
+
+      - name: Enable linux desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Build Linux App Bundle
+        run: flutter build linux --release
+
+      - name: Create a tarball
+        env:
+          APP_NAME: $(ls build/linux/x64/release/bundle | grep .out | sed 's/.out//')
+          VERSION: ${{ github.ref_name }}
+        run: |
+          mkdir -p build/linux/x64/release/${APP_NAME}
+          cp -r build/linux/x64/release/bundle/* build/linux/x64/release/${APP_NAME}/
+          tar -czvf build/linux/x64/release/${APP_NAME}-linux.tar.gz -C build/linux/x64/release ${APP_NAME}
+          
+          cat <<EOF > build/linux/x64/release/${APP_NAME}/DEBIAN/control
+          Package: ${APP_NAME}
+          Version: ${VERSION}
+          Section: base
+          Priority: optional
+          Architecture: amd64
+          Depends: libgtk-3-0, libstdc++6
+          Maintainer: Chivehao <chivehao@ikaros.run>
+          Description: Ikaros flutter app.
+          EOF
+
+      - name: Publish Linux Artefacts
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
+          file: build/linux/x64/release/${{ env.APP_NAME }}-linux.tar.gz
+          asset_name: ikaros-linux-${{  github.ref_name }}.tar.gz
+
+      - name: Build DEB package
+        run: |
+          APP_NAME=$(ls build/linux/x64/release/bundle | grep .out | sed 's/.out//')
+          dpkg-deb --build build/linux/x64/release/${APP_NAME}
+
+      - name: Publish DEB Linux/Ubuntu Artefacts
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
+          file: build/linux/x64/release/${{ env.APP_NAME }}.deb
+          asset_name: ikaros-ubuntu-${{  github.ref_name }}.deb
 
 
