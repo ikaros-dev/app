@@ -1,14 +1,13 @@
-# This is a basic workflow to help you get started with Actions
+name: Flutter_iOS
 
-name: Build IOS Package
-
-# Controls when the workflow will run
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - release-*
+    tags:
+      - '*'
 
 jobs:
-
   build_ios:
     runs-on: macos-latest
     env:
@@ -19,13 +18,10 @@ jobs:
       - name: Checkout the code
         uses: actions/checkout@v2
 
-      - name: Git submodule init
-        uses: snickerbockers/submodules-init@v4
-
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.1'
+          flutter-version: '3.10.5'
           channel: 'stable'
 
       - name: Restore packages
@@ -38,11 +34,8 @@ jobs:
         run: |
           mkdir Payload && mv build/ios/iphoneos/Runner.app Payload && zip -r Payload.zip Payload && mkdir output && mv Payload.zip output/ikaros.ipa
 
-      - name: Upload ipa to release
-        uses: svenstaro/upload-release-action@v2
+      - name: Publish iOS Artefacts
+        uses: actions/upload-artifact@v1
         with:
-          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
-          file: output/ikaros.ipa
-          asset_name: ikaros-ios-${{  github.ref_name }}.ipa
-
-
+          name: release-ios-${{  github.ref_name }}
+          path: output
