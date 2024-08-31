@@ -2,6 +2,7 @@ name: Create Draft Release
 
 permissions:
   contents: write
+  packages: write
 
 on:
   push:
@@ -11,6 +12,9 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/create-gh-release-action@v1
