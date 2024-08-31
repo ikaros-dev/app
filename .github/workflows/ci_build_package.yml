@@ -180,9 +180,6 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y ninja-build cmake g++
 
-      - name: Configure CMake
-        run: cmake -B build -G Ninja -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release
-
       - name: Build Linux App Bundle
         run: flutter build linux --release
 
