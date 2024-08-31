@@ -183,10 +183,13 @@ jobs:
       - name: Build Linux App Bundle
         run: flutter build linux --release -v
 
+      - name: Set environment variables
+        run: |
+          APP_NAME=$(find build/linux/x64/release/bundle -name "*.out" -exec basename {} .out \;)
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+
       - name: Create a tarball
-        env:
-          APP_NAME: $(find build/linux/x64/release/bundle -name "*.out" -exec basename {} .out \;)
-          VERSION: ${{ github.ref_name }}
         run: |
           mkdir -p build/linux/x64/release/${{ env.APP_NAME }}
           cp -r build/linux/x64/release/bundle/* build/linux/x64/release/${{ env.APP_NAME }}/
