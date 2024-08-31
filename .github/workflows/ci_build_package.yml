@@ -185,8 +185,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          APP_NAME=$(find build/linux/x64/release/bundle -name "*.out" -exec basename {} .out \;)
-          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "APP_NAME=ikaros" >> $GITHUB_ENV
           echo "VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
 
       - name: Create a tarball
