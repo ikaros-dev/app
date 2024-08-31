@@ -185,7 +185,7 @@ jobs:
 
       - name: Create a tarball
         env:
-          APP_NAME: $(ls build/linux/x64/release/bundle | grep .out | sed 's/.out//')
+          APP_NAME: $(find build/linux/x64/release/bundle -name "*.out" -exec basename {} .out \;)
           VERSION: ${{ github.ref_name }}
         run: |
           mkdir -p build/linux/x64/release/${APP_NAME}
