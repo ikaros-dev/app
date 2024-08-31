@@ -178,7 +178,7 @@ jobs:
         run: flutter config --enable-linux-desktop
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y ninja-build cmake g++ libgtk-3-dev
+        run: sudo apt-get update && sudo apt-get install -y ninja-build cmake g++ libgtk-3-dev vlc libvlc-dev
 
       - name: Build Linux App Bundle
         run: flutter build linux --release -v
