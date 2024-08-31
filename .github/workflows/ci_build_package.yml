@@ -99,7 +99,7 @@ jobs:
       - name: Restore packages
         run: flutter pub get
 
-      - name: Build Android App Bundle
+      - name: Build Windows App Bundle
         run: flutter build windows --release
 
       - name: Zip release files
@@ -134,11 +134,12 @@ jobs:
       - name: Build macOS app
         run: flutter build macos --release
 
-      - name: Find the generated .app file
-        id: find_app
-        run: echo "APP_NAME=$(ls build/macos/Build/Products/Release/ | grep .app)" >> $GITHUB_ENV
+      - name: Set APP_NAME
+        run: |
+          APP_NAME=$(ls build/macos/Build/Products/Release/ | grep -E '\.app$')
+          echo "APP_NAME=${APP_NAME}" >> $GITHUB_ENV
 
-      - name: Create DMG installer
+      - name: Create DMG Installer
         run: |
           mkdir -p build/macos/Build/Products/Release/dmg
           hdiutil create build/macos/Build/Products/Release/dmg/${{ env.APP_NAME }}-macOS.dmg \
@@ -175,6 +176,12 @@ jobs:
 
       - name: Enable linux desktop
         run: flutter config --enable-linux-desktop
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y ninja-build cmake g++
+
+      - name: Configure CMake
+        run: cmake -B build -G Ninja -DCMAKE_CXX_COMPILER=g++ -DCMAKE_BUILD_TYPE=Release
 
       - name: Build Linux App Bundle
         run: flutter build linux --release
