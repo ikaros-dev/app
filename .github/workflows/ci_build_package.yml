@@ -32,7 +32,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Flutter
-        run: flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign -v
 
       - name: Build xArchive
         run: |
@@ -70,7 +70,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Android App Bundle
-        run: flutter build apk --release
+        run: flutter build apk --release -v
 
       - name: Publish Android Artefacts
         uses: svenstaro/upload-release-action@v2
@@ -100,7 +100,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Windows App Bundle
-        run: flutter build windows --release
+        run: flutter build windows --release -v
 
       - name: Zip release files
         run: Compress-Archive -Path "build\\windows\\x64\\runner\\Release\\*" -DestinationPath "output.zip"
@@ -132,7 +132,7 @@ jobs:
         run: flutter pub get
 
       - name: Build macOS app
-        run: flutter build macos --release
+        run: flutter build macos --release -v
 
       - name: Set APP_NAME
         run: |
