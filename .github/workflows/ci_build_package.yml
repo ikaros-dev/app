@@ -188,15 +188,13 @@ jobs:
           APP_NAME: $(find build/linux/x64/release/bundle -name "*.out" -exec basename {} .out \;)
           VERSION: ${{ github.ref_name }}
         run: |
-          APP_NAME=$(find build/linux/x64/release/bundle -name "*.out" -exec basename {} .out \;)
-          echo "APP_NAME=${APP_NAME}" >> $GITHUB_ENV
-          mkdir -p build/linux/x64/release/${APP_NAME}
-          cp -r build/linux/x64/release/bundle/* build/linux/x64/release/${APP_NAME}/
-          tar -czvf build/linux/x64/release/${APP_NAME}-linux.tar.gz -C build/linux/x64/release ${APP_NAME}
+          mkdir -p build/linux/x64/release/${{ env.APP_NAME }}
+          cp -r build/linux/x64/release/bundle/* build/linux/x64/release/${{ env.APP_NAME }}/
+          tar -czvf build/linux/x64/release/${{ env.APP_NAME }}-linux.tar.gz -C build/linux/x64/release ${{ env.APP_NAME }}
 
           cat <<EOF > build/linux/x64/release/${APP_NAME}/DEBIAN/control
-          Package: ${APP_NAME}
-          Version: ${VERSION}
+          Package: ${{ env.APP_NAME }}
+          Version: ${{ env.VERSION }}
           Section: base
           Priority: optional
           Architecture: amd64
@@ -215,7 +213,7 @@ jobs:
       - name: Build DEB package
         run: |
           APP_NAME=$(ls build/linux/x64/release/bundle | grep .out | sed 's/.out//')
-          dpkg-deb --build build/linux/x64/release/${APP_NAME}
+          dpkg-deb --build build/linux/x64/release/${{ env.APP_NAME }}
 
       - name: Publish DEB Linux/Ubuntu Artefacts
         uses: svenstaro/upload-release-action@v2
