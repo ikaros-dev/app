@@ -195,33 +195,11 @@ jobs:
           cp -r build/linux/x64/release/bundle/* build/linux/x64/release/${{ env.APP_NAME }}/
           tar -czvf build/linux/x64/release/${{ env.APP_NAME }}-linux.tar.gz -C build/linux/x64/release ${{ env.APP_NAME }}
 
-          mkdir -p build/linux/x64/release/${{ env.APP_NAME }}/DEBIAN
-          cat <<EOF > build/linux/x64/release/${{ env.APP_NAME }}/DEBIAN/control
-          Package: ${{ env.APP_NAME }}
-          Version: ${{ env.VERSION }}
-          Section: base
-          Priority: optional
-          Architecture: amd64
-          Depends: libgtk-3-0, libstdc++6
-          Maintainer: Chivehao <chivehao@ikaros.run>
-          Description: Ikaros flutter app.
-          EOF
-
       - name: Publish Linux Artefacts
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
           file: build/linux/x64/release/${{ env.APP_NAME }}-linux.tar.gz
           asset_name: ikaros-linux-${{  github.ref_name }}.tar.gz
-
-      - name: Build DEB package
-        run: dpkg-deb --build build/linux/x64/release/${{ env.APP_NAME }}
-
-      - name: Publish DEB Linux/Ubuntu Artefacts
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
-          file: build/linux/x64/release/${{ env.APP_NAME }}.deb
-          asset_name: ikaros-ubuntu-${{  github.ref_name }}.deb
 
 
