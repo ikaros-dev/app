@@ -450,6 +450,7 @@ class _SubjectState extends State<SubjectPage> {
                               Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) => SubjectEpisodePage(
                                         episode: ep,
+                                        subject: _subject,
                                       )));
                             },
                       child: Text(

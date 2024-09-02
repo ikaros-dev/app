@@ -10,18 +10,24 @@ import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
+import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
+import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/player/player_audio_desktop.dart';
+import 'package:ikaros/player/player_audio_mobile.dart';
 import 'package:ikaros/player/player_video_desktop.dart';
 import 'package:ikaros/player/player_video_mobile.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 import 'package:ikaros/utils/time_utils.dart';
+import 'package:ikaros/utils/url_utils.dart';
 
 class SubjectEpisodePage extends StatefulWidget {
   final Episode episode;
+  final Subject? subject;
 
-  const SubjectEpisodePage({super.key, required this.episode});
+  const SubjectEpisodePage({super.key, required this.episode, this.subject});
 
   @override
   State<StatefulWidget> createState() {
@@ -42,7 +48,9 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   late EpisodeResource? _currentResource = null;
 
   late GlobalKey<MobileVideoPlayerState> _mobilePlayer;
+  late GlobalKey<MobileAudioPlayerState> _mobileAudioPlayer;
   late GlobalKey<DesktopVideoPlayerState> _desktopPlayer;
+  late GlobalKey<DesktopAudioPlayerState> _desktopAudioPlayer;
 
   Future<AuthParams> _loadBaseUrl() async {
     return AuthApi().getAuthParams();
@@ -53,7 +61,9 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     super.initState();
     _episode = widget.episode;
     _mobilePlayer = GlobalKey<MobileVideoPlayerState>();
+    _mobileAudioPlayer = GlobalKey<MobileAudioPlayerState>();
     _desktopPlayer = GlobalKey<DesktopVideoPlayerState>();
+    _desktopAudioPlayer = GlobalKey<DesktopAudioPlayerState>();
 
     _videoTitle =
         "${_episode.sequence}: ${(_episode.nameCn != null && _episode.nameCn != '') ? _episode.nameCn! : _episode.name}";
@@ -121,7 +131,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     }
     return Column(
       children: [
-        _buildVideoPlayer(),
+        _buildMediaPlayer(),
         Visibility(
           visible: !_isFullScreen,
           child: Column(
@@ -139,6 +149,17 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
         ),
       ],
     );
+  }
+
+  Widget _buildMediaPlayer() {
+    if (widget.subject != null && widget.subject?.type != null && widget.subject?.type == SubjectType.MUSIC) {
+      if (Platform.isAndroid || Platform.isIOS) {
+        return MobileAudioPlayer(key: _mobileAudioPlayer,);
+      }
+      return DesktopAudioPlayer(key: _desktopAudioPlayer,);
+    }
+
+    return _buildVideoPlayer();
   }
 
   Widget _buildVideoPlayer() {
@@ -165,6 +186,24 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   }
 
   Future setVideoUrl() async {
+    // 音频
+    if (widget.subject != null && widget.subject?.type != null && widget.subject?.type == SubjectType.MUSIC) {
+      AuthParams authParams = await _loadBaseUrl();
+      String coverUrl = UrlUtils.getCoverUrl(authParams.baseUrl, widget.subject?.cover ?? "");
+      if (Platform.isAndroid || Platform.isIOS) {
+        _mobileAudioPlayer.currentState?.setTitle(_videoTitle);
+        _mobileAudioPlayer.currentState?.setCoverUrl(coverUrl);
+        _mobileAudioPlayer.currentState?.open(_videoUrl, autoStart: true);
+        if (kDebugMode) print("open audio player with _videoUrl:$_videoUrl");
+        return;
+      }
+      _desktopAudioPlayer.currentState?.setTitle(_videoTitle);
+      _desktopAudioPlayer.currentState?.setCoverUrl(coverUrl);
+      _desktopAudioPlayer.currentState?.open(_videoUrl, autoStart: true);
+      if (kDebugMode) print("open audio player with _videoUrl:$_videoUrl");
+      return;
+    }
+
     /// 移动端
     if (Platform.isAndroid || Platform.isIOS) {
       if (_videoSubtitleUrls.isNotEmpty) {
