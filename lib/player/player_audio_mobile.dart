@@ -1,6 +1,6 @@
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio/just_audio.dart';
 
 class MobileAudioPlayer extends StatefulWidget {
   const MobileAudioPlayer({super.key});
@@ -19,7 +19,7 @@ class MobileAudioPlayerState extends State<MobileAudioPlayer> {
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
-  bool _isInitialized = false;
+  bool _isBuffering = true;
 
   void setCoverUrl(String url) {
     setState(() {
@@ -38,7 +38,9 @@ class MobileAudioPlayerState extends State<MobileAudioPlayer> {
       _audioUrl = audioUrl;
     });
     await _loadAlbumArt();
-    _player.play(UrlSource(audioUrl));
+
+    _player.setUrl(audioUrl);
+    _player.play();
   }
 
   Future<void> _loadAlbumArt() async {
@@ -53,19 +55,20 @@ class MobileAudioPlayerState extends State<MobileAudioPlayer> {
     WidgetsFlutterBinding.ensureInitialized();
 
     _player = AudioPlayer();
-    _player.onPositionChanged.listen((steam){
+    _player.positionStream.listen((position) {
       setState(() {
-        _position = Duration(milliseconds: steam.inMilliseconds);
+        _position = position ?? Duration.zero;
       });
     });
-    _player.onDurationChanged.listen((event){
+    _player.durationStream.listen((duration) {
       setState(() {
-        _duration = Duration(milliseconds: event.inMilliseconds);
+        _duration = duration ?? Duration.zero;
       });
     });
-    _player.onPlayerStateChanged.listen((state){
+    _player.playerStateStream.listen((state) {
       setState(() {
-        _isPlaying = state == PlayerState.playing;
+        _isPlaying = state.playing;
+        _isBuffering = state.processingState != ProcessingState.ready;
       });
     });
   }
@@ -80,7 +83,7 @@ class MobileAudioPlayerState extends State<MobileAudioPlayer> {
     if (_isPlaying) {
       _player.pause();
     } else {
-      _player.resume();
+      _player.play();
     }
     setState(() {
       _isPlaying = !_isPlaying;
@@ -94,6 +97,22 @@ class MobileAudioPlayerState extends State<MobileAudioPlayer> {
       );
     }
     return Image.network(_coverUrl);
+  }
+
+  Widget _buildPlayOrPauseBtn() {
+    if (_isBuffering) {
+      return const SizedBox(
+        width: 30,
+        height: 30,
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    return IconButton(
+      icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow, size: 30,),
+      onPressed: _togglePlayPause,
+    );
   }
 
   @override
@@ -118,11 +137,9 @@ class MobileAudioPlayerState extends State<MobileAudioPlayer> {
           },
         ),
 
-        // 播放/暂停按钮
-        IconButton(
-          icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
-          onPressed: _togglePlayPause,
-        ),
+          // 播放/暂停按钮
+        _buildPlayOrPauseBtn(),
+
       ],
     );
   }
