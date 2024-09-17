@@ -59,5 +59,7 @@
       <string>http</string>
       <string>https</string>
     </array>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Ikaros需要访问您的相册以保存图片</string>
 </dict>
 </plist>

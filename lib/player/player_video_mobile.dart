@@ -21,11 +21,11 @@ import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/throttle_utils.dart';
 import 'package:ikaros/utils/time_utils.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:ns_danmaku/danmaku_controller.dart';
 import 'package:ns_danmaku/danmaku_view.dart';
 import 'package:ns_danmaku/models/danmaku_item.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -337,28 +337,45 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   void _takeSnapshot() async {
     bool result = await _requestPermission();
-
     if (!result) {
-      // 无权限则跳转到配置权限的设置页
+      Toast.show(context, "无相册权限");
       openAppSettings();
+      return;
     }
 
-    if (result) {
-      try {
-        // 捕获视频截图
-        Uint8List pngBytes = await _player.takeSnapshot();
+    PhotoManager.setIgnorePermissionCheck(true);
+    // 捕获视频截图
+    Uint8List pngBytes = await _player.takeSnapshot();
+    // 已获取到权限
+    String fileName = '${_subject.id}_${_episodeId}_${_position.inMilliseconds}ms.png';
+    await PhotoManager.editor.saveImage(pngBytes, filename: fileName);
+    Toast.show(context, "截图已保存到相册");
 
-        // 保存图片
-        final res = await ImageGallerySaver.saveImage(pngBytes);
-        if (kDebugMode) print(res);
-        Toast.show(context, "截图已保存到相册");
 
-      } catch (e) {
-        print(e);
-      }
-    } else {
-      Toast.show(context, "相册权限被拒绝");
-    }
+    // bool result = await _requestPermission();
+    //
+    // if (!result) {
+    //   // 无权限则跳转到配置权限的设置页
+    //   openAppSettings();
+    // }
+    //
+    // if (result) {
+    //   try {
+    //     // 捕获视频截图
+    //     Uint8List pngBytes = await _player.takeSnapshot();
+    //
+    //     // 保存图片
+    //     if (await PhotoManager.requestPermissionExtend()) {
+    //       await PhotoManager.editor.saveImage(pngBytes, filename: '');
+    //       Toast.show(context, "截图已保存到相册");
+    //     }
+    //
+    //   } catch (e) {
+    //     print(e);
+    //   }
+    // } else {
+    //   Toast.show(context, "相册权限被拒绝");
+    // }
   }
 
   void seek(Duration dest) {
