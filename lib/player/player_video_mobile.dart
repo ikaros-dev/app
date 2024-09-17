@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/foundation.dart';
@@ -22,11 +21,10 @@ import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/throttle_utils.dart';
 import 'package:ikaros/utils/time_utils.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:ns_danmaku/danmaku_controller.dart';
 import 'package:ns_danmaku/danmaku_view.dart';
 import 'package:ns_danmaku/models/danmaku_item.dart';
-import 'package:ns_danmaku/models/danmaku_option.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -108,12 +106,12 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       if (!_progressIsLoaded &&
           _progress > 0 &&
           _duration > const Duration(minutes: 5)) {
-        _player.seekTo(Duration(milliseconds: _progress))
-        .then((v){
+        _player.seekTo(Duration(milliseconds: _progress)).then((v) {
           if (kDebugMode) {
             print("seek to $_progress");
           }
-          Toast.show(context, "已跳转到上次的进度: ${TimeUtils.convertMinSec(_progress)}");
+          Toast.show(
+              context, "已跳转到上次的进度: ${TimeUtils.convertMinSec(_progress)}");
         });
         setState(() {
           _progressIsLoaded = true;
@@ -256,9 +254,11 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   void _initDanmukuPool() async {
     _episode = await EpisodeApi().findById(_episodeId);
-    if (_episode.id == -1 || _episode.group != "MAIN") return; // 根据条目名和序号只支持查询正片弹幕
+    if (_episode.id == -1 || _episode.group != "MAIN")
+      return; // 根据条目名和序号只支持查询正片弹幕
     _subject = await SubjectApi().findById(_episode.subjectId);
-    if (_subject.id == -1 || _subject.syncs == null || _subject.syncs!.isEmpty) return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
+    if (_subject.id == -1 || _subject.syncs == null || _subject.syncs!.isEmpty)
+      return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
     SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
         .searchEpisodes(_subject.name, _episode.sequence.toInt().toString());
     if (searchEpsResp == null ||
@@ -316,48 +316,48 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
         overlays: SystemUiOverlay.values); // to re-show bars
   }
 
-  void _takeSnapshot() async {
-    var status = await Permission.storage.status;
-
-    if (status.isDenied) {
-      // 如果权限被拒绝，直接请求权限
-      status = await Permission.storage.request();
+  Future<bool> _requestPermission() async {
+    // 适用于 Android 11 及以上
+    if (await Permission.photos.isGranted || await Permission.storage.isGranted) {
+      return true;
     }
 
-    if (status.isPermanentlyDenied) {
-      // 如果权限被永久拒绝，提示用户去设置手动开启
+    if (await Permission.photos.request().isGranted ||
+        await Permission.storage.request().isGranted) {
+      return true;
+    }
+
+    // 如果是 Android 11 及以上版本，需要请求管理外部存储的权限
+    if (await Permission.manageExternalStorage.request().isGranted) {
+      return true;
+    }
+
+    return false;
+  }
+
+  void _takeSnapshot() async {
+    bool result = await _requestPermission();
+
+    if (!result) {
+      // 无权限则跳转到配置权限的设置页
       openAppSettings();
     }
 
-    print(status);
-
-    if (status.isGranted) {
+    if (result) {
       try {
         // 捕获视频截图
         Uint8List pngBytes = await _player.takeSnapshot();
 
-        // 获取临时目录
-        final directory = await getTemporaryDirectory();
-        // 创建图片文件
-        final imageFile = File('${directory.path}/temp_image.png');
-        // 写入图片数据
-        await imageFile.writeAsBytes(pngBytes);
+        // 保存图片
+        final res = await ImageGallerySaver.saveImage(pngBytes);
+        if (kDebugMode) print(res);
+        Toast.show(context, "截图已保存到相册");
 
-        // 保存图片到相册
-        // await GallerySaver.saveImage(imageFile.path).then((bool? success) {
-        //   if (success == true) {
-        //     GFToast.showToast("截图已保存到相册", context,
-        //         toastPosition: GFToastPosition.CENTER);
-        //   } else {
-        //     GFToast.showToast("保存图片失败", context,
-        //         toastPosition: GFToastPosition.CENTER);
-        //   }
-        // });
       } catch (e) {
         print(e);
       }
     } else {
-      Toast.show(context, "存储权限被拒绝");
+      Toast.show(context, "相册权限被拒绝");
     }
   }
 
@@ -549,127 +549,138 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       isScrollControlled: true,
       builder: (context) {
         return SizedBox(
-          height: MediaQuery.of(context).size.height * (_isFullScreen ? 0.95 : 0.6),
-          width: MediaQuery.of(context).size.width * 0.95,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  height: 20,
-                ),
-                const Text('弹幕字体大小'),
-                const SizedBox(
-                  height: 10,
-                ),
-                SegmentedButton<double>(
-                  selected: <double>{_danmuConfig.fontSize},
-                  segments: const [
-                    ButtonSegment(value: 11.0, label: Text("小")),
-                    ButtonSegment(value: 16.0, label: Text("中")),
-                    ButtonSegment(value: 21.0, label: Text("大")),
-                    ButtonSegment(value: 26.0, label: Text("特大")),
-                    ButtonSegment(value: 31.0, label: Text("超级大")),
-                  ],
-                  onSelectionChanged: (Set<double> newSelection) {
-                    if (_danmuConfig.fontSize != newSelection.first) {
-                      _danmuConfig.fontSize = newSelection.first;
-                      _danmuConfigChange = true;
-                    }
-                    Navigator.of(context).pop();
-                  },
-                ),
-                const SizedBox(height: 20,),
-                const Text('弹幕显示区域'),
-                const SizedBox(height: 10),
-                SegmentedButton<double>(
-                  selected: <double>{_danmuConfig.area},
-                  segments: const [
-                    ButtonSegment(value: 0.25, label: Text("小屏")),
-                    ButtonSegment(value: 0.5, label: Text("半屏")),
-                    ButtonSegment(value: 0.75, label: Text("大屏")),
-                    ButtonSegment(value: 1.0, label: Text("全屏")),
-                  ],
-                  onSelectionChanged: (Set<double> newSelection) {
-                    if (_danmuConfig.area != newSelection.first) {
-                      _danmuConfig.area = newSelection.first;
-                      _danmuConfigChange = true;
-                    }
-                    Navigator.of(context).pop();
-                  },
-                ),
-                const SizedBox(height: 20,),
-                const Text('弹幕透明度'),
-                const SizedBox(height: 10),
-                SegmentedButton<double>(
-                  selected: <double>{_danmuConfig.opacity},
-                  segments: const [
-                    ButtonSegment(value: 0.25, label: Text("0.25")),
-                    ButtonSegment(value: 0.5, label: Text("0.5")),
-                    ButtonSegment(value: 0.75, label: Text("0.75")),
-                    ButtonSegment(value: 1.0, label: Text("1.0")),
-                  ],
-                  onSelectionChanged: (Set<double> newSelection) {
-                    if (_danmuConfig.opacity != newSelection.first) {
-                      _danmuConfig.opacity = newSelection.first;
-                      _danmuConfigChange = true;
-                    }
-                    Navigator.of(context).pop();
-                  },
-                ),
-                const SizedBox(height: 20,),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Column(
-                      children: [
-                        const Text('隐藏顶部弹幕'),
-                        const SizedBox(height: 10),
-                        Switch(value: _danmuConfig.hideTop, onChanged: ((bool value){
-                          if (_danmuConfig.hideTop != value) {
-                            _danmuConfig.hideTop = value;
-                            _danmuConfigChange = true;
-                          }
-                          Navigator.of(context).pop();
-                        })),
-                      ],
-                    ),
-                    const SizedBox(width: 5),
-                    Column(
-                      children: [
-                        const Text('隐藏底部弹幕'),
-                        const SizedBox(height: 10),
-                        Switch(value: _danmuConfig.hideBottom, onChanged: ((bool value){
-                          if (_danmuConfig.hideBottom != value) {
-                            _danmuConfig.hideBottom = value;
-                            _danmuConfigChange = true;
-                          }
-                          Navigator.of(context).pop();
-                        })),
-                      ],
-                    ),
-                    const SizedBox(width: 5),
-                    Column(
-                      children: [
-                        const Text('隐藏滚动弹幕'),
-                        const SizedBox(height: 10),
-                        Switch(value: _danmuConfig.hideScroll, onChanged: ((bool value){
-                          if (_danmuConfig.hideScroll != value) {
-                            _danmuConfig.hideScroll = value;
-                            _danmuConfigChange = true;
-                          }
-                          Navigator.of(context).pop();
-                        })),
-                      ],
-                    ),
-                  ],
-                ),
-
-              ],
-            ),
-          )
-        );
+            height: MediaQuery.of(context).size.height *
+                (_isFullScreen ? 0.95 : 0.6),
+            width: MediaQuery.of(context).size.width * 0.95,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text('弹幕字体大小'),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  SegmentedButton<double>(
+                    selected: <double>{_danmuConfig.fontSize},
+                    segments: const [
+                      ButtonSegment(value: 11.0, label: Text("小")),
+                      ButtonSegment(value: 16.0, label: Text("中")),
+                      ButtonSegment(value: 21.0, label: Text("大")),
+                      ButtonSegment(value: 26.0, label: Text("特大")),
+                      ButtonSegment(value: 31.0, label: Text("超级大")),
+                    ],
+                    onSelectionChanged: (Set<double> newSelection) {
+                      if (_danmuConfig.fontSize != newSelection.first) {
+                        _danmuConfig.fontSize = newSelection.first;
+                        _danmuConfigChange = true;
+                      }
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text('弹幕显示区域'),
+                  const SizedBox(height: 10),
+                  SegmentedButton<double>(
+                    selected: <double>{_danmuConfig.area},
+                    segments: const [
+                      ButtonSegment(value: 0.25, label: Text("小屏")),
+                      ButtonSegment(value: 0.5, label: Text("半屏")),
+                      ButtonSegment(value: 0.75, label: Text("大屏")),
+                      ButtonSegment(value: 1.0, label: Text("全屏")),
+                    ],
+                    onSelectionChanged: (Set<double> newSelection) {
+                      if (_danmuConfig.area != newSelection.first) {
+                        _danmuConfig.area = newSelection.first;
+                        _danmuConfigChange = true;
+                      }
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const Text('弹幕透明度'),
+                  const SizedBox(height: 10),
+                  SegmentedButton<double>(
+                    selected: <double>{_danmuConfig.opacity},
+                    segments: const [
+                      ButtonSegment(value: 0.25, label: Text("0.25")),
+                      ButtonSegment(value: 0.5, label: Text("0.5")),
+                      ButtonSegment(value: 0.75, label: Text("0.75")),
+                      ButtonSegment(value: 1.0, label: Text("1.0")),
+                    ],
+                    onSelectionChanged: (Set<double> newSelection) {
+                      if (_danmuConfig.opacity != newSelection.first) {
+                        _danmuConfig.opacity = newSelection.first;
+                        _danmuConfigChange = true;
+                      }
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Column(
+                        children: [
+                          const Text('隐藏顶部弹幕'),
+                          const SizedBox(height: 10),
+                          Switch(
+                              value: _danmuConfig.hideTop,
+                              onChanged: ((bool value) {
+                                if (_danmuConfig.hideTop != value) {
+                                  _danmuConfig.hideTop = value;
+                                  _danmuConfigChange = true;
+                                }
+                                Navigator.of(context).pop();
+                              })),
+                        ],
+                      ),
+                      const SizedBox(width: 5),
+                      Column(
+                        children: [
+                          const Text('隐藏底部弹幕'),
+                          const SizedBox(height: 10),
+                          Switch(
+                              value: _danmuConfig.hideBottom,
+                              onChanged: ((bool value) {
+                                if (_danmuConfig.hideBottom != value) {
+                                  _danmuConfig.hideBottom = value;
+                                  _danmuConfigChange = true;
+                                }
+                                Navigator.of(context).pop();
+                              })),
+                        ],
+                      ),
+                      const SizedBox(width: 5),
+                      Column(
+                        children: [
+                          const Text('隐藏滚动弹幕'),
+                          const SizedBox(height: 10),
+                          Switch(
+                              value: _danmuConfig.hideScroll,
+                              onChanged: ((bool value) {
+                                if (_danmuConfig.hideScroll != value) {
+                                  _danmuConfig.hideScroll = value;
+                                  _danmuConfigChange = true;
+                                }
+                                Navigator.of(context).pop();
+                              })),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ));
       },
     );
     if (_danmuConfigChange) {
@@ -678,7 +689,6 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       await _reloadDanmukuConfig();
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -798,19 +808,19 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                 ),
 
                 // 右边的截图按钮
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Padding(
-                      padding: EdgeInsets.only(right: 15),
+                      padding: const EdgeInsets.only(right: 15),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
                             color: Colors.white,
                             iconSize: 30,
-                            icon: Icon(Icons.photo_camera),
-                            onPressed: null,
+                            icon: const Icon(Icons.photo_camera),
+                            onPressed: _takeSnapshot,
                           ),
                         ],
                       ),
@@ -940,23 +950,26 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                           onPressed: _getSubtitleTracks,
                         ),
 
-                      if(_isFullScreen)
-                        IconButton(onPressed: ()async {
-                          if (_isFullScreenPortraitUp) {
-                            await SystemChrome.setPreferredOrientations([
-                              DeviceOrientation.landscapeRight,
-                              DeviceOrientation.landscapeLeft,
-                            ]);
-                            _isFullScreenPortraitUp = false;
-                          } else {
-                            await SystemChrome.setPreferredOrientations([
-                              DeviceOrientation.portraitUp
-                            ]);
-                            _isFullScreenPortraitUp = true;
-                          }
+                      if (_isFullScreen)
+                        IconButton(
+                            onPressed: () async {
+                              if (_isFullScreenPortraitUp) {
+                                await SystemChrome.setPreferredOrientations([
+                                  DeviceOrientation.landscapeRight,
+                                  DeviceOrientation.landscapeLeft,
+                                ]);
+                                _isFullScreenPortraitUp = false;
+                              } else {
+                                await SystemChrome.setPreferredOrientations(
+                                    [DeviceOrientation.portraitUp]);
+                                _isFullScreenPortraitUp = true;
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.screen_rotation_alt,
+                              color: Colors.white,
+                            )),
 
-                        }, icon: const Icon(Icons.screen_rotation_alt, color: Colors.white,)),
-                      
                       // 全屏控制按钮
                       IconButton(
                         iconSize: 24,
