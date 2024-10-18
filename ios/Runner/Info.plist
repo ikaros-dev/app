@@ -61,5 +61,14 @@
     </array>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>Ikaros需要访问您的相册以保存图片</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>ikaros</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

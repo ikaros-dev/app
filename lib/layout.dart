@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:ikaros/collection/collections.dart';
+import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/user/user.dart';
-import 'package:ikaros/collection/collections.dart';
+import 'package:ikaros/utils/message_utils.dart';
+import 'package:uni_links/uni_links.dart';
 
 /// 主页面 移动端
 class MobileLayout extends StatefulWidget {
@@ -20,16 +23,62 @@ class _MobileLayoutState extends State<MobileLayout> {
   // Current page.
   int _pageIndex = 0;
 
+  String? _latestLink;
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _initUniLinks();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initUniLinks() async {
+    // 获取初始链接
+    try {
+      final initialLink = await getInitialLink();
+      if (initialLink != null) {
+        setState(() {
+          _latestLink = initialLink;
+        });
+        _handleIncomingLink(initialLink.toString());
+      }
+    } catch (e) {
+      print('Failed to get initial link: $e');
+    }
+
+    // 监听链接变化
+    linkStream.listen((String? link) {
+      setState(() {
+        _latestLink = link;
+      });
+      if (link != null) {
+        _handleIncomingLink(link.toString());
+      }
+    });
+  }
+
+  void _handleIncomingLink(String link) {
+    // 处理链接逻辑，例如导航到特定页面
+    setState(() {
+      _latestLink = link;
+    });
+    // 解析链接并进行导航
+    // 格式：ikaros://app/subject/111
+    if (link.contains("subject/")) {
+      var id = link.substring(link.lastIndexOf("/") + 1);
+      Toast.show(context,
+          "正在跳转到条目:$id");
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => SubjectPage(
+                id: id,
+              )));
+    }
   }
 
   // Change page.
@@ -86,14 +135,15 @@ class DesktopLayout extends StatefulWidget {
   State<StatefulWidget> createState() {
     return _DesktopLayoutState();
   }
-
 }
 
 class _DesktopLayoutState extends State<DesktopLayout> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const CollectionPage(), const SubjectsPage(), const UserPage(),
+    const CollectionPage(),
+    const SubjectsPage(),
+    const UserPage(),
   ];
 
   void _onMenuItemTapped(int index) {
@@ -135,5 +185,4 @@ class _DesktopLayoutState extends State<DesktopLayout> {
       ),
     );
   }
-
 }

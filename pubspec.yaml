@@ -1,6 +1,6 @@
 name: ikaros
 description: ikaros app by flutter
-version: 15.3.26
+version: 17.1.0
 
 environment:
   sdk: '>=2.18.4 <=3.10.5'
@@ -36,6 +36,7 @@ dependencies:
   wakelock_plus: ^1.2.8
   just_audio: ^0.9.40
   photo_manager: ^3.3.0
+  uni_links: ^0.5.1
 
 dev_dependencies:
   flutter_test:
