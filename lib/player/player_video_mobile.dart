@@ -15,8 +15,10 @@ import 'package:ikaros/api/dandanplay/model/SearchEpisodesAnime.dart';
 import 'package:ikaros/api/dandanplay/model/SearchEpisodesResponse.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
+import 'package:ikaros/api/subject/SubjectSyncApi.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/api/subject/model/SubjectSync.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/throttle_utils.dart';
@@ -62,6 +64,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   int _progress = 0;
   late Episode _episode;
   late Subject _subject;
+  late List<SubjectSync> _syncs = [];
   late DanmakuController _danmuku;
   List<CommentEpisode> _commentEpisodes = [];
   List<CommentEpisode> _commentRomovedEpisodes = [];
@@ -257,8 +260,10 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     if (_episode.id == -1 || _episode.group != "MAIN")
       return; // 根据条目名和序号只支持查询正片弹幕
     _subject = await SubjectApi().findById(_episode.subjectId);
-    if (_subject.id == -1 || _subject.syncs == null || _subject.syncs!.isEmpty)
+    _syncs = await SubjectSyncApi().getSyncsBySubjectId(_episode.subjectId);
+    if (_subject.id == -1 || _syncs.isEmpty) {
       return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
+    }
     SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
         .searchEpisodes(_subject.name, _episode.sequence.toInt().toString());
     if (searchEpsResp == null ||
@@ -318,7 +323,8 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   Future<bool> _requestPermission() async {
     // 适用于 Android 11 及以上
-    if (await Permission.photos.isGranted || await Permission.storage.isGranted) {
+    if (await Permission.photos.isGranted ||
+        await Permission.storage.isGranted) {
       return true;
     }
 
@@ -347,10 +353,10 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     // 捕获视频截图
     Uint8List pngBytes = await _player.takeSnapshot();
     // 已获取到权限
-    String fileName = '${_subject.id}_${_episodeId}_${_position.inMilliseconds}ms.png';
+    String fileName =
+        '${_subject.id}_${_episodeId}_${_position.inMilliseconds}ms.png';
     await PhotoManager.editor.saveImage(pngBytes, filename: fileName);
     Toast.show(context, "截图已保存到相册");
-
 
     // bool result = await _requestPermission();
     //

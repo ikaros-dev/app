@@ -15,14 +15,6 @@ Subject _$SubjectFromJson(Map<String, dynamic> json) => Subject(
       summary: json['summary'] as String?,
       nsfw: json['nsfw'] as bool,
       cover: json['cover'] as String,
-      episodes: (json['episodes'] as List<dynamic>?)
-          ?.map((e) => Episode.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      totalEpisodes: (json['total_episodes'] as num?)?.toInt(),
-      syncs: (json['syncs'] as List<dynamic>?)
-          ?.map((e) => SubjectSync.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      canRead: json['canRead'] as bool?,
     );
 
 Map<String, dynamic> _$SubjectToJson(Subject instance) => <String, dynamic>{
@@ -34,10 +26,6 @@ Map<String, dynamic> _$SubjectToJson(Subject instance) => <String, dynamic>{
       'summary': instance.summary,
       'nsfw': instance.nsfw,
       'cover': instance.cover,
-      'episodes': instance.episodes,
-      'total_episodes': instance.totalEpisodes,
-      'syncs': instance.syncs,
-      'canRead': instance.canRead,
     };
 
 const _$SubjectTypeEnumMap = {

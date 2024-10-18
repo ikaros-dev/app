@@ -14,9 +14,6 @@ Episode _$EpisodeFromJson(Map<String, dynamic> json) => Episode(
       description: json['description'] as String?,
       sequence: (json['sequence'] as num).toDouble(),
       group: json['group'] as String?,
-      resources: (json['resources'] as List<dynamic>?)
-          ?.map((e) => EpisodeResource.fromJson(e as Map<String, dynamic>))
-          .toList(),
     );
 
 Map<String, dynamic> _$EpisodeToJson(Episode instance) => <String, dynamic>{
@@ -27,5 +24,4 @@ Map<String, dynamic> _$EpisodeToJson(Episode instance) => <String, dynamic>{
       'description': instance.description,
       'sequence': instance.sequence,
       'group': instance.group,
-      'resources': instance.resources,
     };

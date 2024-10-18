@@ -19,15 +19,10 @@ class Subject {
   final String? summary;
   final bool nsfw;
   final String cover;
-  final List<Episode>? episodes;
-  @JsonKey(name: "total_episodes")
-  final int? totalEpisodes;
-  final List<SubjectSync>? syncs;
-  final bool? canRead;
 
   Subject({required this.id, required this.type, required this.name,
   this.nameCn, this.infobox, this.summary, required this.nsfw,
-  required this.cover, this.episodes, this.totalEpisodes, this.syncs, this.canRead});
+  required this.cover});
 
   factory Subject.fromJson(Map<String, dynamic> json) => _$SubjectFromJson(json);
 

@@ -10,6 +10,7 @@ import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
+import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
@@ -46,6 +47,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   String _episodeResName = '';
   int _progress = 0;
   late EpisodeResource? _currentResource = null;
+  late List<EpisodeResource> _episodeResList = [];
 
   late GlobalKey<MobileVideoPlayerState> _mobilePlayer;
   late GlobalKey<MobileAudioPlayerState> _mobileAudioPlayer;
@@ -68,10 +70,19 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
     _videoTitle =
         "${_episode.sequence}: ${(_episode.nameCn != null && _episode.nameCn != '') ? _episode.nameCn! : _episode.name}";
 
-    if (_episode.resources != null && _episode.resources!.isNotEmpty) {
-      _videoUrl = _episode.resources!.first.url;
-      _loadEpisodeResource(_episode.resources!.first);
+    _fetchEpisodeResources();
+
+
+  }
+
+  Future<void> _fetchEpisodeResources() async {
+    var id = widget.episode.id;
+    _episodeResList = await EpisodeApi().getEpisodeResourcesRefs(id);
+    if (_episodeResList.isNotEmpty) {
+      _videoUrl = _episodeResList.first.url;
+      _loadEpisodeResource(_episodeResList.first);
     }
+    setState(() {});
   }
 
   // void release() {
@@ -126,8 +137,8 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   }
 
   Widget _buildEpisodePage() {
-    if (_episode.resources == null || _episode.resources!.isEmpty) {
-      return const Text("Current Episode Not Bind Attachment Resources.");
+    if (_episodeResList.isEmpty) {
+      return const CircularProgressIndicator ();
     }
     return Column(
       children: [
@@ -152,11 +163,17 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   }
 
   Widget _buildMediaPlayer() {
-    if (widget.subject != null && widget.subject?.type != null && widget.subject?.type == SubjectType.MUSIC) {
+    if (widget.subject != null &&
+        widget.subject?.type != null &&
+        widget.subject?.type == SubjectType.MUSIC) {
       if (Platform.isAndroid || Platform.isIOS) {
-        return MobileAudioPlayer(key: _mobileAudioPlayer,);
+        return MobileAudioPlayer(
+          key: _mobileAudioPlayer,
+        );
       }
-      return DesktopAudioPlayer(key: _desktopAudioPlayer,);
+      return DesktopAudioPlayer(
+        key: _desktopAudioPlayer,
+      );
     }
 
     return _buildVideoPlayer();
@@ -187,9 +204,12 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
 
   Future setVideoUrl() async {
     // 音频
-    if (widget.subject != null && widget.subject?.type != null && widget.subject?.type == SubjectType.MUSIC) {
+    if (widget.subject != null &&
+        widget.subject?.type != null &&
+        widget.subject?.type == SubjectType.MUSIC) {
       AuthParams authParams = await _loadBaseUrl();
-      String coverUrl = UrlUtils.getCoverUrl(authParams.baseUrl, widget.subject?.cover ?? "");
+      String coverUrl =
+          UrlUtils.getCoverUrl(authParams.baseUrl, widget.subject?.cover ?? "");
       if (Platform.isAndroid || Platform.isIOS) {
         _mobileAudioPlayer.currentState?.setTitle(_videoTitle);
         _mobileAudioPlayer.currentState?.setCoverUrl(coverUrl);
@@ -282,7 +302,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
       _videoUrl = _apiBaseUrl + episodeResource.url;
     }
     print("episode resource video url: $_videoUrl");
-    if (_episode.resources != null && _episode.resources!.isNotEmpty) {
+    if (_episodeResList.isNotEmpty) {
       List<VideoSubtitle> videoSubtitles = await AttachmentRelationApi()
           .findByAttachmentId(episodeResource.attachmentId);
       List<String> subtitleUrls = [];
@@ -316,39 +336,39 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
   }
 
   Widget _buildResourceSelectListView() {
-    if (_episode.resources == null || _episode.resources!.isEmpty) {
-      return Container();
-    }
-    var items = _episode.resources!
-        .map((res) => MaterialButton(
-            onPressed: () {
-              _loadEpisodeResource(res);
-            },
-            color: (_currentResource != null &&
-                    _currentResource!.attachmentId == res.attachmentId)
-                ? Colors.lightBlue
-                : Colors.white,
-            shape: const RoundedRectangleBorder(
-              side: BorderSide(
-                color: Colors.deepPurple,
-                width: 1,
-              ),
-              borderRadius: BorderRadius.all(
-                Radius.circular(8),
-              ),
+  if (_episodeResList.isEmpty) {
+    return Container();
+  }
+  var items = _episodeResList
+      .map((res) => MaterialButton(
+          onPressed: () {
+            _loadEpisodeResource(res);
+          },
+          color: (_currentResource != null &&
+                  _currentResource!.attachmentId == res.attachmentId)
+              ? Colors.lightBlue
+              : Colors.white,
+          shape: const RoundedRectangleBorder(
+            side: BorderSide(
+              color: Colors.deepPurple,
+              width: 1,
             ),
-            child: Text(
-              res.name,
-              overflow: TextOverflow.ellipsis,
-            )))
-        .map((textBtn) => Container(
-              margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
-              child: SizedBox(
-                height: 40,
-                child: textBtn,
-              ),
-            ))
-        .toList();
+            borderRadius: BorderRadius.all(
+              Radius.circular(8),
+            ),
+          ),
+          child: Text(
+            res.name,
+            overflow: TextOverflow.ellipsis,
+          )))
+      .map((textBtn) => Container(
+            margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
+            child: SizedBox(
+              height: 40,
+              child: textBtn,
+            ),
+          ))
+      .toList();
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       height: MediaQuery.of(context).size.height,

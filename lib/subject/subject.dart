@@ -9,9 +9,11 @@ import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
 import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
+import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
+import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
@@ -35,6 +37,8 @@ class SubjectPage extends StatefulWidget {
 class _SubjectState extends State<SubjectPage> {
   late String _apiBaseUrl;
   late Subject _subject;
+  late List<Episode> _episodes = [];
+  late final Map<int, List<EpisodeResource>> _episodeResourcesMap = {};
   late SubjectCollection? _subjectCollection;
   late CollectionType _collectionType;
 
@@ -69,6 +73,7 @@ class _SubjectState extends State<SubjectPage> {
     super.initState();
     _loadSubjectWithIdFuture = _loadSubjectWithId();
     _loadApiBaseUrlFuture = _loadBaseUrl();
+    _fetchSubjectEpisodes();
     _fetchSubjectCollection();
   }
 
@@ -105,8 +110,11 @@ class _SubjectState extends State<SubjectPage> {
                   );
                 }
               } else {
-                return const Center(
-                  child: CircularProgressIndicator(),
+                return Container(
+                  margin: const EdgeInsets.only(top: 20.0), // 设置顶部边距为20像素
+                  child: const Center(
+                    child: CircularProgressIndicator(),
+                  ), // 替换为你要使用的组件
                 );
               }
             }),
@@ -222,7 +230,7 @@ class _SubjectState extends State<SubjectPage> {
           "剧集总数",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        Text("${_subject.totalEpisodes}", overflow: TextOverflow.ellipsis),
+        Text("${_episodes.length}", overflow: TextOverflow.ellipsis),
       ],
     );
   }
@@ -255,24 +263,12 @@ class _SubjectState extends State<SubjectPage> {
     );
   }
 
-  bool _episodesHasResource() {
-    bool hasRes = false;
-    if (_subject.episodes == null) return hasRes;
-    for (var ep in _subject.episodes!) {
-      if (ep.resources != null && ep.resources!.isNotEmpty) {
-        hasRes = true;
-        break;
-      }
-    }
-    return hasRes;
-  }
-
   Row _buildEpisodeAndCollectionButtonsRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         ElevatedButton(
-          onPressed: _episodesHasResource()
+          onPressed: _episodeResourcesMap.isNotEmpty
               ? () async {
                   bool? cancel = await showEpisodesDialog();
                   // ignore: unnecessary_null_comparison
@@ -283,7 +279,13 @@ class _SubjectState extends State<SubjectPage> {
                   }
                 }
               : null,
-          child: const Text("选集"),
+          child: _episodeResourcesMap.isEmpty
+              ? const SizedBox(
+                  width: 20, // 控制宽度
+                  height: 20, // 控制高度
+                  child: CircularProgressIndicator(),
+                )
+              : const Text("选集"),
         ),
         const SizedBox(width: 2),
         _buildCollectOperateWidget(),
@@ -375,9 +377,9 @@ class _SubjectState extends State<SubjectPage> {
 
   List<EpisodeGroup> _getEpisodeGroupEnums() {
     var epGroups = <EpisodeGroup>[];
-    if (_subject.episodes == null) return epGroups;
-    var groupSet = _subject.episodes?.map((e) => e.group).toSet();
-    if (groupSet == null) return epGroups;
+    if (_episodes.isEmpty) return epGroups;
+    var groupSet = _episodes.map((e) => e.group).toSet();
+    if (groupSet.isEmpty) return epGroups;
     for (var group in groupSet) {
       var findEpGroups = EpisodeGroup.values.where((ep) => ep.name == group);
       if (findEpGroups.isEmpty) continue;
@@ -408,9 +410,9 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   List<Episode>? _getEpisodesByGroup(String group) {
-    if (_subject.episodes == null) return [];
-    var episodes = _subject.episodes?.where((ep) => ep.group == group).toList();
-    episodes?.sort((me, ot) => me.sequence.compareTo(ot.sequence));
+    if (_episodes.isEmpty) return [];
+    var episodes = _episodes.where((ep) => ep.group == group).toList();
+    episodes.sort((me, ot) => me.sequence.compareTo(ot.sequence));
     return episodes;
   }
 
@@ -443,7 +445,7 @@ class _SubjectState extends State<SubjectPage> {
                         disabledBackgroundColor: Colors.grey[400],
                         disabledForegroundColor: Colors.grey[600],
                       ),
-                      onPressed: (ep.resources == null || ep.resources!.isEmpty)
+                      onPressed: _episodeHasResource(ep)
                           ? null
                           : () {
                               Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
@@ -469,6 +471,13 @@ class _SubjectState extends State<SubjectPage> {
     );
   }
 
+  bool _episodeHasResource(Episode e) {
+    if (_episodeResourcesMap.isEmpty) return false;
+    if (!_episodeResourcesMap.containsKey(e.id)) return false;
+    List<EpisodeResource> resList = _episodeResourcesMap[e.id] ?? List.empty();
+    return resList.isEmpty;
+  }
+
   TabBarView _buildEpisodeSelectTabView() {
     var groups = _getEpisodeGroupEnums();
     var tabViews =
@@ -481,6 +490,27 @@ class _SubjectState extends State<SubjectPage> {
     return TabBarView(
       children: tabViews,
     );
+  }
+
+  Future<void> _fetchSubjectEpisodes() async {
+    _episodes =
+        await EpisodeApi().findBySubjectId(int.parse(widget.id.toString()));
+    if (_episodes.isEmpty && kDebugMode) {
+      print("获取条目剧集失败");
+    }
+
+    await _fetchEpisodeResourcesMap();
+
+    setState(() {});
+  }
+
+  Future<void> _fetchEpisodeResourcesMap() async {
+    for (Episode e in _episodes) {
+      var id = e.id;
+      List<EpisodeResource> epResList =
+          await EpisodeApi().getEpisodeResourcesRefs(id);
+      _episodeResourcesMap.putIfAbsent(e.id, () => epResList);
+    }
   }
 
   Future<void> _fetchSubjectCollection() async {

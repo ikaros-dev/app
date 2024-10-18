@@ -10,7 +10,7 @@ import 'model/Subject.dart';
 
 class SubjectApi {
 
-  Subject error = Subject(id: -1, type: SubjectType.OTHER, name: "-1", nsfw: false, cover: "-1", episodes: [], totalEpisodes: 0);
+  Subject error = Subject(id: -1, type: SubjectType.OTHER, name: "-1", nsfw: false, cover: "-1");
 
 
   Future<PagingWrap> listSubjectsByCondition(int page, int size, String name, String nameCn,
