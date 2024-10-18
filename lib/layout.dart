@@ -48,15 +48,6 @@ class _MobileLayoutState extends State<MobileLayout> {
       _handleIncomingLink(link.toString());
     });
 
-    // 获取应用启动时的链接
-    final initialLink = await _appLinks.getInitialLink();
-    if (initialLink != null) {
-      setState(() {
-        _latestLink = initialLink.toString();
-      });
-      _handleIncomingLink(initialLink.toString());
-    }
-
   }
 
   void _handleIncomingLink(String link) {
