@@ -1,10 +1,10 @@
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/collection/collections.dart';
 import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/user/user.dart';
 import 'package:ikaros/utils/message_utils.dart';
-import 'package:uni_links/uni_links.dart';
 
 /// 主页面 移动端
 class MobileLayout extends StatefulWidget {
@@ -24,12 +24,13 @@ class _MobileLayoutState extends State<MobileLayout> {
   int _pageIndex = 0;
 
   String? _latestLink;
+  final AppLinks _appLinks = AppLinks();
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    _initUniLinks();
+    _initAppLinks();
   }
 
   @override
@@ -38,29 +39,24 @@ class _MobileLayoutState extends State<MobileLayout> {
     super.dispose();
   }
 
-  Future<void> _initUniLinks() async {
-    // 获取初始链接
-    try {
-      final initialLink = await getInitialLink();
-      if (initialLink != null) {
-        setState(() {
-          _latestLink = initialLink;
-        });
-        _handleIncomingLink(initialLink.toString());
-      }
-    } catch (e) {
-      print('Failed to get initial link: $e');
+  Future<void> _initAppLinks() async {
+    // 监听 incoming links
+    _appLinks.uriLinkStream.listen((Uri? link) {
+      setState(() {
+        _latestLink = link.toString();
+      });
+      _handleIncomingLink(link.toString());
+    });
+
+    // 获取应用启动时的链接
+    final initialLink = await _appLinks.getInitialLink();
+    if (initialLink != null) {
+      setState(() {
+        _latestLink = initialLink.toString();
+      });
+      _handleIncomingLink(initialLink.toString());
     }
 
-    // 监听链接变化
-    linkStream.listen((String? link) {
-      setState(() {
-        _latestLink = link;
-      });
-      if (link != null) {
-        _handleIncomingLink(link.toString());
-      }
-    });
   }
 
   void _handleIncomingLink(String link) {
