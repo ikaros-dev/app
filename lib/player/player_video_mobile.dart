@@ -342,6 +342,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   }
 
   void _takeSnapshot() async {
+    _player.pause();
     bool result = await _requestPermission();
     if (!result) {
       Toast.show(context, "无相册权限");
