@@ -38,7 +38,6 @@ class _SubjectState extends State<SubjectPage> {
   late String _apiBaseUrl;
   late Subject _subject;
   late List<Episode> _episodes = [];
-  late final Map<int, List<EpisodeResource>> _episodeResourcesMap = {};
   late SubjectCollection? _subjectCollection;
   late CollectionType _collectionType;
 
@@ -268,24 +267,16 @@ class _SubjectState extends State<SubjectPage> {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         ElevatedButton(
-          onPressed: _episodeResourcesMap.isNotEmpty
-              ? () async {
-                  bool? cancel = await showEpisodesDialog();
-                  // ignore: unnecessary_null_comparison
-                  if (cancel == null) {
-                    print("返回");
-                  } else {
-                    print("确认");
-                  }
-                }
-              : null,
-          child: _episodeResourcesMap.isEmpty
-              ? const SizedBox(
-                  width: 20, // 控制宽度
-                  height: 20, // 控制高度
-                  child: CircularProgressIndicator(),
-                )
-              : const Text("选集"),
+          onPressed: () async {
+            bool? cancel = await showEpisodesDialog();
+            // ignore: unnecessary_null_comparison
+            if (cancel == null) {
+              print("返回");
+            } else {
+              print("确认");
+            }
+          },
+          child: const Text("选集"),
         ),
         const SizedBox(width: 2),
         _buildCollectOperateWidget(),
@@ -416,51 +407,73 @@ class _SubjectState extends State<SubjectPage> {
     return episodes;
   }
 
+  Widget _buildEpisodeButtonWidget(Episode ep) {
+    return FutureBuilder(
+        future: EpisodeApi().getEpisodeResourcesRefs(ep.id),
+        builder: (BuildContext context,
+            AsyncSnapshot<List<EpisodeResource>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              return Text(
+                  "Load EpisodeApi getEpisodeResourcesRefs error: ${snapshot.error}");
+            } else {
+              List<EpisodeResource> epResList = snapshot.data ?? List.empty();
+              return GestureDetector(
+                onLongPress: () async {
+                  bool isFinish = _episodeIsFinish(ep.id);
+                  await EpisodeCollectionApi()
+                      .updateCollectionFinish(ep.id, !isFinish);
+                  Toast.show(context, "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}");
+                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            SubjectPage(id: widget.id.toString())),
+                  );
+                },
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _episodeIsFinish(ep.id)
+                        ? Colors.green
+                        : Colors.lightBlueAccent,
+                    disabledBackgroundColor: Colors.grey[400],
+                    disabledForegroundColor: Colors.grey[600],
+                  ),
+                  onPressed: epResList.isEmpty
+                      ? null
+                      : () {
+                          Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => SubjectEpisodePage(
+                                    episode: ep,
+                                    subject: _subject,
+                                  )));
+                        },
+                  child: Text(
+                    "${ep.sequence} : ${ep.name}",
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              );
+            }
+          } else {
+            return const Center(
+              child: SizedBox(
+                width: 20, // 控制宽度
+                height: 20, // 控制高度
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+        });
+  }
+
   Widget _getEpisodesTabViewByGroup(String group) {
     var buttons = _getEpisodesByGroup(group)
         ?.map((ep) => Container(
               margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
-              child: SizedBox(
-                  height: 40,
-                  child: GestureDetector(
-                    onLongPress: () async {
-                      bool isFinish = _episodeIsFinish(ep.id);
-                      await EpisodeCollectionApi()
-                          .updateCollectionFinish(ep.id, !isFinish);
-                      Toast.show(
-                          context, "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}");
-                      Navigator.pop(context);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                SubjectPage(id: widget.id.toString())),
-                      );
-                    },
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _episodeIsFinish(ep.id)
-                            ? Colors.green
-                            : Colors.lightBlueAccent,
-                        disabledBackgroundColor: Colors.grey[400],
-                        disabledForegroundColor: Colors.grey[600],
-                      ),
-                      onPressed: _episodeHasResource(ep)
-                          ? null
-                          : () {
-                              Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => SubjectEpisodePage(
-                                        episode: ep,
-                                        subject: _subject,
-                                      )));
-                            },
-                      child: Text(
-                        "${ep.sequence} : ${ep.name}",
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  )),
+              child: SizedBox(height: 40, child: _buildEpisodeButtonWidget(ep)),
             ))
         .toList();
 
@@ -469,13 +482,6 @@ class _SubjectState extends State<SubjectPage> {
     return ListView(
       children: buttons,
     );
-  }
-
-  bool _episodeHasResource(Episode e) {
-    if (_episodeResourcesMap.isEmpty) return false;
-    if (!_episodeResourcesMap.containsKey(e.id)) return false;
-    List<EpisodeResource> resList = _episodeResourcesMap[e.id] ?? List.empty();
-    return resList.isEmpty;
   }
 
   TabBarView _buildEpisodeSelectTabView() {
@@ -499,19 +505,9 @@ class _SubjectState extends State<SubjectPage> {
       print("获取条目剧集失败");
     }
 
-    await _fetchEpisodeResourcesMap();
-
     setState(() {});
   }
 
-  Future<void> _fetchEpisodeResourcesMap() async {
-    for (Episode e in _episodes) {
-      var id = e.id;
-      List<EpisodeResource> epResList =
-          await EpisodeApi().getEpisodeResourcesRefs(id);
-      _episodeResourcesMap.putIfAbsent(e.id, () => epResList);
-    }
-  }
 
   Future<void> _fetchSubjectCollection() async {
     _subjectCollection = await SubjectCollectionApi()
