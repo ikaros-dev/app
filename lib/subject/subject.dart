@@ -264,23 +264,32 @@ class _SubjectState extends State<SubjectPage> {
 
   Row _buildEpisodeAndCollectionButtonsRow() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        ElevatedButton(
-          onPressed: () async {
-            bool? cancel = await showEpisodesDialog();
-            // ignore: unnecessary_null_comparison
-            if (cancel == null) {
-              print("返回");
-            } else {
-              print("确认");
-            }
-          },
-          child: const Text("选集"),
+        Row(
+          children: [
+            _buildCollectOperateWidget(),
+            _buildCollectTypeOperateWidget(),
+          ],
         ),
-        const SizedBox(width: 2),
-        _buildCollectOperateWidget(),
-        _buildCollectTypeOperateWidget(),
+
+        Row(
+          children: [
+            ElevatedButton(
+              onPressed: () async {
+                bool? cancel = await showEpisodesDialog();
+                // ignore: unnecessary_null_comparison
+                if (cancel == null) {
+                  print("返回");
+                } else {
+                  print("确认");
+                }
+              },
+              child: const Text("选集"),
+            )
+          ],
+        ),
+
       ],
     );
   }
