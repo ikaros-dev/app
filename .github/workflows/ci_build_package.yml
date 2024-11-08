@@ -139,7 +139,7 @@ jobs:
           
           # Ensure Podfile exists and update macOS deployment target
           if [ -f Podfile ]; then
-            sed -i '' "s/platform :macos, .*/platform :macos, '10.15'/" Podfile
+            sed -i '' "s/platform :macos, .*/platform :macos, '12.6'/" Podfile
           fi
 
       - name: Install dependencies
