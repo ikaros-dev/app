@@ -148,11 +148,8 @@ jobs:
           cd macos
           pod install
 
-      - name: Install dependencies
-        run: flutter pub get
-
       - name: Build macOS app
-        run: flutter build macos --release -v
+        run: flutter build macos --pubspec=pubspec_macos.yaml --release -v
 
       - name: Set APP_NAME
         run: |
