@@ -28,5 +28,7 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Ikaros需要访问您的相册以保存图片</string>
 </dict>
 </plist>
