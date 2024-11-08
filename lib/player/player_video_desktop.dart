@@ -176,8 +176,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     }
     _subject = await SubjectApi().findById(_episode.subjectId);
     _syncs = await SubjectSyncApi().getSyncsBySubjectId(_episode.subjectId);
-    if (_subject.id == -1 || _syncs.isEmpty
-    ) {
+    if (_subject.id == -1 || _syncs.isEmpty) {
       return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
     }
     SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
@@ -432,7 +431,8 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     setState(() {});
   }
 
-  void _takeSnapshot() async {
+  void _takeSnapshotOnWindows() async {
+    if (!Platform.isWindows) return;
     final ptr = calloc<Pointer<Utf16>>();
     final guid = calloc<GUID>()..ref.setGUID(FOLDERID_Pictures);
     final hr = SHGetKnownFolderPath(guid, KF_FLAG_DEFAULT, NULL, ptr);
@@ -455,7 +455,8 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         print("create ikaros snapshot dir: ${directory.path}");
       }
     }
-    String fileName = '${_subject.id}_${_episodeId}_${_position.inMilliseconds}ms.png';
+    String fileName =
+        '${_subject.id}_${_episodeId}_${_position.inMilliseconds}ms.png';
     File file = File('${directory.path}/$fileName');
     if (kDebugMode) {
       print("take snapshot to file: ${file.path}");
@@ -738,25 +739,26 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                     ),
 
                     // 右边的截图按钮
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 15),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                color: Colors.white,
-                                iconSize: 30,
-                                icon: const Icon(Icons.photo_camera),
-                                onPressed: _takeSnapshot,
-                              ),
-                            ],
+                    if (Platform.isWindows)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 15),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                  color: Colors.white,
+                                  iconSize: 30,
+                                  icon: const Icon(Icons.photo_camera),
+                                  onPressed: _takeSnapshotOnWindows,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
 
                     /// 底部的控制UI
                     Positioned(
