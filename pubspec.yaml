@@ -1,6 +1,6 @@
 name: ikaros
 description: ikaros app by flutter
-version: 17.1.8
+version: 17.1.9
 
 environment:
   sdk: '>=2.18.4 <=3.10.5'
@@ -50,3 +50,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/loading_placeholder.jpg
+  plugin:
+    platforms:
+      macos:
+        dependency_overrides:
+          photo_manager: false
