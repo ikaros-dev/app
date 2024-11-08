@@ -77,34 +77,27 @@ class _MobileLayoutState extends State<MobileLayout> {
     );
   }
 
-  // TODO Widget _buildMobileWid
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView(
-        controller: _pageController,
-        children: const <Widget>[CollectionPage(), SubjectsPage(), UserPage()],
-        onPageChanged: (index) {
+      body: <Widget>[const CollectionPage(), const SubjectsPage(), const UserPage()][_pageIndex],
+      bottomNavigationBar: NavigationBar(
+        onDestinationSelected: (int index) {
           setState(() {
             _pageIndex = index;
           });
         },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _pageIndex,
-        type: BottomNavigationBarType.fixed,
-        onTap: _onBottomNavigationBarTap,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
+        selectedIndex: _pageIndex,
+        destinations: const <NavigationDestination>[
+          NavigationDestination(
             icon: Icon(Icons.collections_sharp),
             label: '收藏',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.tv),
             label: '条目',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.account_circle),
             label: '我的',
           ),
