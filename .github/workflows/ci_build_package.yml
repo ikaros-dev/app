@@ -113,63 +113,63 @@ jobs:
           asset_name: ikaros-windows-${{  github.ref_name }}.zip
 
 
-  build_macos:
-    runs-on: macos-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Git submodule init
-        uses: snickerbockers/submodules-init@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.1'
-          channel: 'stable'
-
-      - name: Set up CocoaPods
-        run: |
-          sudo gem install cocoapods
-
-      - name: Update macOS deployment target
-        run: |
-          # Navigate to the macos directory
-          cd macos
-          
-          # Ensure Podfile exists and update macOS deployment target
-          if [ -f Podfile ]; then
-            sed -i '' "s/platform :macos, .*/platform :macos, '12.6'/" Podfile
-          fi
-
-      - name: Install dependencies
-        run: |
-          flutter pub get --pubspec=pubspec_macos.yaml
-          cd macos
-          pod install
-
-      - name: Build macOS app
-        run: flutter build macos --pubspec=pubspec_macos.yaml --release -v
-
-      - name: Set APP_NAME
-        run: |
-          APP_NAME=$(ls build/macos/Build/Products/Release/ | grep -E '\.app$')
-          echo "APP_NAME=${APP_NAME}" >> $GITHUB_ENV
-
-      - name: Create DMG Installer
-        run: |
-          mkdir -p build/macos/Build/Products/Release/dmg
-          hdiutil create build/macos/Build/Products/Release/dmg/${{ env.APP_NAME }}-macOS.dmg \
-            -volname "IkarosApp Installer" \
-            -srcfolder build/macos/Build/Products/Release/${{ env.APP_NAME }} \
-            -ov -format UDZO
-
-      - name: Publish Macos Artefacts
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
-          file: build/macos/Build/Products/Release/dmg/${{ env.APP_NAME }}-macOS.dmg
-          asset_name: ikaros-macOS-${{ github.ref_name }}.dmg
+#  build_macos:
+#    runs-on: macos-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      - name: Git submodule init
+#        uses: snickerbockers/submodules-init@v4
+#
+#      - name: Set up Flutter
+#        uses: subosito/flutter-action@v2
+#        with:
+#          flutter-version: '3.24.1'
+#          channel: 'stable'
+#
+#      - name: Set up CocoaPods
+#        run: |
+#          sudo gem install cocoapods
+#
+#      - name: Update macOS deployment target
+#        run: |
+#          # Navigate to the macos directory
+#          cd macos
+#
+#          # Ensure Podfile exists and update macOS deployment target
+#          if [ -f Podfile ]; then
+#            sed -i '' "s/platform :macos, .*/platform :macos, '12.6'/" Podfile
+#          fi
+#
+#      - name: Install dependencies
+#        run: |
+#          flutter pub get --pubspec=pubspec_macos.yaml
+#          cd macos
+#          pod install
+#
+#      - name: Build macOS app
+#        run: flutter build macos --pubspec=pubspec_macos.yaml --release -v
+#
+#      - name: Set APP_NAME
+#        run: |
+#          APP_NAME=$(ls build/macos/Build/Products/Release/ | grep -E '\.app$')
+#          echo "APP_NAME=${APP_NAME}" >> $GITHUB_ENV
+#
+#      - name: Create DMG Installer
+#        run: |
+#          mkdir -p build/macos/Build/Products/Release/dmg
+#          hdiutil create build/macos/Build/Products/Release/dmg/${{ env.APP_NAME }}-macOS.dmg \
+#            -volname "IkarosApp Installer" \
+#            -srcfolder build/macos/Build/Products/Release/${{ env.APP_NAME }} \
+#            -ov -format UDZO
+#
+#      - name: Publish Macos Artefacts
+#        uses: svenstaro/upload-release-action@v2
+#        with:
+#          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
+#          file: build/macos/Build/Products/Release/dmg/${{ env.APP_NAME }}-macOS.dmg
+#          asset_name: ikaros-macOS-${{ github.ref_name }}.dmg
 
 
   build_linux:
