@@ -9,6 +9,7 @@ import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/component/full_screen_Image.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/subject/subject.dart';
@@ -232,14 +233,37 @@ class CollectionsState extends State<CollectionPage> {
                 onTap: () {
                   _onSubjectCardTap(subjectCollections[index].subjectId);
                 },
+                onLongPress: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FullScreenImagePage(
+                        imageUrl: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover), // 替换为你的图片URL
+                      ),
+                    ),
+                  );
+                },
                 child: AspectRatio(
                   aspectRatio: 7 / 10, // 设置图片宽高比例
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10.0), // 设置圆角半径
-                    child: Image.network(
-                      UrlUtils.getCoverUrl(
-                          _baseUrl, subjectCollections[index].cover),
-                      fit: BoxFit.fitWidth,
+                    child: Hero(
+                      tag: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
+                      child: FadeInImage.assetNetwork(
+                        placeholder: 'assets/loading_placeholder.jpg',  // 占位图片
+                        image: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
+                        imageErrorBuilder: (context, error, stackTrace) {
+                          // 如果图片加载失败，显示错误占位图
+                          return const Text("图片加载失败");
+                          // return Image.asset('assets/error_placeholder.png', fit: BoxFit.fitWidth);
+                        },
+                        fadeInDuration: const Duration(milliseconds: 500),
+                        fit: BoxFit.cover,
+                        // height: 200,
+                        width: double.infinity,
+                        // UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
+                        // fit: BoxFit.fitWidth,
+                      ),
                     ),
                   ),
                 ),

@@ -15,6 +15,7 @@ import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/component/full_screen_Image.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/message_utils.dart';
@@ -193,9 +194,24 @@ class _SubjectState extends State<SubjectPage> {
                     alignment: Alignment.topRight,
                     child: AspectRatio(
                       aspectRatio: 7 / 10, // 设置图片宽高比例
-                      child: Image.network(
-                        UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover),
-                        fit: BoxFit.fitWidth,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImagePage(
+                                imageUrl: UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover), // 替换为你的图片URL
+                              ),
+                            ),
+                          );
+                        },
+                        child: Hero(
+                          tag: UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover),
+                          child: Image.network(
+                            UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
                     ),
                   ));
