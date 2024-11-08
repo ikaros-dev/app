@@ -98,7 +98,16 @@ class _SubjectState extends State<SubjectPage> {
                   return Text("Load subject error: ${snapshot.error}");
                 } else {
                   _subject = snapshot.data;
-
+                  return Padding(
+                      padding: const EdgeInsets.only(left: 2, right: 2, bottom: 2),
+                      child: Column(
+                        children: [
+                          _buildSubjectDisplayRow(),
+                          _buildEpisodeAndCollectionButtonsRow(),
+                          _buildDetailsRow(),
+                          // _buildEpisodesGroupTabsRow(),
+                        ],
+                      ));
                   return Column(
                     children: [
                       _buildSubjectDisplayRow(),
@@ -272,7 +281,6 @@ class _SubjectState extends State<SubjectPage> {
             _buildCollectTypeOperateWidget(),
           ],
         ),
-
         Row(
           children: [
             ElevatedButton(
@@ -289,7 +297,6 @@ class _SubjectState extends State<SubjectPage> {
             )
           ],
         ),
-
       ],
     );
   }
@@ -348,7 +355,7 @@ class _SubjectState extends State<SubjectPage> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             SizedBox(
-              width: MediaQuery.of(context).size.width,
+              width: MediaQuery.of(context).size.width - 4,
               child: Text(_subject.summary!),
             )
           ],
@@ -516,7 +523,6 @@ class _SubjectState extends State<SubjectPage> {
 
     setState(() {});
   }
-
 
   Future<void> _fetchSubjectCollection() async {
     _subjectCollection = await SubjectCollectionApi()
