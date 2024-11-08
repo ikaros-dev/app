@@ -281,9 +281,20 @@ class SubjectListState extends State<SubjectsPage> {
                   aspectRatio: 7 / 10, // 设置图片宽高比例
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10.0), // 设置圆角半径
-                    child: Image.network(
-                      UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
-                      fit: BoxFit.fitWidth,
+                    child: FadeInImage.assetNetwork(
+                      placeholder: 'assets/loading_placeholder.jpg',  // 占位图片
+                      image: UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
+                      imageErrorBuilder: (context, error, stackTrace) {
+                        // 如果图片加载失败，显示错误占位图
+                        return const Text("图片加载失败");
+                        return Image.asset('assets/error_placeholder.png', fit: BoxFit.cover);
+                      },
+                      fadeInDuration: const Duration(milliseconds: 500),
+                      fit: BoxFit.cover,
+                      // height: 200,
+                      width: double.infinity,
+                      // UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
+                      // fit: BoxFit.fitWidth,
                     ),
                   ),
                 ),
