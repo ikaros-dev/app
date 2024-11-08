@@ -144,7 +144,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          flutter pub get
+          flutter pub get --pubspec=pubspec_macos.yaml
           cd macos
           pod install
 

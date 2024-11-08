@@ -35,7 +35,6 @@ dependencies:
   crypto: ^3.0.5
   wakelock_plus: ^1.2.8
   just_audio: ^0.9.40
-  photo_manager: ^3.3.0
   app_links: ^6.3.2
 
 dev_dependencies:
