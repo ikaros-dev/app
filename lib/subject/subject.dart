@@ -106,8 +106,7 @@ class _SubjectState extends State<SubjectPage> {
                 } else {
                   _subject = snapshot.data;
                   return Padding(
-                      padding:
-                          const EdgeInsets.only(left: 2, right: 2, bottom: 2),
+                      padding: const EdgeInsets.all(5),
                       child: Column(
                         children: [
                           _buildSubjectDisplayRow(),
@@ -213,13 +212,51 @@ class _SubjectState extends State<SubjectPage> {
                             ),
                           );
                         },
-                        child: Hero(
-                          tag:
-                              UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover),
-                          child: Image.network(
-                            UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover),
-                            fit: BoxFit.cover,
-                          ),
+                        child: Stack(
+                          children: [
+                            Hero(
+                              tag: UrlUtils.getCoverUrl(
+                                  _apiBaseUrl, _subject.cover),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(5),
+                                child: Image.network(
+                                  UrlUtils.getCoverUrl(
+                                      _apiBaseUrl, _subject.cover),
+                                  fit: BoxFit.cover,
+
+                                ),
+                              ),
+                              
+                            ),
+                            if (_subject.nsfw)
+                              Positioned(
+                                top: 8,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.only(
+                                    left: 2, right: 2, top: 2, bottom: 1
+                                  ),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.orangeAccent,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(4),
+                                      bottomLeft: Radius.circular(4),
+                                      topRight: Radius.circular(0),
+                                      bottomRight: Radius.circular(0),
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Text(
+                                    'NSFW',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 6,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ),
