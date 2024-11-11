@@ -9,16 +9,25 @@ import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'model/Subject.dart';
 
 class SubjectApi {
+  Subject error = Subject(
+      id: -1,
+      type: SubjectType.OTHER,
+      name: "-1",
+      nsfw: false,
+      cover: "-1",
+      nameCn: '',
+      infobox: '',
+      summary: '',
+      airTime: '');
 
-  Subject error = Subject(id: -1, type: SubjectType.OTHER, name: "-1", nsfw: false, cover: "-1");
-
-
-  Future<PagingWrap> listSubjectsByCondition(int page, int size, String name, String nameCn,
-      bool nsfw, SubjectType? type) async {
+  Future<PagingWrap> listSubjectsByCondition(int page, int size, String name,
+      String nameCn, bool nsfw, SubjectType? type) async {
     AuthParams authParams = await AuthApi().getAuthParams();
-    if(authParams.baseUrl == '' || authParams.username == ''
-    || authParams.basicAuth == '') {
-      return Future(() => PagingWrap(page: page, size: size, total: 0, items: List.empty()));
+    if (authParams.baseUrl == '' ||
+        authParams.username == '' ||
+        authParams.basicAuth == '') {
+      return Future(() =>
+          PagingWrap(page: page, size: size, total: 0, items: List.empty()));
     }
     String baseUrl = authParams.baseUrl;
     String basicAuth = authParams.basicAuth;
@@ -38,11 +47,12 @@ class SubjectApi {
       options.headers.putIfAbsent("Authorization", () => basicAuth);
 
       // print("queryParams: $queryParams");
-      var response = await Dio(options)
-          .get(apiUrl, queryParameters: queryParams);
+      var response =
+          await Dio(options).get(apiUrl, queryParameters: queryParams);
       // print("response status code: ${response.statusCode}");
-      if(response.statusCode != 200) {
-        return PagingWrap(page: page, size: size, total: 0, items: List.empty());
+      if (response.statusCode != 200) {
+        return PagingWrap(
+            page: page, size: size, total: 0, items: List.empty());
       }
       return PagingWrap.fromJson(response.data);
     } catch (e) {
@@ -53,22 +63,22 @@ class SubjectApi {
 
   Future<Subject> findById(int id) async {
     AuthParams authParams = await AuthApi().getAuthParams();
-    if(authParams.baseUrl == '' || authParams.username == ''
-        || authParams.basicAuth == '') {
+    if (authParams.baseUrl == '' ||
+        authParams.username == '' ||
+        authParams.basicAuth == '') {
       return Future(() => error);
     }
     String baseUrl = authParams.baseUrl;
     String basicAuth = authParams.basicAuth;
     String apiUrl = "$baseUrl/api/v1alpha1/subject/$id";
     try {
-
       BaseOptions options = BaseOptions();
       options.headers.putIfAbsent("Authorization", () => basicAuth);
 
       // print("queryParams: $queryParams");
       var response = await Dio(options).get(apiUrl);
       // print("response status code: ${response.statusCode}");
-      if(response.statusCode != 200) {
+      if (response.statusCode != 200) {
         return error;
       }
       return Subject.fromJson(response.data);
@@ -78,6 +88,3 @@ class SubjectApi {
     }
   }
 }
-
-
-

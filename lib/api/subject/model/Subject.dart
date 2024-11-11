@@ -19,12 +19,21 @@ class Subject {
   final String? summary;
   final bool nsfw;
   final String cover;
+  final String? airTime;
 
-  Subject({required this.id, required this.type, required this.name,
-  this.nameCn, this.infobox, this.summary, required this.nsfw,
-  required this.cover});
+  factory Subject.fromJson(Map<String, dynamic> json) =>
+      _$SubjectFromJson(json);
 
-  factory Subject.fromJson(Map<String, dynamic> json) => _$SubjectFromJson(json);
+  Subject(
+      {required this.id,
+      required this.type,
+      required this.name,
+      required this.nameCn,
+      required this.infobox,
+      required this.summary,
+      required this.nsfw,
+      required this.cover,
+      required this.airTime});
 
   Map<String, dynamic> toJson() => _$SubjectToJson(this);
 }

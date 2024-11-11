@@ -15,6 +15,7 @@ Subject _$SubjectFromJson(Map<String, dynamic> json) => Subject(
       summary: json['summary'] as String?,
       nsfw: json['nsfw'] as bool,
       cover: json['cover'] as String,
+      airTime: json['airTime'] as String?,
     );
 
 Map<String, dynamic> _$SubjectToJson(Subject instance) => <String, dynamic>{
@@ -26,6 +27,7 @@ Map<String, dynamic> _$SubjectToJson(Subject instance) => <String, dynamic>{
       'summary': instance.summary,
       'nsfw': instance.nsfw,
       'cover': instance.cover,
+      'airTime': instance.airTime,
     };
 
 const _$SubjectTypeEnumMap = {

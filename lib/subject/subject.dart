@@ -22,6 +22,7 @@ import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'episode.dart';
@@ -49,7 +50,13 @@ class _SubjectState extends State<SubjectPage> {
   var _loadSubjectWithIdFuture;
   var _loadApiBaseUrlFuture;
 
+  static const double _globalPadding = 10.0;
+
   List<EpisodeCollection> _episodeCollections = List.empty();
+
+  late String _selectedCollectBtnLabelVal = "收藏";
+  late IconData _selectedCollectBtnIconData = Icons.star_border_outlined;
+  late MenuController _collectMenuController;
 
   Future<Subject> _loadSubjectWithId() async {
     _subject = await SubjectApi().findById(int.parse(widget.id.toString()));
@@ -96,31 +103,35 @@ class _SubjectState extends State<SubjectPage> {
         ),
         actions: [_buildLinkIconButton()],
       ),
-      body: SingleChildScrollView(
-        child: FutureBuilder<Subject>(
-            future: _loadSubjectWithIdFuture,
-            builder: (BuildContext context, AsyncSnapshot snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                if (snapshot.hasError) {
-                  return Text("Load subject error: ${snapshot.error}");
-                } else {
-                  _subject = snapshot.data;
-                  return Padding(
-                      padding: const EdgeInsets.all(5),
+      body: FutureBuilder<Subject>(
+          future: _loadSubjectWithIdFuture,
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasError) {
+                return Text("Load subject error: ${snapshot.error}");
+              } else {
+                _subject = snapshot.data;
+                return SingleChildScrollView(
+                  child: Padding(
+                      padding: const EdgeInsets.all(_globalPadding),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildSubjectDisplayRow(),
+                          const SizedBox(height: 10),
                           _buildEpisodeAndCollectionButtonsRow(),
+                          const SizedBox(height: 10),
                           _buildDetailsRow(),
                           // _buildEpisodesGroupTabsRow(),
                         ],
-                      ));
-                }
-              } else {
-                return const LinearProgressIndicator();
+                      )),
+                );
               }
-            }),
-      ),
+            } else {
+              return const LinearProgressIndicator();
+            }
+          }),
     );
   }
 
@@ -156,8 +167,17 @@ class _SubjectState extends State<SubjectPage> {
     );
   }
 
+  String _getSubjectTitle() {
+    if (_subject.nameCn != null && "" != _subject.nameCn) {
+      return _subject.nameCn!;
+    }
+    return _subject.name;
+  }
+
   Row _buildSubjectDisplayRow() {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 左边封面图片
         Column(
@@ -166,8 +186,29 @@ class _SubjectState extends State<SubjectPage> {
         const SizedBox(width: 10),
         // 右边标题
         Expanded(
-          child: _buildSubjectTitleInfo(),
-        )
+            child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _getSubjectTitle(),
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 3,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.black),
+            ),
+            const SizedBox(height: 10),
+            Chip(
+              label: Text(_getAirTimeStr()),
+            ),
+            const SizedBox(height: 10),
+            Text("${SubjectConst.typeCnMap[_subject.type.name]} "
+                "- 全${_episodeRecords.isNotEmpty ? _episodeRecords.length : _episodes.length}话")
+          ],
+        ))
       ],
     );
   }
@@ -210,10 +251,8 @@ class _SubjectState extends State<SubjectPage> {
                                   UrlUtils.getCoverUrl(
                                       _apiBaseUrl, _subject.cover),
                                   fit: BoxFit.cover,
-
                                 ),
                               ),
-                              
                             ),
                             if (_subject.nsfw)
                               Positioned(
@@ -221,8 +260,7 @@ class _SubjectState extends State<SubjectPage> {
                                 right: 0,
                                 child: Container(
                                   padding: const EdgeInsets.only(
-                                    left: 2, right: 2, top: 2, bottom: 1
-                                  ),
+                                      left: 2, right: 2, top: 2, bottom: 1),
                                   decoration: const BoxDecoration(
                                     color: Colors.orangeAccent,
                                     borderRadius: BorderRadius.only(
@@ -262,31 +300,27 @@ class _SubjectState extends State<SubjectPage> {
       direction: Axis.vertical,
       crossAxisAlignment: WrapCrossAlignment.start,
       children: [
+        Text(
+          _subject.nameCn ?? _subject.name,
+          style: const TextStyle(
+              fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
+        ),
+        OutlinedButton(onPressed: () {}, child: const Text('2020 年 10 月')),
         // const Text("类型", style: TextStyle(fontWeight: FontWeight.bold),),
         // Text(_subject.type.toString(), overflow: TextOverflow.ellipsis,),
-        const Text(
-          "名称",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+
         Text(
           _subject.name,
           overflow: TextOverflow.ellipsis,
         ),
-        const Text(
-          "中文名称",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+
         Text(_subject.nameCn!, overflow: TextOverflow.ellipsis),
-        const Text(
-          "NSFW",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        Text(_subject.nameCn!, overflow: TextOverflow.ellipsis),
+        Text(_subject.nameCn!, overflow: TextOverflow.ellipsis),
+
         Text(_subject.nsfw == true ? "是" : "否",
             overflow: TextOverflow.ellipsis),
-        const Text(
-          "剧集总数",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+
         Text("${_episodes.length}", overflow: TextOverflow.ellipsis),
       ],
     );
@@ -297,7 +331,10 @@ class _SubjectState extends State<SubjectPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text("选集播放"),
+          title: const Text(
+            "选集播放",
+            style: TextStyle(color: Colors.black),
+          ),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8,
             child: _buildEpisodeSelectTabs(),
@@ -326,8 +363,7 @@ class _SubjectState extends State<SubjectPage> {
       children: [
         Row(
           children: [
-            _buildCollectOperateWidget(),
-            _buildCollectTypeOperateWidget(),
+            _buildCollectionMenuAnchor(),
           ],
         ),
         Row(
@@ -339,17 +375,223 @@ class _SubjectState extends State<SubjectPage> {
 
   Widget _buildEpisodeSelectButton() {
     // 根据APP设置是否拆分剧集资源接口
-    return ElevatedButton(
+    return OutlinedButton.icon(
       onPressed: () async {
         await showEpisodesDialog();
       },
-      child: const Text("选集"),
+      label: const Text(
+        "选集",
+        style: TextStyle(color: Colors.black),
+      ),
+      icon: const Icon(
+        Icons.view_cozy_outlined,
+        color: Colors.black,
+      ),
     );
     ;
   }
 
-  Widget _buildEnableEpisodeApiSplitButton() {
-    return Container();
+  MenuAnchor _buildCollectionMenuAnchor() {
+    double btnWidth = MediaQuery.of(context).size.width * 0.45;
+    return MenuAnchor(
+      childFocusNode: FocusNode(),
+      menuChildren: <Widget>[
+        SizedBox(
+          width: btnWidth,
+          child: TextButton.icon(
+            icon: Icon(Icons.calendar_month,
+                color: _selectedCollectBtnIconData == Icons.calendar_month
+                    ? Colors.blue
+                    : Colors.black),
+            label: Text("想看",
+                style: TextStyle(
+                    color: _selectedCollectBtnLabelVal == "已想看"
+                        ? Colors.blue
+                        : Colors.black)),
+            onPressed: () async => {
+              debugPrint("想看"),
+              _selectedCollectBtnLabelVal = "已想看",
+              _selectedCollectBtnIconData = Icons.calendar_month,
+              _collectMenuController.close(),
+              setState(() {}),
+              await _postCollectSubjectWithoutRefresh(CollectionType.WISH),
+            },
+            style: TextButton.styleFrom(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero, // 去除圆角
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: btnWidth,
+          child: TextButton.icon(
+            icon: Icon(Icons.play_circle_outline,
+                color: _selectedCollectBtnIconData == Icons.play_circle_outline
+                    ? Colors.blue
+                    : Colors.black),
+            label: Text("在看",
+                style: TextStyle(
+                    color: _selectedCollectBtnLabelVal == "已在看"
+                        ? Colors.blue
+                        : Colors.black)),
+            onPressed: () async => {
+              debugPrint("在看"),
+              _selectedCollectBtnLabelVal = "已在看",
+              _selectedCollectBtnIconData = Icons.play_circle_outline,
+              _collectMenuController.close(),
+              setState(() {}),
+              await _postCollectSubjectWithoutRefresh(CollectionType.DOING),
+            },
+            style: TextButton.styleFrom(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero, // 去除圆角
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: btnWidth,
+          child: TextButton.icon(
+            icon: Icon(Icons.check_circle_outlined,
+                color:
+                    _selectedCollectBtnIconData == Icons.check_circle_outlined
+                        ? Colors.blue
+                        : Colors.black),
+            label: Text("看过",
+                style: TextStyle(
+                    color: _selectedCollectBtnLabelVal == "已看过"
+                        ? Colors.blue
+                        : Colors.black)),
+            onPressed: () async => {
+              debugPrint("看过"),
+              _selectedCollectBtnLabelVal = "已看过",
+              _selectedCollectBtnIconData = Icons.check_circle_outlined,
+              _collectMenuController.close(),
+              setState(() {}),
+              await _postCollectSubjectWithoutRefresh(CollectionType.DONE),
+            },
+            style: TextButton.styleFrom(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero, // 去除圆角
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: btnWidth,
+          child: TextButton.icon(
+            icon: Icon(Icons.access_time,
+                color: _selectedCollectBtnIconData == Icons.access_time
+                    ? Colors.blue
+                    : Colors.black),
+            label: Text("搁置",
+                style: TextStyle(
+                    color: _selectedCollectBtnLabelVal == "已搁置"
+                        ? Colors.blue
+                        : Colors.black)),
+            onPressed: () async => {
+              debugPrint("搁置"),
+              _selectedCollectBtnLabelVal = "已搁置",
+              _selectedCollectBtnIconData = Icons.access_time,
+              _collectMenuController.close(),
+              setState(() {}),
+              await _postCollectSubjectWithoutRefresh(CollectionType.SHELVE),
+            },
+            style: TextButton.styleFrom(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero, // 去除圆角
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: btnWidth,
+          child: TextButton.icon(
+            icon: Icon(Icons.not_interested_sharp,
+                color: _selectedCollectBtnIconData == Icons.not_interested_sharp
+                    ? Colors.blue
+                    : Colors.black),
+            label: Text("抛弃",
+                style: TextStyle(
+                    color: _selectedCollectBtnLabelVal == "已抛弃"
+                        ? Colors.blue
+                        : Colors.black)),
+            onPressed: () async => {
+              debugPrint("抛弃"),
+              _selectedCollectBtnLabelVal = "已抛弃",
+              _selectedCollectBtnIconData = Icons.not_interested_sharp,
+              _collectMenuController.close(),
+              setState(() {}),
+              await _postCollectSubjectWithoutRefresh(CollectionType.DISCARD),
+            },
+            style: TextButton.styleFrom(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero, // 去除圆角
+              ),
+            ),
+          ),
+        ),
+        SizedBox(
+          width: btnWidth,
+          child: TextButton.icon(
+            icon: const Icon(
+              Icons.delete_outline,
+              color: Colors.black,
+            ),
+            label: const Text(
+              "取消",
+              style: TextStyle(color: Colors.red),
+            ),
+            onPressed: () async => {
+              debugPrint("取消"),
+              _selectedCollectBtnLabelVal = "收藏",
+              _selectedCollectBtnIconData = Icons.star_border_outlined,
+              _collectMenuController.close(),
+              setState(() {}),
+              await _postUnCollectSubject(),
+            },
+            style: TextButton.styleFrom(
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero, // 去除圆角
+              ),
+            ),
+          ),
+        ),
+      ],
+      builder:
+          (BuildContext context, MenuController controller, Widget? child) {
+        _collectMenuController = controller;
+        return SizedBox(
+          width: btnWidth,
+          child: OutlinedButton.icon(
+            icon: Icon(
+              _selectedCollectBtnIconData,
+              color: Colors.black,
+            ),
+            label: Text(_selectedCollectBtnLabelVal,
+                style: TextStyle(color: Colors.black)),
+            onPressed: () {
+              if (controller.isOpen) {
+                controller.close();
+              } else {
+                controller.open();
+              }
+            },
+          ),
+        );
+        return OutlinedButton(
+          child: Text("selected"),
+          onPressed: () {
+            if (controller.isOpen) {
+              controller.close();
+            } else {
+              controller.open();
+            }
+          },
+        );
+      },
+    );
   }
 
   Widget _buildCollectOperateWidget() {
@@ -401,12 +643,19 @@ class _SubjectState extends State<SubjectPage> {
           direction: Axis.vertical,
           crossAxisAlignment: WrapCrossAlignment.start,
           children: [
-            const Text(
-              "简介",
-              style: TextStyle(fontWeight: FontWeight.bold),
+            const Row(
+              children: [
+                Text(
+                  "简介",
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.black),
+                )
+              ],
             ),
             SizedBox(
-              width: MediaQuery.of(context).size.width - 4,
+              width: MediaQuery.of(context).size.width - 2 * _globalPadding,
               child: Text(_subject.summary!),
             )
           ],
@@ -661,11 +910,34 @@ class _SubjectState extends State<SubjectPage> {
   Future<void> _fetchSubjectCollection() async {
     _subjectCollection = await SubjectCollectionApi()
         .findCollectionBySubjectId(int.parse(widget.id.toString()));
+
+    if (_subjectCollection == null) {
+      _selectedCollectBtnLabelVal = "收藏";
+      _selectedCollectBtnIconData = Icons.star_border_outlined;
+    }
+
     if (_subjectCollection?.type != null) {
       _collectionType = _subjectCollection!.type;
     }
     if (_subjectCollection == null && kDebugMode) {
       print("获取条目收藏信息失败");
+    }
+
+    if (_collectionType == CollectionType.WISH) {
+      _selectedCollectBtnLabelVal = "已想看";
+      _selectedCollectBtnIconData = Icons.calendar_month;
+    } else if (_collectionType == CollectionType.DOING) {
+      _selectedCollectBtnLabelVal = "已在看";
+      _selectedCollectBtnIconData = Icons.play_circle_outline;
+    } else if (_collectionType == CollectionType.DONE) {
+      _selectedCollectBtnLabelVal = "已看过";
+      _selectedCollectBtnIconData = Icons.check_circle_outlined;
+    } else if (_collectionType == CollectionType.SHELVE) {
+      _selectedCollectBtnLabelVal = "已搁置";
+      _selectedCollectBtnIconData = Icons.access_time;
+    } else if (_collectionType == CollectionType.DISCARD) {
+      _selectedCollectBtnLabelVal = "已抛弃";
+      _selectedCollectBtnIconData = Icons.not_interested_sharp;
     }
   }
 
@@ -693,10 +965,16 @@ class _SubjectState extends State<SubjectPage> {
   Future<void> _postUnCollectSubject() async {
     await SubjectCollectionApi().removeCollection(_subject.id);
     Toast.show(context, "取消收藏番剧[${_getSubjectName()}]成功.");
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-          builder: (context) => SubjectPage(id: _subject.id.toString())),
-    );
+    // Navigator.pushReplacement(
+    //   context,
+    //   MaterialPageRoute(
+    //       builder: (context) => SubjectPage(id: _subject.id.toString())),
+    // );
+  }
+
+  String _getAirTimeStr() {
+    if (_subject.airTime == null || "" == _subject.airTime) return "1970 年 1 月";
+    DateTime dateTime = DateTime.parse(_subject.airTime!);
+    return DateFormat('yyyy 年 MM 月').format(dateTime);
   }
 }
