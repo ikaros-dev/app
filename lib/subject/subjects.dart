@@ -9,6 +9,7 @@ import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/SubjectMeta.dart';
 import 'package:ikaros/component/full_screen_Image.dart';
 import 'package:ikaros/consts/subject_const.dart';
+import 'package:ikaros/subject/search.dart';
 import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
 import 'package:ikaros/utils/message_utils.dart';
@@ -141,8 +142,17 @@ class SubjectListState extends State<SubjectsPage> {
               _loadSubjects();
             })
           },
-          decoration: const InputDecoration(
-            hintText: '输入条目中文名称搜索',
+          decoration: InputDecoration(
+            hintText: '输入条目中文名称搜索，点击左边搜索图标使用内置引擎lucene全局搜索',
+            prefixIcon: IconButton(
+              icon: const Icon(Icons.search),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SearchPage()),
+                );
+              },
+            ),
             border: InputBorder.none,
           ),
         ),
