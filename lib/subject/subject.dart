@@ -115,22 +115,9 @@ class _SubjectState extends State<SubjectPage> {
                           // _buildEpisodesGroupTabsRow(),
                         ],
                       ));
-                  return Column(
-                    children: [
-                      _buildSubjectDisplayRow(),
-                      _buildEpisodeAndCollectionButtonsRow(),
-                      _buildDetailsRow(),
-                      // _buildEpisodesGroupTabsRow(),
-                    ],
-                  );
                 }
               } else {
-                return Container(
-                  margin: const EdgeInsets.only(top: 20.0), // 设置顶部边距为20像素
-                  child: const Center(
-                    child: CircularProgressIndicator(),
-                  ), // 替换为你要使用的组件
-                );
+                return const LinearProgressIndicator();
               }
             }),
       ),
