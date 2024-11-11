@@ -13,12 +13,14 @@ import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
+import 'package:ikaros/api/subject/model/EpisodeRecord.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/component/full_screen_Image.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -39,8 +41,10 @@ class _SubjectState extends State<SubjectPage> {
   late String _apiBaseUrl;
   late Subject _subject;
   late List<Episode> _episodes = [];
+  late List<EpisodeRecord> _episodeRecords = [];
   late SubjectCollection? _subjectCollection;
   late CollectionType _collectionType;
+  late SettingConfig _settingConfig = SettingConfig();
 
   var _loadSubjectWithIdFuture;
   var _loadApiBaseUrlFuture;
@@ -74,6 +78,8 @@ class _SubjectState extends State<SubjectPage> {
     _loadSubjectWithIdFuture = _loadSubjectWithId();
     _loadApiBaseUrlFuture = _loadBaseUrl();
     _fetchSubjectEpisodes();
+    _fetchSubjectEpisodeRecords();
+    _fetchSettingConfig();
     _fetchSubjectCollection();
   }
 
@@ -100,7 +106,8 @@ class _SubjectState extends State<SubjectPage> {
                 } else {
                   _subject = snapshot.data;
                   return Padding(
-                      padding: const EdgeInsets.only(left: 2, right: 2, bottom: 2),
+                      padding:
+                          const EdgeInsets.only(left: 2, right: 2, bottom: 2),
                       child: Column(
                         children: [
                           _buildSubjectDisplayRow(),
@@ -200,13 +207,15 @@ class _SubjectState extends State<SubjectPage> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => FullScreenImagePage(
-                                imageUrl: UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover), // 替换为你的图片URL
+                                imageUrl: UrlUtils.getCoverUrl(
+                                    _apiBaseUrl, _subject.cover), // 替换为你的图片URL
                               ),
                             ),
                           );
                         },
                         child: Hero(
-                          tag: UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover),
+                          tag:
+                              UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover),
                           child: Image.network(
                             UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover),
                             fit: BoxFit.cover,
@@ -298,23 +307,25 @@ class _SubjectState extends State<SubjectPage> {
           ],
         ),
         Row(
-          children: [
-            ElevatedButton(
-              onPressed: () async {
-                bool? cancel = await showEpisodesDialog();
-                // ignore: unnecessary_null_comparison
-                if (cancel == null) {
-                  print("返回");
-                } else {
-                  print("确认");
-                }
-              },
-              child: const Text("选集"),
-            )
-          ],
+          children: [_buildEpisodeSelectButton()],
         ),
       ],
     );
+  }
+
+  Widget _buildEpisodeSelectButton() {
+    // 根据APP设置是否拆分剧集资源接口
+    return ElevatedButton(
+      onPressed: () async {
+        await showEpisodesDialog();
+      },
+      child: const Text("选集"),
+    );
+    ;
+  }
+
+  Widget _buildEnableEpisodeApiSplitButton() {
+    return Container();
   }
 
   Widget _buildCollectOperateWidget() {
@@ -400,8 +411,14 @@ class _SubjectState extends State<SubjectPage> {
 
   List<EpisodeGroup> _getEpisodeGroupEnums() {
     var epGroups = <EpisodeGroup>[];
-    if (_episodes.isEmpty) return epGroups;
-    var groupSet = _episodes.map((e) => e.group).toSet();
+    Set<String?> groupSet;
+    if (_settingConfig.enableEpisodeApiSplit) {
+      if (_episodes.isEmpty) return epGroups;
+      groupSet = _episodes.map((e) => e.group).toSet();
+    } else {
+      if (_episodeRecords.isEmpty) return epGroups;
+      groupSet = _episodeRecords.map((e) => e.episode.group).toSet();
+    }
     if (groupSet.isEmpty) return epGroups;
     for (var group in groupSet) {
       var findEpGroups = EpisodeGroup.values.where((ep) => ep.name == group);
@@ -437,6 +454,16 @@ class _SubjectState extends State<SubjectPage> {
     var episodes = _episodes.where((ep) => ep.group == group).toList();
     episodes.sort((me, ot) => me.sequence.compareTo(ot.sequence));
     return episodes;
+  }
+
+  List<EpisodeRecord>? _getEpisodeRecordsByGroup(String group) {
+    if (_episodeRecords.isEmpty) return [];
+    var records = _episodeRecords
+        .where((record) => record.episode.group == group)
+        .toList();
+    records
+        .sort((me, ot) => me.episode.sequence.compareTo(ot.episode.sequence));
+    return records;
   }
 
   Widget _buildEpisodeButtonWidget(Episode ep) {
@@ -501,13 +528,66 @@ class _SubjectState extends State<SubjectPage> {
         });
   }
 
+  Widget _buildEpisodeRecordButtonWidget(EpisodeRecord record) {
+    List<EpisodeResource> epResList = record.resources;
+    return GestureDetector(
+      onLongPress: () async {
+        bool isFinish = _episodeIsFinish(record.episode.id);
+        await EpisodeCollectionApi()
+            .updateCollectionFinish(record.episode.id, !isFinish);
+        Toast.show(context, "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}");
+        Navigator.pop(context);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => SubjectPage(id: widget.id.toString())),
+        );
+      },
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _episodeIsFinish(record.episode.id)
+              ? Colors.green
+              : Colors.lightBlueAccent,
+          disabledBackgroundColor: Colors.grey[400],
+          disabledForegroundColor: Colors.grey[600],
+        ),
+        onPressed: epResList.isEmpty
+            ? null
+            : () {
+                Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => SubjectEpisodePage(
+                          episode: record.episode,
+                          subject: _subject,
+                        )));
+              },
+        child: Text(
+          "${record.episode.sequence} : ${record.episode.name}",
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+
   Widget _getEpisodesTabViewByGroup(String group) {
-    var buttons = _getEpisodesByGroup(group)
-        ?.map((ep) => Container(
-              margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
-              child: SizedBox(height: 40, child: _buildEpisodeButtonWidget(ep)),
-            ))
-        .toList();
+    List<Container>? buttons;
+    if (_settingConfig.enableEpisodeApiSplit) {
+      buttons = _getEpisodesByGroup(group)
+          ?.map((ep) => Container(
+                margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
+                child:
+                    SizedBox(height: 40, child: _buildEpisodeButtonWidget(ep)),
+              ))
+          .toList();
+    } else {
+      buttons = _getEpisodeRecordsByGroup(group)
+          ?.map((ep) => Container(
+                margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
+                child: SizedBox(
+                    height: 40, child: _buildEpisodeRecordButtonWidget(ep)),
+              ))
+          .toList();
+    }
 
     if (buttons == null) return Container();
 
@@ -533,10 +613,24 @@ class _SubjectState extends State<SubjectPage> {
   Future<void> _fetchSubjectEpisodes() async {
     _episodes =
         await EpisodeApi().findBySubjectId(int.parse(widget.id.toString()));
-    if (_episodes.isEmpty && kDebugMode) {
-      print("获取条目剧集失败");
+    if (_episodes.isEmpty) {
+      debugPrint("获取条目剧集失败");
     }
 
+    setState(() {});
+  }
+
+  Future<void> _fetchSubjectEpisodeRecords() async {
+    _episodeRecords = await EpisodeApi()
+        .findRecordsBySubjectId(int.parse(widget.id.toString()));
+    if (_episodeRecords.isEmpty) {
+      debugPrint("获取条目剧集Record失败");
+    }
+    setState(() {});
+  }
+
+  Future<void> _fetchSettingConfig() async {
+    _settingConfig = await SharedPrefsUtils.getSettingConfig();
     setState(() {});
   }
 
