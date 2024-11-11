@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -6,7 +7,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/main.dart';
+import 'package:ikaros/user/setting.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
@@ -24,16 +27,34 @@ class UserPage extends StatefulWidget {
 
 class _UserPageState extends State<UserPage> {
   late String _appVersion;
+  late SettingConfig config = SettingConfig();
 
   Future<void> _fetchAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     _appVersion = packageInfo.version;
   }
 
+  Future<String> _getAppVersion() async {
+    await _fetchAppVersion();
+    return _appVersion;
+  }
+
+  Future<void> _loadSettingConfig() async {
+    config = await SharedPrefsUtils.getSettingConfig();
+    setState(() {});
+  }
+
+  void onEnableEpisodeApiSplitSwitchChange(val) async {
+    config.enableEpisodeApiSplit = val;
+    await SharedPrefsUtils.saveSettingConfig(config);
+    await _loadSettingConfig();
+  }
+
   @override
   void initState() {
     super.initState();
     _fetchAppVersion();
+    _loadSettingConfig();
   }
 
   @override
@@ -67,25 +88,38 @@ class _UserPageState extends State<UserPage> {
           ),
         ],
       ),
-      body: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: ListView(
         children: [
-          FutureBuilder(
-              future: _fetchAppVersion(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (snapshot.hasError) {
-                    return Text("Load app version error: ${snapshot.error}");
+          Setting(
+            title: "版本号",
+            subtitle: "这是APP当前的版本号",
+            rightWidget: FutureBuilder(
+                future: _getAppVersion(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    if (snapshot.hasError) {
+                      return Text(
+                          "Load app version error: ${snapshot.error ?? ""}");
+                    } else {
+                      return Text(
+                        "v${snapshot.data ?? "0.0.0"}",
+                        style: const TextStyle(fontSize: 20),
+                      );
+                    }
                   } else {
-                    return Text("当前版本：$_appVersion");
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
                   }
-                } else {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-                ;
-              }),
+                }),
+          ),
+          Setting(
+            title: "剧集接口拆分",
+            subtitle: "条目详情页的剧集接口是否拆分，开启则每个剧集单独请求剧集资源，关闭则统一根据条目ID请求剧集和资源。",
+            rightWidget: Switch(
+                value: config.enableEpisodeApiSplit,
+                onChanged: onEnableEpisodeApiSplitSwitchChange),
+          ),
         ],
       ),
     );

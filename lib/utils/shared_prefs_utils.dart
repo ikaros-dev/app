@@ -2,7 +2,6 @@ import 'package:ns_danmaku/models/danmaku_option.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SharedPrefsUtils {
-
   static void reload() async {
     var prefs = await SharedPreferences.getInstance();
     prefs.reload();
@@ -39,6 +38,21 @@ class SharedPrefsUtils {
     return DanmuConfig.name(
         fontSize, area, opacity, hideTop, hideBottom, hideScroll, lineHeight);
   }
+
+  static Future<void> saveSettingConfig(SettingConfig config) async {
+    var prefs = await SharedPreferences.getInstance();
+    prefs.setBool(SharedPrefsKey.settingEnableEpisodeApiSplit,
+        config.enableEpisodeApiSplit);
+  }
+
+  static Future<SettingConfig> getSettingConfig() async {
+    reload();
+    var prefs = await SharedPreferences.getInstance();
+    final bool enableEpisodeApiSplit =
+        prefs.getBool(SharedPrefsKey.settingEnableEpisodeApiSplit) ??
+            SharedPrefsDefaultValue.settingEnableEpisodeApiSplit;
+    return SettingConfig.name(enableEpisodeApiSplit);
+  }
 }
 
 class SharedPrefsKey {
@@ -49,6 +63,8 @@ class SharedPrefsKey {
   static const String danmuHideBottom = "DANMU_HIDE_BOTTOM";
   static const String danmuHideScroll = "DANMU_HIDE_SCROLL";
   static const String danmuLineHeight = "DANMU_LINE_HEIGHT";
+  static const String settingEnableEpisodeApiSplit =
+      "SETTING_ENABLE_EPISODE_API_SPLIT";
 }
 
 class SharedPrefsDefaultValue {
@@ -59,6 +75,7 @@ class SharedPrefsDefaultValue {
   static const bool danmuHideBottom = false;
   static const bool danmuHideScroll = false;
   static const double danmuLineHeight = 1.2;
+  static const bool settingEnableEpisodeApiSplit = false;
 }
 
 class DanmuConfig {
@@ -85,18 +102,15 @@ class DanmuConfig {
   /// - 默认值`1.2`
   double lineHeight = SharedPrefsDefaultValue.danmuLineHeight;
 
-
   DanmuConfig.name(this.fontSize, this.area, this.opacity, this.hideTop,
       this.hideBottom, this.hideScroll, this.lineHeight);
 
   DanmuConfig();
 
-
   @override
   String toString() {
     return 'DanmuConfig{fontSize: $fontSize, area: $area, opacity: $opacity, hideTop: $hideTop, hideBottom: $hideBottom, hideScroll: $hideScroll, lineHeight: $lineHeight}';
   }
-
 
   @override
   bool operator ==(Object other) =>
@@ -142,4 +156,13 @@ class DanmuConfig {
         option.hideScroll,
         option.lineHeight);
   }
+}
+
+class SettingConfig {
+  bool enableEpisodeApiSplit =
+      SharedPrefsDefaultValue.settingEnableEpisodeApiSplit;
+
+  SettingConfig();
+
+  SettingConfig.name(this.enableEpisodeApiSplit);
 }
