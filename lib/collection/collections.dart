@@ -231,7 +231,8 @@ class CollectionsState extends State<CollectionPage> {
               context,
               MaterialPageRoute(
                 builder: (context) => FullScreenImagePage(
-                  imageUrl: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover), // 替换为你的图片URL
+                  imageUrl: UrlUtils.getCoverUrl(
+                      _baseUrl, subjectCollections[index].cover), // 替换为你的图片URL
                 ),
               ),
             );
@@ -240,32 +241,68 @@ class CollectionsState extends State<CollectionPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AspectRatio(
-                aspectRatio: 7 / 10, // 设置图片宽高比例
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(5.0), // 设置圆角半径
-                  child: Hero(
-                    tag: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
-                    child: FadeInImage.assetNetwork(
-                      placeholder: 'assets/loading_placeholder.jpg',  // 占位图片
-                      image: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
-                      imageErrorBuilder: (context, error, stackTrace) {
-                        // 如果图片加载失败，显示错误占位图
-                        return const Text("图片加载失败");
-                        // return Image.asset('assets/error_placeholder.png', fit: BoxFit.fitWidth);
-                      },
-                      fadeInDuration: const Duration(milliseconds: 500),
-                      fit: BoxFit.cover,
-                      // height: 200,
-                      width: double.infinity,
-                      // UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
-                      // fit: BoxFit.fitWidth,
+                aspectRatio: 7 / 10,
+                child: Stack(
+                  children: [
+                    Hero(
+                      tag: UrlUtils.getCoverUrl(
+                          _baseUrl, subjectCollections[index].cover),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(5.0), // 设置圆角半径
+                        child: FadeInImage.assetNetwork(
+                          placeholder: 'assets/loading_placeholder.jpg',
+                          // 占位图片
+                          image: UrlUtils.getCoverUrl(
+                              _baseUrl, subjectCollections[index].cover),
+                          imageErrorBuilder: (context, error, stackTrace) {
+                            // 如果图片加载失败，显示错误占位图
+                            return const Text("图片加载失败");
+                            // return Image.asset('assets/error_placeholder.png', fit: BoxFit.fitWidth);
+                          },
+                          fadeInDuration: const Duration(milliseconds: 500),
+                          fit: BoxFit.cover,
+                          // height: 200,
+                          width: double.infinity,
+                          // UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
+                          // fit: BoxFit.fitWidth,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (subjectCollections[index].nsfw)
+                      Positioned(
+                        top: 8,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.only(
+                              left: 2, right: 2, top: 2, bottom: 1),
+                          decoration: const BoxDecoration(
+                            color: Colors.orangeAccent,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(4),
+                              bottomLeft: Radius.circular(4),
+                              topRight: Radius.circular(0),
+                              bottomRight: Radius.circular(0),
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Text(
+                            'NSFW',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 6,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              Flexible(child: Text(
+
+              Flexible(
+                  child: Text(
                 ((subjectCollections[index].nameCn == null ||
-                    subjectCollections[index].nameCn == '')
+                        subjectCollections[index].nameCn == '')
                     ? subjectCollections[index].name
                     : subjectCollections[index].nameCn)!,
                 maxLines: 2,
