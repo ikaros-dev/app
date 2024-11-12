@@ -8,7 +8,6 @@ import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/SubjectMeta.dart';
-import 'package:ikaros/component/full_screen_Image.dart';
 import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/subject/search.dart';
@@ -35,7 +34,10 @@ class SubjectListState extends State<SubjectsPage> {
   int _total = 0;
 
   bool? _nsfw;
+  bool? _airTimeDesc = true;
+  bool? _updateTimeDesc = true;
   String? _type;
+  String? _time = "";
   String _keyword = "";
   String _baseUrl = '';
 
@@ -101,11 +103,15 @@ class SubjectListState extends State<SubjectsPage> {
     }
 
     if (kDebugMode) {
-      print(
-          "load data for page=1 size=$_size type=$_type nameCn=$_keyword, nsfw=$_nsfw");
+      print("load data for page=1 size=$_size "
+          "type=$_type nameCn=$_keyword, nsfw=$_nsfw "
+          "time=$_time airTimeDesc=$_airTimeDesc updateTimeDesc=$_updateTimeDesc");
     }
-    PagingWrap pagingWrap = await SubjectApi()
-        .listSubjectsByCondition(1, _size, '', _keyword, _nsfw, _type);
+    PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
+        1, _size, '', _keyword, _nsfw, _type,
+        time: _time,
+        airTimeDesc: _airTimeDesc,
+        updateTimeDesc: _updateTimeDesc);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
@@ -302,19 +308,48 @@ class SubjectListState extends State<SubjectsPage> {
                           (value) {
                         setState(() {
                           _selectedSeason = value!;
+
+                          String year = "";
+                          if ('全部年份' == _selectedYear) {
+                            year = DateTime.now().year.toString();
+                          } else {
+                            year = _selectedYear;
+                          }
+
+                          if (_selectedSeason == '全部季度') {
+                            _time = year;
+                          } else if ('一月' == _selectedSeason) {
+                            _time = "$year.1-$year.3";
+                          } else if ('四月' == _selectedSeason) {
+                            _time = "$year.4-$year.6";
+                          } else if ('七月' == _selectedSeason) {
+                            _time = "$year.7-$year.9";
+                          } else if ('十月' == _selectedSeason) {
+                            _time = "$year.10-$year.12";
+                          }
+
+                          if (_selectedYear == '全部年份') {
+                            if (_selectedSeason == '全部季度') {
+                            _time = "";
+                            }
+                          }
+                          if (_selectedYear.indexOf("-") > 0) {
+                            _time = _selectedYear;
+                          }
                         });
-                      }, enable: false),
+                          _loadSubjects();
+                      }, enable: true),
 
                       const SizedBox(
                         height: 5,
                       ),
 
                       // 完结状态
-                      _buildFilterRow(_selectedStatus, _allStatus, (value) {
-                        setState(() {
-                          _selectedStatus = value!;
-                        });
-                      }, enable: false),
+                      // _buildFilterRow(_selectedStatus, _allStatus, (value) {
+                      //   setState(() {
+                      //     _selectedStatus = value!;
+                      //   });
+                      // }, enable: false),
 
                       const SizedBox(
                         height: 5,
@@ -323,9 +358,14 @@ class SubjectListState extends State<SubjectsPage> {
                       // 综合排序
                       _buildFilterRow(_selectedSort, _selectedSorts, (value) {
                         setState(() {
-                          _selectedSort = value!;
+                          setState(() {
+                            _selectedSort = value!;
+                            _airTimeDesc = '最近放送' == _selectedSort;
+                            _updateTimeDesc = '最近更新' == _selectedSort;
+                          });
+                          _loadSubjects();
                         });
-                      }, enable: false),
+                      }, enable: true),
 
                       const SizedBox(
                         height: 5,
@@ -335,8 +375,41 @@ class SubjectListState extends State<SubjectsPage> {
                       _buildFilterRow(_selectedYear, _selectedYears, (value) {
                         setState(() {
                           _selectedYear = value!;
+                          if ('90年代' == _selectedYear) {
+                            _time = '1900-1999';
+                          } else if ('80年代' == _selectedYear) {
+                            _time = '1800-1899';
+                          } else if ('更早' == _selectedYear) {
+                            _time = '1945-1799';
+                          } else if (_selectedYear.indexOf("-") > 0) {
+                            _time = _selectedYear;
+                          } else {
+                            String year = "";
+                            if ('全部年份' == _selectedYear) {
+                              year = DateTime.now().year.toString();
+                            } else {
+                              year = _selectedYear;
+                            }
+                            if (_selectedSeason == '全部季度') {
+                              _time = year;
+                            } else if ('一月' == _selectedSeason) {
+                              _time = "$year.1-$year.3";
+                            } else if ('四月' == _selectedSeason) {
+                              _time = "$year.4-$year.6";
+                            } else if ('七月' == _selectedSeason) {
+                              _time = "$year.7-$year.9";
+                            } else if ('十月' == _selectedSeason) {
+                              _time = "$year.10-$year.12";
+                            }
+                          }
+
+                          if (_selectedYear == '全部年份' &&
+                              _selectedSeason == '全部季度') {
+                            _time = "";
+                          }
                         });
-                      }, enable: false),
+                        _loadSubjects();
+                      }, enable: true),
                     ]),
               )),
 
@@ -396,22 +469,22 @@ class SubjectListState extends State<SubjectsPage> {
             SubjectCover(
               url: UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
               nsfw: subjectList[index].nsfw,
-              onTap: (){
+              onTap: () {
                 _onSubjectCardTap(subjectList[index]);
               },
             ),
             Flexible(
                 child: Text(
-                  ((subjectList[index].nameCn == null ||
+              ((subjectList[index].nameCn == null ||
                       subjectList[index].nameCn == '')
-                      ? subjectList[index].name
-                      : subjectList[index].nameCn)!,
-                  maxLines: 2,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: true,
-                )),
+                  ? subjectList[index].name
+                  : subjectList[index].nameCn)!,
+              maxLines: 2,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+            )),
           ],
         );
       },
