@@ -417,7 +417,7 @@ class SubjectListState extends State<SubjectsPage> {
         spacing: 4,
         children: options.map((option) {
           return ChoiceChip(
-            label: Text(option ?? "Null"),
+            label: Text(option ?? "Null", style: const TextStyle(fontWeight: FontWeight.normal, ),),
             showCheckmark: false,
             side: BorderSide.none,
             selected: currentValue == option,
