@@ -10,6 +10,7 @@ import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/component/full_screen_Image.dart';
+import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/subject/subject.dart';
@@ -234,6 +235,31 @@ class CollectionsState extends State<CollectionPage> {
       ),
       itemCount: subjectCollections.length,
       itemBuilder: (context, index) {
+        return Column(
+          children: [
+            SubjectCover(
+              url: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
+              nsfw: subjectCollections[index].nsfw,
+              onTap: (){
+                _onSubjectCardTap(subjectCollections[index].subjectId);
+              },
+            ),
+            Flexible(
+                child: Text(
+                  ((subjectCollections[index].nameCn == null ||
+                      subjectCollections[index].nameCn == '')
+                      ? subjectCollections[index].name
+                      : subjectCollections[index].nameCn)!,
+                  maxLines: 2,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
+                )),
+          ],
+        );
+
+
         return GestureDetector(
           onTap: () {
             _onSubjectCardTap(subjectCollections[index].subjectId);
