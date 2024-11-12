@@ -37,12 +37,16 @@ class CollectionsState extends State<CollectionPage> {
 
   bool _hasMore = true;
   late EasyRefreshController _controller;
+  bool _isCollectionsLoading = false;
 
   List<SubjectCollection> _convertItems(List<Map<String, dynamic>> items) {
     return items.map((e) => SubjectCollection.fromJson(e)).toList();
   }
 
   _loadSubjectCollections() async {
+    setState(() {
+      _isCollectionsLoading = true;
+    });
     if (_baseUrl == '') {
       AuthParams authParams = await AuthApi().getAuthParams();
       if (authParams.baseUrl == '') {
@@ -67,6 +71,9 @@ class CollectionsState extends State<CollectionPage> {
         _page = 2;
       });
     }
+    setState(() {
+      _isCollectionsLoading = false;
+    });
   }
 
   _loadMoreSubjectCollections() async {
@@ -112,7 +119,7 @@ class CollectionsState extends State<CollectionPage> {
   @override
   void initState() {
     super.initState();
-    _loadMoreSubjectCollections();
+    _loadSubjectCollections();
     _controller = EasyRefreshController();
   }
 
@@ -166,27 +173,32 @@ class CollectionsState extends State<CollectionPage> {
           )
         ],
       ),
-      body: EasyRefresh(
-        controller: _controller,
-        footer: ClassicalFooter(
-            loadingText: "加载中...",
-            loadFailedText: "加载失败",
-            loadReadyText: "加载就绪",
-            loadedText: "已全部加载",
-            noMoreText: "没有更多了",
-            showInfo: false),
-        onLoad: () async {
-          // await Future.delayed(const Duration(seconds: 4));
-          await _loadMoreSubjectCollections();
-          if (!mounted) {
-            return;
-          }
-          print("noMore: ${!_hasMore}");
-          _controller.finishLoad(success: true, noMore: !_hasMore);
-          _controller.resetLoadState();
-        },
-        child: buildSubjectCollectionsGridView(),
-      ),
+      body: _buildEasyRefresh(),
+    );
+  }
+
+  Widget _buildEasyRefresh() {
+    if (_isCollectionsLoading) return const LinearProgressIndicator();
+    return EasyRefresh(
+      controller: _controller,
+      footer: ClassicalFooter(
+          loadingText: "加载中...",
+          loadFailedText: "加载失败",
+          loadReadyText: "加载就绪",
+          loadedText: "已全部加载",
+          noMoreText: "没有更多了",
+          showInfo: false),
+      onLoad: () async {
+        // await Future.delayed(const Duration(seconds: 4));
+        await _loadMoreSubjectCollections();
+        if (!mounted) {
+          return;
+        }
+        print("noMore: ${!_hasMore}");
+        _controller.finishLoad(success: true, noMore: !_hasMore);
+        _controller.resetLoadState();
+      },
+      child: buildSubjectCollectionsGridView(),
     );
   }
 
