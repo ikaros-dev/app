@@ -920,7 +920,7 @@ class _SubjectState extends State<SubjectPage> {
       _collectionType = _subjectCollection!.type;
     }
     if (_subjectCollection == null && kDebugMode) {
-      print("获取条目收藏信息失败");
+      debugPrint("获取条目收藏信息失败");
     }
 
     if (_collectionType == CollectionType.WISH) {
