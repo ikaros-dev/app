@@ -21,7 +21,7 @@ class SubjectApi {
       airTime: '');
 
   Future<PagingWrap> listSubjectsByCondition(int page, int size, String name,
-      String nameCn, bool nsfw, SubjectType? type) async {
+      String nameCn, bool? nsfw, String? type) async {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
@@ -34,14 +34,20 @@ class SubjectApi {
     String apiUrl = "$baseUrl/api/v1alpha1/subjects/condition";
     try {
       final queryParams = {
-        'page': page,
-        'size': size,
+        'page': page.toString(),
+        'size': size.toString(),
         'name': base64Encode(utf8.encode(name)),
         'nameCn': base64Encode(utf8.encode(nameCn)),
         'nsfw': nsfw,
-        'type': type?.name,
+        'type': type,
         // 在这里添加更多查询参数
       };
+      // if (nsfw != null) {
+      //   queryParams.putIfAbsent('nsfw', nsfw as String Function());
+      // }
+      // if (type != null) {
+      //   queryParams.putIfAbsent('type', type as String Function());
+      // }
 
       BaseOptions options = BaseOptions();
       options.headers.putIfAbsent("Authorization", () => basicAuth);

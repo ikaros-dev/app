@@ -28,4 +28,14 @@ class SubjectConst {
     "REAL": "三次元",
     "OTHER": "其它",
   };
+
+  static const Map<String, String> cnTypeMap = {
+    "动漫": "ANIME",
+    "漫画": "COMIC",
+    "游戏": "GAME",
+    "音声": "MUSIC",
+    "小说": "NOVEL",
+    "三次元": "REAL",
+    "其它": "OTHER",
+  };
 }

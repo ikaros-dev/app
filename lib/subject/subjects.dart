@@ -31,19 +31,55 @@ class SubjectListState extends State<SubjectsPage> {
   int _size = 15;
   int _total = 0;
 
-  bool _nsfw = false;
-  SubjectType _type = SubjectType.ANIME;
+  bool? _nsfw;
+  String? _type;
   String _keyword = "";
   String _baseUrl = '';
 
+  bool _isSubjectLoading = false;
   bool _hasMore = true;
   late EasyRefreshController _controller;
+
+  String _selectedType = '全部类型';
+  final List<String> _selectedTypes = ['全部类型'];
+  String _selectedYear = '全部年份';
+  final List<String> _selectedYears = const [
+    '全部年份',
+    '2025',
+    '2024',
+    '2023',
+    '2022',
+    '2021',
+    '2020',
+    '2019',
+    '2018',
+    '2017',
+    '2016',
+    '2015',
+    '2014-2010',
+    '2009-2005',
+    '2004-2000',
+    '90年代',
+    '80年代',
+    '更早',
+  ];
+  String _selectedNsfw = '全部条目';
+  final List<String> _selectedNsfws = const ['全部条目', '正常', 'NSFW'];
+  String _selectedSeason = '全部季度';
+  final List<String> _selectedSeasons = const ['全部季度', '一月', '四月', '七月', '十月'];
+  String _selectedStatus = '完结状态';
+  final List<String> _allStatus = const ['完结状态', '完结', '连载'];
+  String _selectedSort = '综合排序';
+  final List<String> _selectedSorts = const ['综合排序', '最近放送', '最近更新'];
 
   List<SubjectMeta> _convertItems(List<Map<String, dynamic>> items) {
     return items.map((e) => SubjectMeta.fromJson(e)).toList();
   }
 
   _loadSubjects() async {
+    setState(() {
+      _isSubjectLoading = true;
+    });
     if (_baseUrl == '') {
       AuthParams authParams = await AuthApi().getAuthParams();
       if (authParams.baseUrl == '') {
@@ -57,7 +93,8 @@ class SubjectListState extends State<SubjectsPage> {
     }
 
     if (kDebugMode) {
-      print("load data for page=1 size=$_size nameCn=$_keyword, nsfw=$_nsfw");
+      print(
+          "load data for page=1 size=$_size type=$_type nameCn=$_keyword, nsfw=$_nsfw");
     }
     PagingWrap pagingWrap = await SubjectApi()
         .listSubjectsByCondition(1, _size, '', _keyword, _nsfw, _type);
@@ -70,6 +107,9 @@ class SubjectListState extends State<SubjectsPage> {
         _page = 2;
       });
     }
+    setState(() {
+      _isSubjectLoading = false;
+    });
   }
 
   _loadMoreSubjects() async {
@@ -119,7 +159,10 @@ class SubjectListState extends State<SubjectsPage> {
   @override
   void initState() {
     super.initState();
-    _loadMoreSubjects();
+    _selectedTypes.addAll(SubjectType.values.map((type) {
+      return SubjectConst.typeCnMap[type.name] ?? "Null";
+    }).toSet());
+    _loadSubjects();
     _controller = EasyRefreshController();
   }
 
@@ -135,106 +178,112 @@ class SubjectListState extends State<SubjectsPage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
-        title: TextField(
-          onSubmitted: (v) => {
-            setState(() {
-              _keyword = v;
-              _loadSubjects();
-            })
-          },
-          decoration: InputDecoration(
-            hintText: '输入条目中文名称搜索，点击左边搜索图标使用内置引擎lucene全局搜索',
-            prefixIcon: IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SearchPage()),
-                );
-              },
-            ),
-            border: InputBorder.none,
-          ),
-        ),
+        title: const Text("条目"),
         actions: [
-          Row(
-            children: [
-              const Text("类型", style: TextStyle(color: Colors.black)),
-              const SizedBox(
-                width: 5,
-              ),
-              DropdownButton(
-                  value: _type,
-                  items: SubjectType.values
-                      .map((type) => DropdownMenuItem(
-                          value: type,
-                          child:
-                              Text(SubjectConst.typeCnMap[type.name] ?? "未知")))
-                      .toList(),
-                  onChanged: (newType) {
-                    if (newType == null) return;
-                    setState(() {
-                      _type = newType;
-                    });
-                    _loadSubjects();
-                  }),
-              // DropdownMenu(
-              //   initialSelection: _type,
-              //     dropdownMenuEntries: SubjectType.values
-              // .map((type)=> DropdownMenuEntry(value: type, label: type.name)).toList(),
-              //   onSelected: (newType){
-              //     if (newType == null) return;
-              //     setState(() {
-              //       _type = newType;
-              //     });
-              //     _loadSubjects();
-              //   },
-              // ),
-
-              const SizedBox(
-                width: 10,
-              ),
-              const Text("NSFW", style: TextStyle(color: Colors.black)),
-              Switch(
-                  value: _nsfw,
-                  onChanged: (v) => {
-                        setState(() {
-                          _nsfw = v; // 更新开关状态的变量
-                          _loadSubjects();
-                        })
-                      }),
-              // IconButton(
-              //   icon: const Icon(Icons.search, color: Colors.black), // 设置搜索图标
-              //   onPressed: () => setState(() {
-              //     _loadSubjects();
-              //   }),
-              // ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SearchPage()),
+              );
+            },
           )
         ],
       ),
-      body: EasyRefresh(
-        controller: _controller,
-        footer: ClassicalFooter(
-            loadingText: "加载中...",
-            loadFailedText: "加载失败",
-            loadReadyText: "加载就绪",
-            loadedText: "已全部加载",
-            noMoreText: "没有更多了",
-            showInfo: false),
-        onLoad: () async {
-          // await Future.delayed(const Duration(seconds: 4));
-          await _loadMoreSubjects();
-          if (!mounted) {
-            return;
-          }
-          if (kDebugMode) {
-            print("noMore: ${!_hasMore}");
-          }
-          _controller.finishLoad(success: true, noMore: !_hasMore);
-          _controller.resetLoadState();
-        },
-        child: buildSubjectsGridView(),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ExpansionTile(
+              title: TextField(
+                obscureText: false,
+                decoration: const InputDecoration(
+                  labelText: '输入条目中文名称回车搜索',
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) {
+                  _keyword = value;
+                },
+                onSubmitted: (value) {
+                  setState(() {
+                    _keyword = value;
+                  });
+                  _loadSubjects();
+                },
+                onEditingComplete: () {
+                  _loadSubjects();
+                },
+              ),
+              showTrailingIcon: true,
+              expandedCrossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                // 类型
+                _buildFilterRow(_selectedType, _selectedTypes, (value) {
+                  setState(() {
+                    _selectedType = value!;
+                    _type = SubjectConst.cnTypeMap[_selectedType];
+                  });
+                  _loadSubjects();
+                }),
+
+                // NSFW
+                _buildFilterRow(_selectedNsfw, _selectedNsfws, (value) {
+                  setState(() {
+                    _selectedNsfw = value!;
+                    if (_selectedNsfw == '正常') {
+                      _nsfw = false;
+                    } else if (_selectedNsfw == 'NSFW') {
+                      _nsfw = true;
+                    } else {
+                      _nsfw = null;
+                    }
+                  });
+                  _loadSubjects();
+                }),
+
+                // 季度
+                _buildFilterRow(_selectedSeason, _selectedSeasons, (value) {
+                  setState(() {
+                    _selectedSeason = value!;
+                  });
+                }, enable: false),
+
+                // 完结状态
+                _buildFilterRow(_selectedStatus, _allStatus, (value) {
+                  setState(() {
+                    _selectedStatus = value!;
+                  });
+                }, enable: false),
+
+                // 综合排序
+                _buildFilterRow(_selectedSort, _selectedSorts,
+                        (value) {
+                      setState(() {
+                        _selectedSort = value!;
+                      });
+                    }, enable: false),
+
+                // 年份
+                _buildFilterRow(_selectedYear, _selectedYears, (value) {
+                  setState(() {
+                    _selectedYear = value!;
+                  });
+                }, enable: false),
+
+              ]),
+
+
+          // 上方条目索引条件
+
+
+
+          const SizedBox(
+            height: 10,
+          ),
+
+          // 下方条目结果展示
+          _buildSubjectsEasyRefresh(),
+        ],
       ),
     );
   }
@@ -286,7 +335,8 @@ class SubjectListState extends State<SubjectsPage> {
               context,
               MaterialPageRoute(
                 builder: (context) => FullScreenImagePage(
-                  imageUrl: UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover), // 替换为你的图片URL
+                  imageUrl: UrlUtils.getCoverUrl(
+                      _baseUrl, subjectList[index].cover), // 替换为你的图片URL
                 ),
               ),
             );
@@ -299,10 +349,13 @@ class SubjectListState extends State<SubjectsPage> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(5.0), // 设置圆角半径
                   child: Hero(
-                    tag: UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
+                    tag: UrlUtils.getCoverUrl(
+                        _baseUrl, subjectList[index].cover),
                     child: FadeInImage.assetNetwork(
-                      placeholder: 'assets/loading_placeholder.jpg',  // 占位图片
-                      image: UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
+                      placeholder: 'assets/loading_placeholder.jpg',
+                      // 占位图片
+                      image: UrlUtils.getCoverUrl(
+                          _baseUrl, subjectList[index].cover),
                       imageErrorBuilder: (context, error, stackTrace) {
                         // 如果图片加载失败，显示错误占位图
                         return const Text("图片加载失败");
@@ -318,9 +371,10 @@ class SubjectListState extends State<SubjectsPage> {
                   ),
                 ),
               ),
-              Flexible(child: Text(
+              Flexible(
+                  child: Text(
                 ((subjectList[index].nameCn == null ||
-                    subjectList[index].nameCn == '')
+                        subjectList[index].nameCn == '')
                     ? subjectList[index].name
                     : subjectList[index].nameCn)!,
                 maxLines: 2,
@@ -333,6 +387,63 @@ class SubjectListState extends State<SubjectsPage> {
           ),
         );
       },
+    );
+  }
+
+  // 构建筛选行组件
+  Widget _buildFilterRow(
+    String currentValue,
+    List<String?> options,
+    ValueChanged<String?> onChanged,
+    {bool enable = true}
+  ) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Wrap(
+        spacing: 4,
+        children: options.map((option) {
+          return ChoiceChip(
+            label: Text(option ?? "Null"),
+            showCheckmark: false,
+            side: BorderSide.none,
+            selected: currentValue == option,
+            onSelected: enable ? (bool selected) {
+              onChanged(selected ? option : null);
+            } : null,
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSubjectsEasyRefresh() {
+    if (_isSubjectLoading) {
+      return const LinearProgressIndicator();
+    }
+    return Expanded(
+      child: EasyRefresh(
+        controller: _controller,
+        footer: ClassicalFooter(
+            loadingText: "加载中...",
+            loadFailedText: "加载失败",
+            loadReadyText: "加载就绪",
+            loadedText: "已全部加载",
+            noMoreText: "没有更多了",
+            showInfo: false),
+        onLoad: () async {
+          // await Future.delayed(const Duration(seconds: 4));
+          await _loadMoreSubjects();
+          if (!mounted) {
+            return;
+          }
+          if (kDebugMode) {
+            print("noMore: ${!_hasMore}");
+          }
+          _controller.finishLoad(success: true, noMore: !_hasMore);
+          _controller.resetLoadState();
+        },
+        child: buildSubjectsGridView(),
+      ),
     );
   }
 }
