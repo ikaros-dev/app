@@ -4,8 +4,9 @@ import 'package:ikaros/component/full_screen_Image.dart';
 class SubjectCover extends StatefulWidget {
   final String url;
   final bool? nsfw;
+  final VoidCallback? onTap;
 
-  const SubjectCover({super.key, required this.url, this.nsfw = false});
+  const SubjectCover({super.key, required this.url, this.nsfw = false, this.onTap});
 
   @override
   State<StatefulWidget> createState() {
@@ -21,7 +22,10 @@ class SubjectCoverState extends State<SubjectCover> {
       child: AspectRatio(
         aspectRatio: 7 / 10, // 设置图片宽高比例
         child: GestureDetector(
-          onTap: () {
+          onTap: (){
+            widget.onTap?.call();
+          },
+          onLongPress: () {
             Navigator.push(
               context,
               MaterialPageRoute(

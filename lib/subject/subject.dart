@@ -17,6 +17,7 @@ import 'package:ikaros/api/subject/model/EpisodeRecord.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/component/full_screen_Image.dart';
+import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/message_utils.dart';
@@ -223,69 +224,11 @@ class _SubjectState extends State<SubjectPage> {
             } else {
               _apiBaseUrl = (snapshot.data as AuthParams).baseUrl;
               return SizedBox(
-                  width: 120,
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: AspectRatio(
-                      aspectRatio: 7 / 10, // 设置图片宽高比例
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => FullScreenImagePage(
-                                imageUrl: UrlUtils.getCoverUrl(
-                                    _apiBaseUrl, _subject.cover), // 替换为你的图片URL
-                              ),
-                            ),
-                          );
-                        },
-                        child: Stack(
-                          children: [
-                            Hero(
-                              tag: UrlUtils.getCoverUrl(
-                                  _apiBaseUrl, _subject.cover),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(5),
-                                child: Image.network(
-                                  UrlUtils.getCoverUrl(
-                                      _apiBaseUrl, _subject.cover),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            if (_subject.nsfw)
-                              Positioned(
-                                top: 8,
-                                right: 0,
-                                child: Container(
-                                  padding: const EdgeInsets.only(
-                                      left: 2, right: 2, top: 2, bottom: 1),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.orangeAccent,
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(4),
-                                      bottomLeft: Radius.circular(4),
-                                      topRight: Radius.circular(0),
-                                      bottomRight: Radius.circular(0),
-                                    ),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: const Text(
-                                    'NSFW',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 6,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                width: 120,
+                child: SubjectCover(
+                  url: UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover),
+                  nsfw: _subject.nsfw,
+                ),
               );
             }
           } else {

@@ -391,6 +391,29 @@ class SubjectListState extends State<SubjectsPage> {
       ),
       itemCount: subjectList.length,
       itemBuilder: (context, index) {
+        return Column(
+          children: [
+            SubjectCover(
+              url: UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
+              nsfw: subjectList[index].nsfw,
+              onTap: (){
+                _onSubjectCardTap(subjectList[index]);
+              },
+            ),
+            Flexible(
+                child: Text(
+                  ((subjectList[index].nameCn == null ||
+                      subjectList[index].nameCn == '')
+                      ? subjectList[index].name
+                      : subjectList[index].nameCn)!,
+                  maxLines: 2,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: true,
+                )),
+          ],
+        );
         return GestureDetector(
           onTap: () {
             _onSubjectCardTap(subjectList[index]);
