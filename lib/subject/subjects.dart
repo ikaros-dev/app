@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
@@ -39,7 +40,10 @@ class SubjectListState extends State<SubjectsPage> {
 
   bool _isSubjectLoading = false;
   bool _hasMore = true;
-  late EasyRefreshController _controller;
+  late EasyRefreshController _easyRefreshController = EasyRefreshController();
+  late final ScrollController _easyRefreshScrollController = ScrollController();
+  bool _isExpansionTileVisible = true;
+  bool _isExpansionTileVisible2 = true;
 
   String _selectedType = '全部类型';
   final List<String> _selectedTypes = ['全部类型'];
@@ -167,13 +171,39 @@ class SubjectListState extends State<SubjectsPage> {
     }).toSet());
     _fetchSettingConfig();
     _loadSubjects();
-    _controller = EasyRefreshController();
+
+    _easyRefreshScrollController.addListener(() {
+      // 当用户向下滚动时，隐藏组件；向上滚动时，显示组件
+      if (_easyRefreshScrollController.position.userScrollDirection ==
+          ScrollDirection.reverse) {
+        if (_isExpansionTileVisible) {
+          setState(() {
+            if (_isExpansionTileVisible) {
+              _isExpansionTileVisible = false;
+            }
+          });
+        }
+      } else if (_easyRefreshScrollController.position.userScrollDirection ==
+          ScrollDirection.forward) {
+        if (!_isExpansionTileVisible) {
+          setState(() {
+            if (!_isExpansionTileVisible2) {
+              _isExpansionTileVisible2 = true;
+            }
+            if (!_isExpansionTileVisible) {
+              _isExpansionTileVisible = true;
+            }
+          });
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
     super.dispose();
-    _controller.dispose();
+    _easyRefreshController.dispose();
+    _easyRefreshScrollController.dispose();
   }
 
   @override
@@ -182,111 +212,127 @@ class SubjectListState extends State<SubjectsPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ExpansionTile(
-              title: TextField(
-                obscureText: false,
-                decoration:  InputDecoration(
-                  prefixIcon: GestureDetector(
-                    onTap: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SearchPage()),
-                      );
+          AnimatedOpacity(
+            opacity: _isExpansionTileVisible ? 1.0 : 0.0,
+            onEnd: () {
+              // 动画结束时刷新状态以移除占位空间
+              if (!_isExpansionTileVisible) {
+                setState(() {
+                  _isExpansionTileVisible2 = false;
+                });
+              }
+            },
+            duration: const Duration(milliseconds: 500),
+            child: Visibility(
+              visible: _isExpansionTileVisible2,
+              child: ExpansionTile(
+                  title: TextField(
+                    obscureText: false,
+                    decoration: InputDecoration(
+                      prefixIcon: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const SearchPage()),
+                          );
+                        },
+                        child: const Icon(Icons.search),
+                      ),
+                      labelText: '输入条目中文名称回车搜索',
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      _keyword = value;
                     },
-                    child: const Icon(Icons.search),
+                    onSubmitted: (value) {
+                      setState(() {
+                        _keyword = value;
+                      });
+                      _loadSubjects();
+                    },
+                    onEditingComplete: () {
+                      _loadSubjects();
+                    },
                   ),
-                  labelText: '输入条目中文名称回车搜索',
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: (value) {
-                  _keyword = value;
-                },
-                onSubmitted: (value) {
-                  setState(() {
-                    _keyword = value;
-                  });
-                  _loadSubjects();
-                },
-                onEditingComplete: () {
-                  _loadSubjects();
-                },
-              ),
-              showTrailingIcon: true,
-              expandedCrossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                // 类型
-                _buildFilterRow(_selectedType, _selectedTypes, (value) {
-                  setState(() {
-                    _selectedType = value!;
-                    _type = SubjectConst.cnTypeMap[_selectedType];
-                  });
-                  _loadSubjects();
-                }),
+                  showTrailingIcon: true,
+                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    // 类型
+                    _buildFilterRow(_selectedType, _selectedTypes, (value) {
+                      setState(() {
+                        _selectedType = value!;
+                        _type = SubjectConst.cnTypeMap[_selectedType];
+                      });
+                      _loadSubjects();
+                    }),
 
-                const SizedBox(
-                  height: 5,
-                ),
+                    const SizedBox(
+                      height: 5,
+                    ),
 
-                // NSFW
-                _buildFilterRow(_selectedNsfw, _selectedNsfws, (value) {
-                  setState(() {
-                    _selectedNsfw = value!;
-                    if (_selectedNsfw == '正常') {
-                      _nsfw = false;
-                    } else if (_selectedNsfw == 'NSFW') {
-                      _nsfw = true;
-                    } else {
-                      _nsfw = null;
-                    }
-                  });
-                  _loadSubjects();
-                }),
+                    // NSFW
+                    _buildFilterRow(_selectedNsfw, _selectedNsfws, (value) {
+                      setState(() {
+                        _selectedNsfw = value!;
+                        if (_selectedNsfw == '正常') {
+                          _nsfw = false;
+                        } else if (_selectedNsfw == 'NSFW') {
+                          _nsfw = true;
+                        } else {
+                          _nsfw = null;
+                        }
+                      });
+                      _loadSubjects();
+                    }),
 
-                const SizedBox(
-                  height: 5,
-                ),
+                    const SizedBox(
+                      height: 5,
+                    ),
 
-                // 季度
-                _buildFilterRow(_selectedSeason, _selectedSeasons, (value) {
-                  setState(() {
-                    _selectedSeason = value!;
-                  });
-                }, enable: false),
+                    // 季度
+                    _buildFilterRow(_selectedSeason, _selectedSeasons,
+                            (value) {
+                          setState(() {
+                            _selectedSeason = value!;
+                          });
+                        }, enable: false),
 
-                const SizedBox(
-                  height: 5,
-                ),
+                    const SizedBox(
+                      height: 5,
+                    ),
 
-                // 完结状态
-                _buildFilterRow(_selectedStatus, _allStatus, (value) {
-                  setState(() {
-                    _selectedStatus = value!;
-                  });
-                }, enable: false),
+                    // 完结状态
+                    _buildFilterRow(_selectedStatus, _allStatus, (value) {
+                      setState(() {
+                        _selectedStatus = value!;
+                      });
+                    }, enable: false),
 
-                const SizedBox(
-                  height: 5,
-                ),
+                    const SizedBox(
+                      height: 5,
+                    ),
 
-                // 综合排序
-                _buildFilterRow(_selectedSort, _selectedSorts, (value) {
-                  setState(() {
-                    _selectedSort = value!;
-                  });
-                }, enable: false),
+                    // 综合排序
+                    _buildFilterRow(_selectedSort, _selectedSorts, (value) {
+                      setState(() {
+                        _selectedSort = value!;
+                      });
+                    }, enable: false),
 
-                const SizedBox(
-                  height: 5,
-                ),
+                    const SizedBox(
+                      height: 5,
+                    ),
 
-                // 年份
-                _buildFilterRow(_selectedYear, _selectedYears, (value) {
-                  setState(() {
-                    _selectedYear = value!;
-                  });
-                }, enable: false),
-              ]),
+                    // 年份
+                    _buildFilterRow(_selectedYear, _selectedYears, (value) {
+                      setState(() {
+                        _selectedYear = value!;
+                      });
+                    }, enable: false),
+                  ]),
+            )
+          ),
 
           // 上方条目索引条件
 
@@ -439,7 +485,8 @@ class SubjectListState extends State<SubjectsPage> {
     }
     return Expanded(
       child: EasyRefresh(
-        controller: _controller,
+        controller: _easyRefreshController,
+        scrollController: _easyRefreshScrollController,
         footer: ClassicalFooter(
             loadingText: "加载中...",
             loadFailedText: "加载失败",
@@ -456,8 +503,8 @@ class SubjectListState extends State<SubjectsPage> {
           if (kDebugMode) {
             print("noMore: ${!_hasMore}");
           }
-          _controller.finishLoad(success: true, noMore: !_hasMore);
-          _controller.resetLoadState();
+          _easyRefreshController.finishLoad(success: true, noMore: !_hasMore);
+          _easyRefreshController.resetLoadState();
         },
         child: buildSubjectsGridView(),
       ),
