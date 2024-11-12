@@ -9,6 +9,7 @@ import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/SubjectMeta.dart';
 import 'package:ikaros/component/full_screen_Image.dart';
+import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/subject/search.dart';
 import 'package:ikaros/subject/subject.dart';
@@ -229,116 +230,115 @@ class SubjectListState extends State<SubjectsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           AnimatedOpacity(
-            opacity: _isExpansionTileVisible ? 1.0 : 0.0,
-            onEnd: () {
-              // 动画结束时刷新状态以移除占位空间
-              if (!_isExpansionTileVisible) {
-                setState(() {
-                  _isExpansionTileVisible2 = false;
-                });
-              }
-            },
-            duration: const Duration(milliseconds: 500),
-            child: Visibility(
-              visible: _isExpansionTileVisible2,
-              child: ExpansionTile(
-                  title: TextField(
-                    obscureText: false,
-                    decoration: const InputDecoration(
-                      labelText: '输入条目中文名称回车搜索',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      _keyword = value;
-                    },
-                    onSubmitted: (value) {
-                      setState(() {
+              opacity: _isExpansionTileVisible ? 1.0 : 0.0,
+              onEnd: () {
+                // 动画结束时刷新状态以移除占位空间
+                if (!_isExpansionTileVisible) {
+                  setState(() {
+                    _isExpansionTileVisible2 = false;
+                  });
+                }
+              },
+              duration: const Duration(milliseconds: 500),
+              child: Visibility(
+                visible: _isExpansionTileVisible2,
+                child: ExpansionTile(
+                    title: TextField(
+                      obscureText: false,
+                      decoration: const InputDecoration(
+                        labelText: '输入条目中文名称回车搜索',
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: (value) {
                         _keyword = value;
-                      });
-                      _loadSubjects();
-                    },
-                    onEditingComplete: () {
-                      _loadSubjects();
-                    },
-                  ),
-                  showTrailingIcon: true,
-                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    // 类型
-                    _buildFilterRow(_selectedType, _selectedTypes, (value) {
-                      setState(() {
-                        _selectedType = value!;
-                        _type = SubjectConst.cnTypeMap[_selectedType];
-                      });
-                      _loadSubjects();
-                    }),
-
-                    const SizedBox(
-                      height: 5,
+                      },
+                      onSubmitted: (value) {
+                        setState(() {
+                          _keyword = value;
+                        });
+                        _loadSubjects();
+                      },
+                      onEditingComplete: () {
+                        _loadSubjects();
+                      },
                     ),
+                    showTrailingIcon: true,
+                    expandedCrossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      // 类型
+                      _buildFilterRow(_selectedType, _selectedTypes, (value) {
+                        setState(() {
+                          _selectedType = value!;
+                          _type = SubjectConst.cnTypeMap[_selectedType];
+                        });
+                        _loadSubjects();
+                      }),
 
-                    // NSFW
-                    _buildFilterRow(_selectedNsfw, _selectedNsfws, (value) {
-                      setState(() {
-                        _selectedNsfw = value!;
-                        if (_selectedNsfw == '正常') {
-                          _nsfw = false;
-                        } else if (_selectedNsfw == 'NSFW') {
-                          _nsfw = true;
-                        } else {
-                          _nsfw = null;
-                        }
-                      });
-                      _loadSubjects();
-                    }),
+                      const SizedBox(
+                        height: 5,
+                      ),
 
-                    const SizedBox(
-                      height: 5,
-                    ),
+                      // NSFW
+                      _buildFilterRow(_selectedNsfw, _selectedNsfws, (value) {
+                        setState(() {
+                          _selectedNsfw = value!;
+                          if (_selectedNsfw == '正常') {
+                            _nsfw = false;
+                          } else if (_selectedNsfw == 'NSFW') {
+                            _nsfw = true;
+                          } else {
+                            _nsfw = null;
+                          }
+                        });
+                        _loadSubjects();
+                      }),
 
-                    // 季度
-                    _buildFilterRow(_selectedSeason, _selectedSeasons,
-                            (value) {
-                          setState(() {
-                            _selectedSeason = value!;
-                          });
-                        }, enable: false),
+                      const SizedBox(
+                        height: 5,
+                      ),
 
-                    const SizedBox(
-                      height: 5,
-                    ),
+                      // 季度
+                      _buildFilterRow(_selectedSeason, _selectedSeasons,
+                          (value) {
+                        setState(() {
+                          _selectedSeason = value!;
+                        });
+                      }, enable: false),
 
-                    // 完结状态
-                    _buildFilterRow(_selectedStatus, _allStatus, (value) {
-                      setState(() {
-                        _selectedStatus = value!;
-                      });
-                    }, enable: false),
+                      const SizedBox(
+                        height: 5,
+                      ),
 
-                    const SizedBox(
-                      height: 5,
-                    ),
+                      // 完结状态
+                      _buildFilterRow(_selectedStatus, _allStatus, (value) {
+                        setState(() {
+                          _selectedStatus = value!;
+                        });
+                      }, enable: false),
 
-                    // 综合排序
-                    _buildFilterRow(_selectedSort, _selectedSorts, (value) {
-                      setState(() {
-                        _selectedSort = value!;
-                      });
-                    }, enable: false),
+                      const SizedBox(
+                        height: 5,
+                      ),
 
-                    const SizedBox(
-                      height: 5,
-                    ),
+                      // 综合排序
+                      _buildFilterRow(_selectedSort, _selectedSorts, (value) {
+                        setState(() {
+                          _selectedSort = value!;
+                        });
+                      }, enable: false),
 
-                    // 年份
-                    _buildFilterRow(_selectedYear, _selectedYears, (value) {
-                      setState(() {
-                        _selectedYear = value!;
-                      });
-                    }, enable: false),
-                  ]),
-            )
-          ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+
+                      // 年份
+                      _buildFilterRow(_selectedYear, _selectedYears, (value) {
+                        setState(() {
+                          _selectedYear = value!;
+                        });
+                      }, enable: false),
+                    ]),
+              )),
 
           // 上方条目索引条件
 
@@ -409,32 +409,36 @@ class SubjectListState extends State<SubjectsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AspectRatio(
-                aspectRatio: 7 / 10, // 设置图片宽高比例
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(5.0), // 设置圆角半径
-                  child: Hero(
-                    tag: UrlUtils.getCoverUrl(
-                        _baseUrl, subjectList[index].cover),
-                    child: FadeInImage.assetNetwork(
-                      placeholder: 'assets/loading_placeholder.jpg',
-                      // 占位图片
-                      image: UrlUtils.getCoverUrl(
-                          _baseUrl, subjectList[index].cover),
-                      imageErrorBuilder: (context, error, stackTrace) {
-                        // 如果图片加载失败，显示错误占位图
-                        return const Text("图片加载失败");
-                        // return Image.asset('assets/error_placeholder.png', fit: BoxFit.fitWidth);
-                      },
-                      fadeInDuration: const Duration(milliseconds: 500),
-                      fit: BoxFit.cover,
-                      // height: 200,
-                      width: double.infinity,
-                      // UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
-                      // fit: BoxFit.fitWidth,
-                    ),
-                  ),
-                ),
+              // AspectRatio(
+              //   aspectRatio: 7 / 10, // 设置图片宽高比例
+              //   child: ClipRRect(
+              //     borderRadius: BorderRadius.circular(5.0), // 设置圆角半径
+              //     child: Hero(
+              //       tag: UrlUtils.getCoverUrl(
+              //           _baseUrl, subjectList[index].cover),
+              //       child: FadeInImage.assetNetwork(
+              //         placeholder: 'assets/loading_placeholder.jpg',
+              //         // 占位图片
+              //         image: UrlUtils.getCoverUrl(
+              //             _baseUrl, subjectList[index].cover),
+              //         imageErrorBuilder: (context, error, stackTrace) {
+              //           // 如果图片加载失败，显示错误占位图
+              //           return const Text("图片加载失败");
+              //           // return Image.asset('assets/error_placeholder.png', fit: BoxFit.fitWidth);
+              //         },
+              //         fadeInDuration: const Duration(milliseconds: 500),
+              //         fit: BoxFit.cover,
+              //         // height: 200,
+              //         width: double.infinity,
+              //         // UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
+              //         // fit: BoxFit.fitWidth,
+              //       ),
+              //     ),
+              //   ),
+              // ),
+              SubjectCover(
+                url: UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
+                nsfw: subjectList[index].nsfw,
               ),
               Flexible(
                   child: Text(

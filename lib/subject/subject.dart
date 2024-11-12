@@ -285,7 +285,8 @@ class _SubjectState extends State<SubjectPage> {
                         ),
                       ),
                     ),
-                  ));
+                  ),
+              );
             }
           } else {
             return const Center(
