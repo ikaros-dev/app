@@ -179,31 +179,25 @@ class SubjectListState extends State<SubjectsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
-        title: const Text("条目"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SearchPage()),
-              );
-            },
-          )
-        ],
-      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ExpansionTile(
               title: TextField(
                 obscureText: false,
-                decoration: const InputDecoration(
+                decoration:  InputDecoration(
+                  prefixIcon: GestureDetector(
+                    onTap: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const SearchPage()),
+                      );
+                    },
+                    child: const Icon(Icons.search),
+                  ),
                   labelText: '输入条目中文名称回车搜索',
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                 ),
                 onChanged: (value) {
                   _keyword = value;
@@ -230,7 +224,9 @@ class SubjectListState extends State<SubjectsPage> {
                   _loadSubjects();
                 }),
 
-                const SizedBox(height: 5,),
+                const SizedBox(
+                  height: 5,
+                ),
 
                 // NSFW
                 _buildFilterRow(_selectedNsfw, _selectedNsfws, (value) {
@@ -247,7 +243,9 @@ class SubjectListState extends State<SubjectsPage> {
                   _loadSubjects();
                 }),
 
-                const SizedBox(height: 5,),
+                const SizedBox(
+                  height: 5,
+                ),
 
                 // 季度
                 _buildFilterRow(_selectedSeason, _selectedSeasons, (value) {
@@ -256,7 +254,9 @@ class SubjectListState extends State<SubjectsPage> {
                   });
                 }, enable: false),
 
-                const SizedBox(height: 5,),
+                const SizedBox(
+                  height: 5,
+                ),
 
                 // 完结状态
                 _buildFilterRow(_selectedStatus, _allStatus, (value) {
@@ -265,17 +265,20 @@ class SubjectListState extends State<SubjectsPage> {
                   });
                 }, enable: false),
 
-                const SizedBox(height: 5,),
+                const SizedBox(
+                  height: 5,
+                ),
 
                 // 综合排序
-                _buildFilterRow(_selectedSort, _selectedSorts,
-                        (value) {
-                      setState(() {
-                        _selectedSort = value!;
-                      });
-                    }, enable: false),
+                _buildFilterRow(_selectedSort, _selectedSorts, (value) {
+                  setState(() {
+                    _selectedSort = value!;
+                  });
+                }, enable: false),
 
-                const SizedBox(height: 5,),
+                const SizedBox(
+                  height: 5,
+                ),
 
                 // 年份
                 _buildFilterRow(_selectedYear, _selectedYears, (value) {
@@ -283,13 +286,9 @@ class SubjectListState extends State<SubjectsPage> {
                     _selectedYear = value!;
                   });
                 }, enable: false),
-
               ]),
 
-
           // 上方条目索引条件
-
-
 
           const SizedBox(
             height: 10,
@@ -405,25 +404,29 @@ class SubjectListState extends State<SubjectsPage> {
   }
 
   // 构建筛选行组件
-  Widget _buildFilterRow(
-    String currentValue,
-    List<String?> options,
-    ValueChanged<String?> onChanged,
-    {bool enable = true}
-  ) {
+  Widget _buildFilterRow(String currentValue, List<String?> options,
+      ValueChanged<String?> onChanged,
+      {bool enable = true}) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Wrap(
         spacing: 4,
         children: options.map((option) {
           return ChoiceChip(
-            label: Text(option ?? "Null", style: const TextStyle(fontWeight: FontWeight.normal, ),),
+            label: Text(
+              option ?? "Null",
+              style: const TextStyle(
+                fontWeight: FontWeight.normal,
+              ),
+            ),
             showCheckmark: false,
             side: BorderSide.none,
             selected: currentValue == option,
-            onSelected: enable ? (bool selected) {
-              onChanged(selected ? option : null);
-            } : null,
+            onSelected: enable
+                ? (bool selected) {
+                    onChanged(selected ? option : null);
+                  }
+                : null,
           );
         }).toList(),
       ),
