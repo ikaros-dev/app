@@ -43,6 +43,7 @@ class SharedPrefsUtils {
     var prefs = await SharedPreferences.getInstance();
     prefs.setBool(SharedPrefsKey.settingEnableEpisodeApiSplit,
         config.enableEpisodeApiSplit);
+    prefs.setBool(SharedPrefsKey.hideNsfwWhenSubjectsOpen, config.hideNsfwWhenSubjectsOpen);
   }
 
   static Future<SettingConfig> getSettingConfig() async {
@@ -51,7 +52,10 @@ class SharedPrefsUtils {
     final bool enableEpisodeApiSplit =
         prefs.getBool(SharedPrefsKey.settingEnableEpisodeApiSplit) ??
             SharedPrefsDefaultValue.settingEnableEpisodeApiSplit;
-    return SettingConfig.name(enableEpisodeApiSplit);
+    final bool hideNsfwWhenSubjectsOpen =
+        prefs.getBool(SharedPrefsKey.hideNsfwWhenSubjectsOpen) ??
+            SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen;
+    return SettingConfig(enableEpisodeApiSplit: enableEpisodeApiSplit, hideNsfwWhenSubjectsOpen: hideNsfwWhenSubjectsOpen);
   }
 }
 
@@ -65,6 +69,8 @@ class SharedPrefsKey {
   static const String danmuLineHeight = "DANMU_LINE_HEIGHT";
   static const String settingEnableEpisodeApiSplit =
       "SETTING_ENABLE_EPISODE_API_SPLIT";
+  static const String hideNsfwWhenSubjectsOpen =
+      "HIDE_NSFW_WHEN_SUBJECTS_OPEN";
 }
 
 class SharedPrefsDefaultValue {
@@ -76,6 +82,7 @@ class SharedPrefsDefaultValue {
   static const bool danmuHideScroll = false;
   static const double danmuLineHeight = 1.2;
   static const bool settingEnableEpisodeApiSplit = false;
+  static const bool hideNsfwWhenSubjectsOpen = true;
 }
 
 class DanmuConfig {
@@ -161,8 +168,9 @@ class DanmuConfig {
 class SettingConfig {
   bool enableEpisodeApiSplit =
       SharedPrefsDefaultValue.settingEnableEpisodeApiSplit;
+  bool hideNsfwWhenSubjectsOpen = SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen;
 
-  SettingConfig();
-
-  SettingConfig.name(this.enableEpisodeApiSplit);
+  SettingConfig({this.enableEpisodeApiSplit =
+      SharedPrefsDefaultValue.settingEnableEpisodeApiSplit,
+    this.hideNsfwWhenSubjectsOpen = SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen});
 }

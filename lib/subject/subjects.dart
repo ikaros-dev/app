@@ -14,6 +14,7 @@ import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
+import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 
 class SubjectsPage extends StatefulWidget {
@@ -71,6 +72,8 @@ class SubjectListState extends State<SubjectsPage> {
   final List<String> _allStatus = const ['完结状态', '完结', '连载'];
   String _selectedSort = '综合排序';
   final List<String> _selectedSorts = const ['综合排序', '最近放送', '最近更新'];
+
+  late SettingConfig _settingConfig = SettingConfig();
 
   List<SubjectMeta> _convertItems(List<Map<String, dynamic>> items) {
     return items.map((e) => SubjectMeta.fromJson(e)).toList();
@@ -162,6 +165,7 @@ class SubjectListState extends State<SubjectsPage> {
     _selectedTypes.addAll(SubjectType.values.map((type) {
       return SubjectConst.typeCnMap[type.name] ?? "Null";
     }).toSet());
+    _fetchSettingConfig();
     _loadSubjects();
     _controller = EasyRefreshController();
   }
@@ -445,5 +449,12 @@ class SubjectListState extends State<SubjectsPage> {
         child: buildSubjectsGridView(),
       ),
     );
+  }
+
+  Future<void> _fetchSettingConfig() async {
+    _settingConfig = await SharedPrefsUtils.getSettingConfig();
+    _selectedNsfw = _settingConfig.hideNsfwWhenSubjectsOpen ? '正常' : '全部条目';
+    _nsfw = !_settingConfig.hideNsfwWhenSubjectsOpen;
+    setState(() {});
   }
 }
