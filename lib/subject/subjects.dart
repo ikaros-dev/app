@@ -277,24 +277,24 @@ class SubjectListState extends State<SubjectsPage> {
       ),
       itemCount: subjectList.length,
       itemBuilder: (context, index) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            GestureDetector(
-              onTap: () {
-                _onSubjectCardTap(subjectList[index]);
-              },
-              onLongPress: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FullScreenImagePage(
-                      imageUrl: UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover), // 替换为你的图片URL
-                    ),
-                  ),
-                );
-              },
-              child: AspectRatio(
+        return GestureDetector(
+          onTap: () {
+            _onSubjectCardTap(subjectList[index]);
+          },
+          onLongPress: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FullScreenImagePage(
+                  imageUrl: UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover), // 替换为你的图片URL
+                ),
+              ),
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(5.0), // 设置圆角半径
@@ -318,19 +318,19 @@ class SubjectListState extends State<SubjectsPage> {
                   ),
                 ),
               ),
-            ),
-            Flexible(child: Text(
-              ((subjectList[index].nameCn == null ||
-                  subjectList[index].nameCn == '')
-                  ? subjectList[index].name
-                  : subjectList[index].nameCn)!,
-              maxLines: 2,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              softWrap: true,
-            )),
-          ],
+              Flexible(child: Text(
+                ((subjectList[index].nameCn == null ||
+                    subjectList[index].nameCn == '')
+                    ? subjectList[index].name
+                    : subjectList[index].nameCn)!,
+                maxLines: 2,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                softWrap: true,
+              )),
+            ],
+          ),
         );
       },
     );

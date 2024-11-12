@@ -222,24 +222,24 @@ class CollectionsState extends State<CollectionPage> {
       ),
       itemCount: subjectCollections.length,
       itemBuilder: (context, index) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            GestureDetector(
-              onTap: () {
-                _onSubjectCardTap(subjectCollections[index].subjectId);
-              },
-              onLongPress: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FullScreenImagePage(
-                      imageUrl: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover), // 替换为你的图片URL
-                    ),
-                  ),
-                );
-              },
-              child: AspectRatio(
+        return GestureDetector(
+          onTap: () {
+            _onSubjectCardTap(subjectCollections[index].subjectId);
+          },
+          onLongPress: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FullScreenImagePage(
+                  imageUrl: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover), // 替换为你的图片URL
+                ),
+              ),
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AspectRatio(
                 aspectRatio: 7 / 10, // 设置图片宽高比例
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(5.0), // 设置圆角半径
@@ -263,76 +263,16 @@ class CollectionsState extends State<CollectionPage> {
                   ),
                 ),
               ),
-            ),
-            Flexible(child: Text(
-              ((subjectCollections[index].nameCn == null ||
-                  subjectCollections[index].nameCn == '')
-                  ? subjectCollections[index].name
-                  : subjectCollections[index].nameCn)!,
-              maxLines: 2,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              softWrap: true,
-            )),
-          ],
-        );
-        return Card(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0), // 设置圆角半径
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  _onSubjectCardTap(subjectCollections[index].subjectId);
-                },
-                onLongPress: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => FullScreenImagePage(
-                        imageUrl: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover), // 替换为你的图片URL
-                      ),
-                    ),
-                  );
-                },
-                child: AspectRatio(
-                  aspectRatio: 7 / 10, // 设置图片宽高比例
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10.0), // 设置圆角半径
-                    child: Hero(
-                      tag: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
-                      child: FadeInImage.assetNetwork(
-                        placeholder: 'assets/loading_placeholder.jpg',  // 占位图片
-                        image: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
-                        imageErrorBuilder: (context, error, stackTrace) {
-                          // 如果图片加载失败，显示错误占位图
-                          return const Text("图片加载失败");
-                          // return Image.asset('assets/error_placeholder.png', fit: BoxFit.fitWidth);
-                        },
-                        fadeInDuration: const Duration(milliseconds: 500),
-                        fit: BoxFit.cover,
-                        // height: 200,
-                        width: double.infinity,
-                        // UrlUtils.getCoverUrl(_baseUrl, subjectList[index].cover),
-                        // fit: BoxFit.fitWidth,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                  child: Text(
+              Flexible(child: Text(
                 ((subjectCollections[index].nameCn == null ||
-                        subjectCollections[index].nameCn == '')
+                    subjectCollections[index].nameCn == '')
                     ? subjectCollections[index].name
                     : subjectCollections[index].nameCn)!,
                 maxLines: 2,
                 style: const TextStyle(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
+                softWrap: true,
               )),
             ],
           ),
