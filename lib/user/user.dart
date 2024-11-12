@@ -1,15 +1,20 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:ui' as DartUi;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
+import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/user/UserApi.dart';
+import 'package:ikaros/api/user/model/User.dart';
 import 'package:ikaros/main.dart';
 import 'package:ikaros/user/setting.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
+import 'package:ikaros/utils/url_utils.dart';
 import 'package:open_file/open_file.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as path;
@@ -28,6 +33,8 @@ class UserPage extends StatefulWidget {
 class _UserPageState extends State<UserPage> {
   late String _appVersion;
   late SettingConfig config = SettingConfig();
+  late User? _me;
+  late String _baseUrl;
 
   Future<void> _fetchAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -63,13 +70,84 @@ class _UserPageState extends State<UserPage> {
     _loadSettingConfig();
   }
 
+  Future<User?> _fetchMe() async {
+    await _fetchBaseUrl();
+    _me = await UserApi().getMe();
+    return _me;
+  }
+
+  Future<String> _fetchBaseUrl() async {
+    AuthParams authParams = await AuthApi().getAuthParams();
+    _baseUrl = authParams.baseUrl;
+    return _baseUrl;
+  }
+
+  String getAvatarTitle(User? user) {
+    var res = user?.username ?? "";
+    if (user?.nickname != null && user?.nickname != "") {
+      res = '$res(${user!.nickname!})';
+    }
+    return res;
+  }
+
+  Widget _buildAppbarUser() {
+    return FutureBuilder(
+        future: _fetchMe(),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              return Text("Load api base url error: ${snapshot.error}");
+            } else {
+              return Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28, // 半径控制头像的大小
+                    backgroundImage: NetworkImage(
+                        UrlUtils.getCoverUrl(_baseUrl, _me?.avatar ?? "")),
+                  ),
+                  const SizedBox(
+                    width: 10,
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        getAvatarTitle(_me),
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                      if (_me?.introduce != null)
+                        Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Text(
+                            _me?.introduce ?? "",
+                            style: const TextStyle(
+                              fontSize: 15, // 字体大小
+                              fontWeight: FontWeight.w500, // 字体粗细
+                              color: Colors.grey, // 字体颜色
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              );
+            }
+          } else {
+            return const CircularProgressIndicator();
+          }
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text("用户",
-            style: TextStyle(color: Colors.black, fontSize: 25)),
+        title: _buildAppbarUser(),
+        // title: const CircleAvatar(
+        //   radius: 32.5, // 半径控制头像的大小
+        //   backgroundImage: NetworkImage('https://ikaros.run/img/favicon.ico'),
+        // ),
         actionsIconTheme: const IconThemeData(
           color: Colors.black,
           size: 35,
@@ -94,6 +172,39 @@ class _UserPageState extends State<UserPage> {
           ),
         ],
       ),
+      // appBar: PreferredSize(
+      //   preferredSize: const DartUi.Size.fromHeight(70.0),
+      //   child: AppBar(
+      //     backgroundColor: Colors.white,
+      //     title: const CircleAvatar(
+      //       radius: 32.5, // 半径控制头像的大小
+      //       backgroundImage: NetworkImage('https://ikaros.run/img/favicon.ico'),
+      //     ),
+      //     actionsIconTheme: const IconThemeData(
+      //       color: Colors.black,
+      //       size: 35,
+      //     ),
+      //     actions: <Widget>[
+      //       PopupMenuButton<String>(
+      //         itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
+      //           _selectView(Icons.update, "更新", "app_update"),
+      //           _selectView(Icons.exit_to_app_rounded, '退出', 'user_logout'),
+      //         ],
+      //         onSelected: (String action) {
+      //           // 点击选项的时候
+      //           switch (action) {
+      //             case 'user_logout':
+      //               _userLogout();
+      //               break;
+      //             case 'app_update':
+      //               _checkAppUpdate();
+      //               break;
+      //           }
+      //         },
+      //       ),
+      //     ],
+      //   ),
+      // ),
       body: ListView(
         children: [
           Setting(
