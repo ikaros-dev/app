@@ -230,6 +230,8 @@ class SubjectListState extends State<SubjectsPage> {
                   _loadSubjects();
                 }),
 
+                const SizedBox(height: 5,),
+
                 // NSFW
                 _buildFilterRow(_selectedNsfw, _selectedNsfws, (value) {
                   setState(() {
@@ -245,12 +247,16 @@ class SubjectListState extends State<SubjectsPage> {
                   _loadSubjects();
                 }),
 
+                const SizedBox(height: 5,),
+
                 // 季度
                 _buildFilterRow(_selectedSeason, _selectedSeasons, (value) {
                   setState(() {
                     _selectedSeason = value!;
                   });
                 }, enable: false),
+
+                const SizedBox(height: 5,),
 
                 // 完结状态
                 _buildFilterRow(_selectedStatus, _allStatus, (value) {
@@ -259,6 +265,8 @@ class SubjectListState extends State<SubjectsPage> {
                   });
                 }, enable: false),
 
+                const SizedBox(height: 5,),
+
                 // 综合排序
                 _buildFilterRow(_selectedSort, _selectedSorts,
                         (value) {
@@ -266,6 +274,8 @@ class SubjectListState extends State<SubjectsPage> {
                         _selectedSort = value!;
                       });
                     }, enable: false),
+
+                const SizedBox(height: 5,),
 
                 // 年份
                 _buildFilterRow(_selectedYear, _selectedYears, (value) {
