@@ -209,6 +209,22 @@ class SubjectListState extends State<SubjectsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        title: const Text("条目"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SearchPage()),
+              );
+            },
+          )
+        ],
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -228,19 +244,9 @@ class SubjectListState extends State<SubjectsPage> {
               child: ExpansionTile(
                   title: TextField(
                     obscureText: false,
-                    decoration: InputDecoration(
-                      prefixIcon: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const SearchPage()),
-                          );
-                        },
-                        child: const Icon(Icons.search),
-                      ),
+                    decoration: const InputDecoration(
                       labelText: '输入条目中文名称回车搜索',
-                      border: const OutlineInputBorder(),
+                      border: OutlineInputBorder(),
                     ),
                     onChanged: (value) {
                       _keyword = value;
