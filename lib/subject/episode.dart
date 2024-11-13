@@ -138,7 +138,7 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
 
   Widget _buildEpisodePage() {
     if (_episodeResList.isEmpty) {
-      return const CircularProgressIndicator ();
+      return const LinearProgressIndicator();
     }
     return Column(
       children: [
