@@ -148,7 +148,7 @@ class SubjectListState extends State<SubjectsPage> {
           "time=$_time airTimeDesc=$_airTimeDesc updateTimeDesc=$_updateTimeDesc");
     }
     PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
-        1, _size, '', _keyword, _nsfw, _type,
+        _page, _size, '', _keyword, _nsfw, _type,
         time: _time,
         airTimeDesc: _airTimeDesc,
         updateTimeDesc: _updateTimeDesc);
