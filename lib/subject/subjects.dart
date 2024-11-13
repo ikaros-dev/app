@@ -34,8 +34,8 @@ class SubjectListState extends State<SubjectsPage> {
   int _total = 0;
 
   bool? _nsfw;
-  bool? _airTimeDesc = true;
-  bool? _updateTimeDesc = true;
+  bool? _airTimeDesc;
+  bool? _updateTimeDesc;
   String? _type;
   String? _time = "";
   String _keyword = "";
@@ -143,11 +143,15 @@ class SubjectListState extends State<SubjectsPage> {
       return;
     }
     if (kDebugMode) {
-      print(
-          "load more data for page=$_page size=$_size nameCn=$_keyword, nsfw=$_nsfw");
+      print("load data for page=1 size=$_size "
+          "type=$_type nameCn=$_keyword, nsfw=$_nsfw "
+          "time=$_time airTimeDesc=$_airTimeDesc updateTimeDesc=$_updateTimeDesc");
     }
-    PagingWrap pagingWrap = await SubjectApi()
-        .listSubjectsByCondition(_page, _size, '', _keyword, _nsfw, _type);
+    PagingWrap pagingWrap = await SubjectApi().listSubjectsByCondition(
+        1, _size, '', _keyword, _nsfw, _type,
+        time: _time,
+        airTimeDesc: _airTimeDesc,
+        updateTimeDesc: _updateTimeDesc);
     _page = pagingWrap.page;
     _size = pagingWrap.size;
     _total = pagingWrap.total;
@@ -362,6 +366,10 @@ class SubjectListState extends State<SubjectsPage> {
                             _selectedSort = value!;
                             _airTimeDesc = '最近放送' == _selectedSort;
                             _updateTimeDesc = '最近更新' == _selectedSort;
+                            if ('综合排序' == _selectedSort) {
+                              _airTimeDesc = null;
+                              _updateTimeDesc = null;
+                            }
                           });
                           _loadSubjects();
                         });
