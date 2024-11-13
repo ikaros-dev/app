@@ -12,6 +12,7 @@ import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
+import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeRecord.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
@@ -271,6 +272,12 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   Future<bool?> showEpisodesDialog() {
+    if (_subject.type == SubjectType.GAME || _subject.type == SubjectType.COMIC
+    || _subject.type == SubjectType.NOVEL || _subject.type == SubjectType.OTHER) {
+      Toast.show(context,
+          "当前条目类型[${SubjectConst.typeCnMap[_subject.type.name] ?? "未知"}]不支持视频播放");
+      return Future.value();
+    }
     return showDialog<bool>(
       context: context,
       builder: (context) {

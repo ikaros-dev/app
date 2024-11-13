@@ -449,17 +449,10 @@ class SubjectListState extends State<SubjectsPage> {
     // SubjectCollection collection =
     //     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
 
-    if (subjectMeta.type == SubjectType.ANIME ||
-        subjectMeta.type == SubjectType.MUSIC ||
-        subjectMeta.type == SubjectType.REAL) {
-      Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => SubjectPage(
-                id: subjectId.toString(),
-              )));
-    } else {
-      Toast.show(context,
-          "当前条目类型[${SubjectConst.typeCnMap[subjectMeta.type.name] ?? "未知"}]不支持视频播放");
-    }
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => SubjectPage(
+          id: subjectId.toString(),
+        )));
   }
 
   Widget buildSubjectsGridView() {
