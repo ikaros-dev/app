@@ -103,9 +103,9 @@ class EpisodeCollectionApi {
 
     BaseOptions options = BaseOptions();
     options.headers.putIfAbsent("Authorization", () => basicAuth);
-    if (kDebugMode) {
-      print("apiUrl:$apiUrl   basicAuth:$basicAuth");
-    }
+    // if (kDebugMode) {
+    //   print("apiUrl:$apiUrl   basicAuth:$basicAuth");
+    // }
     var response = await Dio(options).put(apiUrl, queryParameters: queryParams);
     if (response.statusCode != 200) {
       if (kDebugMode) {

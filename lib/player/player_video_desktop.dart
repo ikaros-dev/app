@@ -46,6 +46,14 @@ class DesktopVideoPlayer extends StatefulWidget {
   }
 }
 
+int GET_X_LPARAM(int lParam) {
+  return lParam & 0xFFFF; // 低 16 位是 x 坐标
+}
+
+int GET_Y_LPARAM(int lParam) {
+  return (lParam >> 16) & 0xFFFF; // 高 16 位是 y 坐标
+}
+
 class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     with SingleTickerProviderStateMixin {
   late Player _player;
@@ -53,6 +61,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late StreamSubscription<PlaybackState> playPauseStream;
   bool _displayTapped = false;
   bool _isFullScreen = false; // 全屏控制
+  bool _isSmallScreen = false; // 小窗播放
   Timer? _hideTimer;
   ValueNotifier<bool> isLoading = ValueNotifier(false);
   double _playbackSpeed = 1.0;
@@ -72,6 +81,14 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late Lock lock = Lock();
   late DanmuConfig _danmuConfig = DanmuConfig();
   late bool _danmuConfigChange = false;
+
+  // 视频小窗的宽和高
+  static const smallWindowWidth = 700;
+  static const smallWindowHeight = 400;
+  late int _hwnd; // 存储窗口句柄
+  Offset _smallScreenInitialPosition = Offset.zero;
+  Offset _smallScreenLastPosition = Offset.zero;
+  bool _isDragging = false;
 
   @override
   void initState() {
@@ -113,6 +130,8 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       _danmuConfig = config;
       if (mounted) _danmuku.updateOption(_danmuConfig.toOption());
     });
+
+    _hwnd = GetForegroundWindow();
   }
 
   @override
@@ -263,6 +282,59 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       _commentRomovedEpisodes.clear();
     });
     _danmuku.resume();
+  }
+
+  void _switchSmallScreen() async {
+    if (!Platform.isWindows) return;
+
+    setState(() {
+      _isSmallScreen = !_isSmallScreen;
+      _isFullScreen = !_isFullScreen;
+    });
+    widget.onFullScreenChange?.call();
+
+    if (_isSmallScreen) {
+      _enterSmallScreen();
+    } else {
+      _exitImmersiveFullscreen();
+    }
+  }
+
+  void _enterSmallScreen() async {
+    if (!Platform.isWindows) return;
+
+    final hWnd = GetForegroundWindow();
+    final style = GetWindowLongPtr(hWnd, GWL_STYLE);
+    final exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+
+    // 隐藏标题栏和任务栏
+    SetWindowLongPtr(hWnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
+    SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle | WS_EX_TOPMOST);
+
+    // 获取屏幕尺寸
+    final screenWidth = GetSystemMetrics(SM_CXSCREEN); // 屏幕宽度
+    final screenHeight = GetSystemMetrics(SM_CYSCREEN); // 屏幕高度
+
+    // 计算窗口右下角的位置
+    final x = screenWidth - smallWindowWidth;
+    final y = screenHeight - smallWindowHeight;
+
+    // 使用 SetWindowPos 将窗口缩小到右下角并置顶
+    SetWindowPos(
+      hWnd,
+      // 窗口句柄
+      HWND_TOPMOST,
+      // 窗口置顶
+      x,
+      // 计算的右下角 x 坐标
+      y,
+      // 计算的右下角 y 坐标
+      smallWindowWidth,
+      // 指定的窗口宽度
+      smallWindowHeight,
+      // 指定的窗口高度
+      SWP_NOACTIVATE | SWP_SHOWWINDOW, // 不激活窗口，显示窗口
+    );
   }
 
   void _updateFullScreen() async {
@@ -616,6 +688,34 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      onPanStart: (details) {
+        if (!_isSmallScreen) return;
+        debugPrint("onPanStart: ${details.localPosition}");
+        setState(() {
+          _smallScreenInitialPosition = details.localPosition;
+          _isDragging = true;
+        });
+      },
+      onPanUpdate: (details) {
+        if (!_isSmallScreen || !_isDragging) return;
+        debugPrint("onPanUpdate: localPosition:${details.localPosition}");
+        final dx = details.localPosition.dx - _smallScreenInitialPosition.dx;
+        final dy = details.localPosition.dy - _smallScreenInitialPosition.dy;
+
+        setState(() {
+          _smallScreenLastPosition = Offset(dx, dy);
+        });
+
+        // 调整窗口位置
+        SetWindowPos(_hwnd, HWND_TOP, _smallScreenLastPosition.dx.toInt() + smallWindowWidth, _smallScreenLastPosition.dy.toInt() + smallWindowHeight, smallWindowWidth, smallWindowHeight, SWP_NOZORDER | SWP_NOSIZE | SWP_NOREDRAW);
+      },
+      onPanEnd: (details) {
+        if (!_isSmallScreen) return;
+        debugPrint("onPanEnd: ${details.localPosition}");
+        setState(() {
+          _isDragging = false;
+        });
+      },
       onTap: () {
         if (_player.playback.isPlaying) {
           if (_displayTapped) {
@@ -633,6 +733,13 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         autofocus: true,
         child: MouseRegion(
           onHover: (_) => _cancelAndRestartTimer(),
+          onExit: (event) {
+            if (mounted) {
+              setState(() {
+                _displayTapped = false;
+              });
+            }
+          },
           child: Stack(
             children: [
               GestureDetector(
@@ -705,10 +812,19 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                         children: [
                           IconButton(
                               onPressed: () {
+                                if (!_isSmallScreen && !_isFullScreen) {
+                                  Navigator.of(context).pop();
+                                  return;
+                                }
+
+                                if (_isSmallScreen) {
+                                  _switchSmallScreen();
+                                  return;
+                                }
+
                                 if (_isFullScreen) {
                                   _updateFullScreen();
-                                } else {
-                                  Navigator.of(context).pop();
+                                  return;
                                 }
                               },
                               iconSize: 30,
@@ -721,25 +837,26 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                     ),
 
                     // 上方右边的设置按钮
-                    Positioned(
-                      right: 15,
-                      top: 12.5,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          IconButton(
-                              onPressed: _openSettingsPanel,
-                              iconSize: 30,
-                              icon: const Icon(
-                                Icons.settings,
-                                color: Colors.white,
-                              ))
-                        ],
+                    if (!_isSmallScreen)
+                      Positioned(
+                        right: 15,
+                        top: 12.5,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            IconButton(
+                                onPressed: _openSettingsPanel,
+                                iconSize: 30,
+                                icon: const Icon(
+                                  Icons.settings,
+                                  color: Colors.white,
+                                ))
+                          ],
+                        ),
                       ),
-                    ),
 
                     // 右边的截图按钮
-                    if (Platform.isWindows)
+                    if (Platform.isWindows && !_isSmallScreen)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -818,14 +935,15 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                                     onPressed: () => _player.previous(),
                                   ),
                                 const SizedBox(width: 50),
-                                IconButton(
-                                    color: Colors.white,
-                                    iconSize: 30,
-                                    icon: const Icon(Icons.replay_10),
-                                    onPressed: () {
-                                      seekPlus(
-                                          false, const Duration(seconds: 10));
-                                    }),
+                                if (!_isSmallScreen)
+                                  IconButton(
+                                      color: Colors.white,
+                                      iconSize: 30,
+                                      icon: const Icon(Icons.replay_10),
+                                      onPressed: () {
+                                        seekPlus(
+                                            false, const Duration(seconds: 10));
+                                      }),
                                 const SizedBox(
                                   width: 20,
                                 ),
@@ -840,14 +958,15 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                                   onPressed: _switchPlayerPauseOrPlay,
                                 ),
                                 const SizedBox(width: 20),
-                                IconButton(
-                                    color: Colors.white,
-                                    iconSize: 30,
-                                    icon: const Icon(Icons.forward_10),
-                                    onPressed: () {
-                                      seekPlus(
-                                          true, const Duration(seconds: 10));
-                                    }),
+                                if (!_isSmallScreen)
+                                  IconButton(
+                                      color: Colors.white,
+                                      iconSize: 30,
+                                      icon: const Icon(Icons.forward_10),
+                                      onPressed: () {
+                                        seekPlus(
+                                            true, const Duration(seconds: 10));
+                                      }),
                                 const SizedBox(
                                   width: 20,
                                 ),
@@ -870,40 +989,42 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           // 倍速按钮
-                          IconButton(
-                            iconSize: 24,
-                            color: Colors.white,
-                            icon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.speed),
-                                const SizedBox(
-                                  width: 4,
-                                ),
-                                Text(
-                                  'x$_playbackSpeed',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                )
-                              ],
+                          if (!_isSmallScreen)
+                            IconButton(
+                              iconSize: 24,
+                              color: Colors.white,
+                              icon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.speed),
+                                  const SizedBox(
+                                    width: 4,
+                                  ),
+                                  Text(
+                                    'x$_playbackSpeed',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                  )
+                                ],
+                              ),
+                              onPressed: _updateSpeed,
+                              tooltip: "更改倍速",
                             ),
-                            onPressed: _updateSpeed,
-                            tooltip: "更改倍速",
-                          ),
 
                           /// 音量控制
-                          VolumeControl(
-                            player: _player,
-                            thumbColor: Colors.lightGreen,
-                            inactiveColor: Colors.grey,
-                            activeColor: Colors.blue,
-                            backgroundColor: const Color(0xff424242),
-                          ),
+                          if (!_isSmallScreen)
+                            VolumeControl(
+                              player: _player,
+                              thumbColor: Colors.lightGreen,
+                              inactiveColor: Colors.grey,
+                              activeColor: Colors.blue,
+                              backgroundColor: const Color(0xff424242),
+                            ),
 
                           /// 音频轨道按钮
-                          if (_player.audioTrackCount > 1)
+                          if (_player.audioTrackCount > 1 && !_isSmallScreen)
                             PopupMenuButton(
                               iconSize: 24,
                               tooltip: "音频轨道",
@@ -968,16 +1089,26 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                               },
                             ),
 
-                          // 全屏控制按钮
+                          // 右下角小窗置顶
                           IconButton(
-                            iconSize: 24,
-                            icon: Icon(
-                                _isFullScreen
-                                    ? Icons.fullscreen_exit
-                                    : Icons.fullscreen,
-                                color: Colors.white),
-                            onPressed: _updateFullScreen,
+                            onPressed: _switchSmallScreen,
+                            icon: const Icon(
+                              Icons.picture_in_picture_alt_outlined,
+                              color: Colors.white,
+                            ),
                           ),
+
+                          // 全屏控制按钮
+                          if (!_isSmallScreen)
+                            IconButton(
+                              iconSize: 24,
+                              icon: Icon(
+                                  _isFullScreen
+                                      ? Icons.fullscreen_exit
+                                      : Icons.fullscreen,
+                                  color: Colors.white),
+                              onPressed: _updateFullScreen,
+                            ),
                         ],
                       ),
                     ),
