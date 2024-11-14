@@ -34,3 +34,26 @@ app的服务端版本只取服务端版本的主版本和子版本，忽略第�
 如果服务端版本是1.0.0，此时服务端的子版本最大曾是两位数，则，app的服务端版本是 1 * 100 + 0 = 100
 ，此时APP的版本就是 100.3.0
 
+## Build
+
+```
+git submodule init
+git submodule update
+
+cd dependencies/dart_vlc
+flutter pub get
+
+cd ../../
+cd dependencies/flutter_vlc_player
+flutter pub get
+
+cd ../../
+cd dependencies/ns_danmaku
+flutter pub get
+
+
+cd ../../
+flutter pub get
+```
+用`Android Studio`打开后，如果依赖里还有红线的，进对应的目录，`flutter pub get`下就OK了。
+
