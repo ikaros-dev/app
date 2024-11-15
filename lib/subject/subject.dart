@@ -345,7 +345,7 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   MenuAnchor _buildCollectionMenuAnchor() {
-    double btnWidth = MediaQuery.of(context).size.width * 0.45;
+    final double btnWidth = MediaQuery.of(context).size.width * 0.3;
     return MenuAnchor(
       childFocusNode: FocusNode(),
       menuChildren: <Widget>[
