@@ -70,14 +70,28 @@ jobs:
         run: flutter pub get
 
       - name: Build Android App Bundle
-        run: flutter build apk --release -v
+        run: flutter build apk --release -v --split-per-abi
 
-      - name: Publish Android Artefacts
+      - name: Publish Armeabi V7a Android Artefacts
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
-          file: build/app/outputs/flutter-apk/app-release.apk
-          asset_name: ikaros-android-${{  github.ref_name }}.apk
+          file: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          asset_name: ikaros-android-armeabi-v7a-${{  github.ref_name }}.apk
+
+      - name: Publish Armeabi V8a Android Artefacts
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
+          file: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          asset_name: ikaros-android-arm64-v8a-${{  github.ref_name }}.apk
+
+      - name: Publish x86_64 Android Artefacts
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.LI_GUOHAO_TOKEN }}
+          file: build/app/outputs/flutter-apk/app-x86_64-release.apk
+          asset_name: ikaros-android-x86_64-${{  github.ref_name }}.apk
 
 
   build_windows:
