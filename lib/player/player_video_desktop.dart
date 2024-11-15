@@ -83,8 +83,10 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late bool _danmuConfigChange = false;
 
   // 视频小窗的宽和高
-  static const smallWindowWidth = 700;
-  static const smallWindowHeight = 400;
+  static const defaultSmallWindowsWidth = 800;
+  static const defaultSmallWindowsHeight = 400;
+  var smallWindowWidth = defaultSmallWindowsWidth;
+  var smallWindowHeight = defaultSmallWindowsHeight;
   late int _hwnd; // 存储窗口句柄
   Offset _smallScreenInitialPosition = Offset.zero;
   Offset _smallScreenLastPosition = Offset.zero;
@@ -294,9 +296,24 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     widget.onFullScreenChange?.call();
 
     if (_isSmallScreen) {
+      _danmuConfig.fontSize = 11;
+      await SharedPrefsUtils.saveDanmuConfig(_danmuConfig);
+      await _reloadDanmukuConfig();
+
+      if (_player.playback.isPlaying) {
+        smallWindowHeight = (smallWindowWidth * _player.videoDimensions.height) ~/ _player.videoDimensions.width;
+      } else {
+        smallWindowWidth = defaultSmallWindowsWidth;
+        smallWindowHeight = defaultSmallWindowsHeight;
+      }
+
       _enterSmallScreen();
     } else {
       _exitImmersiveFullscreen();
+
+      _danmuConfig.fontSize = 21;
+      await SharedPrefsUtils.saveDanmuConfig(_danmuConfig);
+      await _reloadDanmukuConfig();
     }
   }
 
