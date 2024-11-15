@@ -10,7 +10,7 @@ import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/user/UserApi.dart';
 import 'package:ikaros/api/user/model/User.dart';
 import 'package:ikaros/main.dart';
-import 'package:ikaros/user/setting.dart';
+import 'package:ikaros/component/setting.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
