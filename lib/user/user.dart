@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui' as DartUi;
 
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
@@ -35,6 +36,8 @@ class _UserPageState extends State<UserPage> {
   late SettingConfig config = SettingConfig();
   late User? _me;
   late String _baseUrl;
+  final FocusNode _proxyUrlFocusNode = FocusNode();
+  final TextEditingController _proxyUrlController = TextEditingController();
 
   Future<void> _fetchAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -48,6 +51,9 @@ class _UserPageState extends State<UserPage> {
 
   Future<void> _loadSettingConfig() async {
     config = await SharedPrefsUtils.getSettingConfig();
+    if (config.proxyUrl != "") {
+      _proxyUrlController.text = config.proxyUrl;
+    }
     setState(() {});
   }
 
@@ -244,6 +250,44 @@ class _UserPageState extends State<UserPage> {
                 value: config.hideNsfwWhenSubjectsOpen,
                 onChanged: onHideNsfwWhenSubjectsOpenSwitchChange),
           ),
+          Setting(
+            title: "HTTP代理Url",
+            subtitle: "更新请求是否使用代理，为空则不启用",
+            rightWidget: SizedBox(
+              width: 200,
+              child: GestureDetector(
+                onTap: () {
+                  // 点击其他区域时，失去焦点并提交
+                  if (_proxyUrlFocusNode.hasFocus) {
+                    _proxyUrlFocusNode.unfocus(); // 失去焦点
+                    _saveProxyUrl(); // 提交文本
+                  }
+                },
+                child: TextField(
+                  controller: _proxyUrlController,
+                  focusNode: _proxyUrlFocusNode,
+                  decoration: const InputDecoration(
+                    labelText: 'http://127.0.0.1:7890',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (v){
+                    setState(() {
+                      config.proxyUrl = v;
+                    });
+                  },
+                  onSubmitted: (v){
+                    setState(() {
+                      config.proxyUrl = v;
+                    });
+                    _saveProxyUrl();
+                  },
+                ),
+              ),
+            ),
+            // rightWidget: Switch(
+            //     value: config.hideNsfwWhenSubjectsOpen,
+            //     onChanged: onHideNsfwWhenSubjectsOpenSwitchChange),
+          ),
         ],
       ),
     );
@@ -309,8 +353,29 @@ class _UserPageState extends State<UserPage> {
     return '';
   }
 
+  Dio _configProxy(Dio dio) {
+    if (config.proxyUrl != "") {
+      (dio.httpClientAdapter as IOHttpClientAdapter).onHttpClientCreate =
+          (client) {
+        client.findProxy = (uri) {
+          // 设置代理服务器地址
+          var str = "";
+          if (config.proxyUrl.contains("http://")) {
+            str = config.proxyUrl.replaceAll("http://", "");
+          }
+          var stirs = str.split(':');
+          return 'PROXY ${stirs[0]}:${stirs[1]}'; // 这里替换成你的代理地址和端口
+        };
+        client.badCertificateCallback =
+            (X509Certificate cert, String host, int port) => true;
+        return null; // 忽略证书错误
+      };
+    }
+    return dio;
+  }
+  
   void _checkAppUpdate() async {
-    final response = await Dio().get<String>(
+    final response = await _configProxy(Dio()).get<String>(
         "https://api.github.com/repos/ikaros-dev/app/releases/latest");
     if (response.statusCode == 200) {
       final data = json.decode(response.data ?? "{}");
@@ -370,7 +435,7 @@ class _UserPageState extends State<UserPage> {
 
     File tmpUpdateFile = File(filePath);
     if (!tmpUpdateFile.existsSync()) {
-      await Dio().download(downloadUrl, filePath);
+      await _configProxy(Dio()).download(downloadUrl, filePath);
     }
 
     // 安卓直接打开apk文件即可跳转安装逻辑
@@ -494,5 +559,10 @@ class _UserPageState extends State<UserPage> {
         .timeout(const Duration(milliseconds: 500), onTimeout: () {
       exit(0);
     });
+  }
+
+  void _saveProxyUrl()async {
+    await SharedPrefsUtils.saveSettingConfig(config);
+    await _loadSettingConfig();
   }
 }

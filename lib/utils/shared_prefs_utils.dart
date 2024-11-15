@@ -43,7 +43,9 @@ class SharedPrefsUtils {
     var prefs = await SharedPreferences.getInstance();
     prefs.setBool(SharedPrefsKey.settingEnableEpisodeApiSplit,
         config.enableEpisodeApiSplit);
-    prefs.setBool(SharedPrefsKey.hideNsfwWhenSubjectsOpen, config.hideNsfwWhenSubjectsOpen);
+    prefs.setBool(SharedPrefsKey.hideNsfwWhenSubjectsOpen,
+        config.hideNsfwWhenSubjectsOpen);
+    prefs.setString(SharedPrefsKey.proxyUrl, config.proxyUrl);
   }
 
   static Future<SettingConfig> getSettingConfig() async {
@@ -55,7 +57,11 @@ class SharedPrefsUtils {
     final bool hideNsfwWhenSubjectsOpen =
         prefs.getBool(SharedPrefsKey.hideNsfwWhenSubjectsOpen) ??
             SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen;
-    return SettingConfig(enableEpisodeApiSplit: enableEpisodeApiSplit, hideNsfwWhenSubjectsOpen: hideNsfwWhenSubjectsOpen);
+    final String proxyUrl = prefs.getString(SharedPrefsKey.proxyUrl) ?? "";
+    return SettingConfig(
+        enableEpisodeApiSplit: enableEpisodeApiSplit,
+        hideNsfwWhenSubjectsOpen: hideNsfwWhenSubjectsOpen,
+        proxyUrl: proxyUrl);
   }
 }
 
@@ -69,8 +75,8 @@ class SharedPrefsKey {
   static const String danmuLineHeight = "DANMU_LINE_HEIGHT";
   static const String settingEnableEpisodeApiSplit =
       "SETTING_ENABLE_EPISODE_API_SPLIT";
-  static const String hideNsfwWhenSubjectsOpen =
-      "HIDE_NSFW_WHEN_SUBJECTS_OPEN";
+  static const String hideNsfwWhenSubjectsOpen = "HIDE_NSFW_WHEN_SUBJECTS_OPEN";
+  static const String proxyUrl = "PROXY_URL";
 }
 
 class SharedPrefsDefaultValue {
@@ -168,9 +174,14 @@ class DanmuConfig {
 class SettingConfig {
   bool enableEpisodeApiSplit =
       SharedPrefsDefaultValue.settingEnableEpisodeApiSplit;
-  bool hideNsfwWhenSubjectsOpen = SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen;
+  bool hideNsfwWhenSubjectsOpen =
+      SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen;
+  String proxyUrl = "";
 
-  SettingConfig({this.enableEpisodeApiSplit =
-      SharedPrefsDefaultValue.settingEnableEpisodeApiSplit,
-    this.hideNsfwWhenSubjectsOpen = SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen});
+  SettingConfig(
+      {this.enableEpisodeApiSplit =
+          SharedPrefsDefaultValue.settingEnableEpisodeApiSplit,
+      this.hideNsfwWhenSubjectsOpen =
+          SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen,
+      this.proxyUrl = ""});
 }
