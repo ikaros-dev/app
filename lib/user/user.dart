@@ -1,7 +1,5 @@
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
-import 'dart:ui' as DartUi;
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
@@ -13,7 +11,6 @@ import 'package:ikaros/api/user/UserApi.dart';
 import 'package:ikaros/api/user/model/User.dart';
 import 'package:ikaros/main.dart';
 import 'package:ikaros/user/setting.dart';
-import 'package:ikaros/utils/device_info_utils.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
@@ -270,12 +267,12 @@ class _UserPageState extends State<UserPage> {
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                   ),
-                  onChanged: (v){
+                  onChanged: (v) {
                     setState(() {
                       config.proxyUrl = v;
                     });
                   },
-                  onSubmitted: (v){
+                  onSubmitted: (v) {
                     setState(() {
                       config.proxyUrl = v;
                     });
@@ -344,16 +341,7 @@ class _UserPageState extends State<UserPage> {
       Toast.show(context, "操作失败：更新功能只支持Windows和Android平台");
       return "";
     }
-    String platform = Platform.isAndroid ? 'android' : 'windows';
-    if (Platform.isAndroid) {
-      if (await DeviceInfoUtils.isAndroidArmv7a()) {
-        platform = '$platform-armeabi-v7a';
-      } else if (await DeviceInfoUtils.isAndroidArm64()) {
-        platform = '$platform-arm64-v8a';
-      } else {
-        platform = '$platform-x86_64';
-      }
-    }
+    String platform = Platform.isAndroid ? 'android-arm64-v8a' : 'windows';
     for (var asset in assets) {
       if (asset['name'].contains(platform)) {
         return asset['browser_download_url'];
@@ -382,7 +370,7 @@ class _UserPageState extends State<UserPage> {
     }
     return dio;
   }
-  
+
   void _checkAppUpdate() async {
     final response = await _configProxy(Dio()).get<String>(
         "https://api.github.com/repos/ikaros-dev/app/releases/latest");
@@ -570,7 +558,7 @@ class _UserPageState extends State<UserPage> {
     });
   }
 
-  void _saveProxyUrl()async {
+  void _saveProxyUrl() async {
     await SharedPrefsUtils.saveSettingConfig(config);
     await _loadSettingConfig();
   }
