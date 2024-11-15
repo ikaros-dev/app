@@ -13,6 +13,7 @@ import 'package:ikaros/api/user/UserApi.dart';
 import 'package:ikaros/api/user/model/User.dart';
 import 'package:ikaros/main.dart';
 import 'package:ikaros/user/setting.dart';
+import 'package:ikaros/utils/device_info_utils.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
@@ -338,12 +339,21 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  String _getDownloadUrl(List assets) {
+  Future<String> _getDownloadUrl(List assets) async {
     if (!(Platform.isWindows || Platform.isAndroid)) {
       Toast.show(context, "操作失败：更新功能只支持Windows和Android平台");
       return "";
     }
     String platform = Platform.isAndroid ? 'android' : 'windows';
+    if (Platform.isAndroid) {
+      if (await DeviceInfoUtils.isAndroidArmv7a()) {
+        platform = '$platform-armeabi-v7a';
+      } else if (await DeviceInfoUtils.isAndroidArm64()) {
+        platform = '$platform-arm64-v8a';
+      } else {
+        platform = '$platform-x86_64';
+      }
+    }
     for (var asset in assets) {
       if (asset['name'].contains(platform)) {
         return asset['browser_download_url'];
@@ -379,7 +389,7 @@ class _UserPageState extends State<UserPage> {
     if (response.statusCode == 200) {
       final data = json.decode(response.data ?? "{}");
       String latestVersion = data['tag_name'];
-      String downloadUrl = _getDownloadUrl(data['assets']);
+      String downloadUrl = await _getDownloadUrl(data['assets']);
       if ('v$_appVersion' == latestVersion) {
         Toast.show(context, "当前已经是最新版本:$_appVersion");
         return;
