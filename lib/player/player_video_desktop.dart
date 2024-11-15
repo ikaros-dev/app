@@ -317,7 +317,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
     // 计算窗口右下角的位置
     final x = screenWidth - smallWindowWidth;
-    final y = screenHeight - smallWindowHeight;
+    final y = screenHeight - smallWindowHeight - 120;
 
     // 使用 SetWindowPos 将窗口缩小到右下角并置顶
     SetWindowPos(
@@ -390,7 +390,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     // 还原窗口位置和大小
     SetWindowPos(
       hWnd,
-      NULL,
+      HWND_NOTOPMOST,
       0,
       0,
       GetSystemMetrics(SM_CXSCREEN) * 3 ~/ 4,
@@ -707,7 +707,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         });
 
         // 调整窗口位置
-        SetWindowPos(_hwnd, HWND_TOP, _smallScreenLastPosition.dx.toInt() + smallWindowWidth, _smallScreenLastPosition.dy.toInt() + smallWindowHeight, smallWindowWidth, smallWindowHeight, SWP_NOZORDER | SWP_NOSIZE | SWP_NOREDRAW);
+        SetWindowPos(_hwnd, HWND_TOPMOST, _smallScreenLastPosition.dx.toInt() + smallWindowWidth, _smallScreenLastPosition.dy.toInt() + smallWindowHeight, smallWindowWidth, smallWindowHeight, SWP_NOZORDER | SWP_NOSIZE | SWP_NOREDRAW);
       },
       onPanEnd: (details) {
         if (!_isSmallScreen) return;
