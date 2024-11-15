@@ -124,8 +124,7 @@ class _SubjectState extends State<SubjectPage> {
                           const SizedBox(height: 10),
                           _buildEpisodeAndCollectionButtonsRow(),
                           const SizedBox(height: 10),
-                          _buildDetailsRow(),
-                          // _buildEpisodesGroupTabsRow(),
+                          _buildMultiTabs(),
                         ],
                       )),
                 );
@@ -136,6 +135,7 @@ class _SubjectState extends State<SubjectPage> {
           }),
     );
   }
+
 
   Widget _buildLinkIconButton() {
     return IconButton(
@@ -272,8 +272,10 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   Future<bool?> showEpisodesDialog() {
-    if (_subject.type == SubjectType.GAME || _subject.type == SubjectType.COMIC
-    || _subject.type == SubjectType.NOVEL || _subject.type == SubjectType.OTHER) {
+    if (_subject.type == SubjectType.GAME ||
+        _subject.type == SubjectType.COMIC ||
+        _subject.type == SubjectType.NOVEL ||
+        _subject.type == SubjectType.OTHER) {
       Toast.show(context,
           "当前条目类型[${SubjectConst.typeCnMap[_subject.type.name] ?? "未知"}]不支持视频播放");
       return Future.value();
@@ -614,6 +616,45 @@ class _SubjectState extends State<SubjectPage> {
       ],
     );
   }
+
+  Widget _buildMultiTabs() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 100, maxHeight: 550),
+      child: DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(10),
+                child: TabBar(
+                  tabs: [
+                    Tab(text: '介绍'),
+                    Tab(text: '信息'),
+                  ],
+                ),
+              ),
+              Expanded(
+                  child: TabBarView(
+                children: [
+                  Text(
+                    _subject.summary!,
+                    style: const TextStyle(overflow: TextOverflow.ellipsis),
+                    maxLines: 40,
+                    softWrap: true,
+                  ),
+                  Text(
+                    _subject.infobox!,
+                    style: const TextStyle(overflow: TextOverflow.ellipsis),
+                    maxLines: 40,
+                    softWrap: true,
+                  ),
+                ],
+              )),
+            ],
+          )),
+    );
+  }
+
 
   Widget _buildEpisodeSelectTabs() {
     var groups = _getEpisodeGroupEnums();
