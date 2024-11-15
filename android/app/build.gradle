@@ -43,7 +43,8 @@ android {
         release {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.release
-            minifyEnabled true
+            minifyEnabled true // 启用代码压缩
+            shrinkResources true // 启用资源压缩
             // useProguard true
             proguardFiles getDefaultProguardFile(
                     'proguard-android-optimize.txt'),
