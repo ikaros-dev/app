@@ -252,7 +252,7 @@ class _UserPageState extends State<UserPage> {
           ),
           Setting(
             title: "HTTP代理Url",
-            subtitle: "更新请求是否使用代理，为空则不启用",
+            subtitle: "更新请求是否使用代理，为空则不启用，格式：http://127.0.0.1:7890",
             rightWidget: SizedBox(
               width: 200,
               child: GestureDetector(
@@ -267,7 +267,6 @@ class _UserPageState extends State<UserPage> {
                   controller: _proxyUrlController,
                   focusNode: _proxyUrlFocusNode,
                   decoration: const InputDecoration(
-                    labelText: 'http://127.0.0.1:7890',
                     border: OutlineInputBorder(),
                   ),
                   onChanged: (v){
