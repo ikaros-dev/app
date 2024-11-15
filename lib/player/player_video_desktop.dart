@@ -28,8 +28,6 @@ import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ns_danmaku/danmaku_controller.dart';
 import 'package:ns_danmaku/danmaku_view.dart';
 import 'package:ns_danmaku/models/danmaku_item.dart';
-import 'package:ns_danmaku/models/danmaku_option.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:synchronized/synchronized.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:win32/win32.dart';
@@ -83,15 +81,16 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late bool _danmuConfigChange = false;
 
   // 视频小窗的宽和高
-  static const defaultSmallWindowsWidth = 800;
-  static const defaultSmallWindowsHeight = 400;
-  var smallWindowWidth = defaultSmallWindowsWidth;
-  var smallWindowHeight = defaultSmallWindowsHeight;
+  static const defaultSmallWindowsDevicePixelWidth = 800;
+  static const defaultSmallWindowsDevicePixelHeight = 400;
+  var smallWindowDevicePixelWidth = defaultSmallWindowsDevicePixelWidth;
+  var smallWindowDevicePixelHeight = defaultSmallWindowsDevicePixelHeight;
   late int _hwnd; // 存储窗口句柄
   double offsetX = 0.0;
   double offsetY = 0.0;
   double clickOffsetX = 0.0;
   double clickOffsetY = 0.0;
+  Pointer<Utf16> _currentCursor = IDC_ARROW;
 
   @override
   void initState() {
@@ -155,6 +154,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       _danmuku.pause();
       _danmuku.clear();
     }
+
     super.dispose();
   }
 
@@ -302,10 +302,12 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       await _reloadDanmukuConfig();
 
       if (_player.playback.isPlaying) {
-        smallWindowHeight = (smallWindowWidth * _player.videoDimensions.height) ~/ _player.videoDimensions.width;
+        smallWindowDevicePixelHeight =
+            (smallWindowDevicePixelWidth * _player.videoDimensions.height) ~/
+                _player.videoDimensions.width;
       } else {
-        smallWindowWidth = defaultSmallWindowsWidth;
-        smallWindowHeight = defaultSmallWindowsHeight;
+        smallWindowDevicePixelWidth = defaultSmallWindowsDevicePixelWidth;
+        smallWindowDevicePixelHeight = defaultSmallWindowsDevicePixelHeight;
       }
 
       _enterSmallScreen();
@@ -334,8 +336,8 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     final screenHeight = GetSystemMetrics(SM_CYSCREEN); // 屏幕高度
 
     // 计算窗口右下角的位置
-    final x = screenWidth - smallWindowWidth;
-    final y = screenHeight - smallWindowHeight - 120;
+    final x = screenWidth - smallWindowDevicePixelWidth;
+    final y = screenHeight - smallWindowDevicePixelHeight - 120;
 
     // 使用 SetWindowPos 将窗口缩小到右下角并置顶
     SetWindowPos(
@@ -347,9 +349,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       // 计算的右下角 x 坐标
       y,
       // 计算的右下角 y 坐标
-      smallWindowWidth,
+      smallWindowDevicePixelWidth,
       // 指定的窗口宽度
-      smallWindowHeight,
+      smallWindowDevicePixelHeight,
       // 指定的窗口高度
       SWP_NOACTIVATE | SWP_SHOWWINDOW, // 不激活窗口，显示窗口
     );
@@ -703,6 +705,12 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     }
   }
 
+  double adjustForDevicePixelRatio(double value) {
+    final devicePixelRatio = WidgetsBinding.instance.window.devicePixelRatio;
+    return value / devicePixelRatio; // 将Win32的物理像素转为Flutter的逻辑像素
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -724,7 +732,14 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         // debugPrint("onPanUpdate: offsetX:${offsetX.toInt()} offsetY:${offsetY.toInt()}");
 
         // 调整窗口位置
-        SetWindowPos(_hwnd, HWND_TOPMOST, offsetX.toInt() + smallWindowWidth, offsetY.toInt() + smallWindowHeight, smallWindowWidth, smallWindowHeight, SWP_NOZORDER | SWP_NOSIZE | SWP_NOREDRAW);
+        SetWindowPos(
+            _hwnd,
+            HWND_TOPMOST,
+            offsetX.toInt() + smallWindowDevicePixelWidth,
+            offsetY.toInt() + smallWindowDevicePixelHeight,
+            smallWindowDevicePixelWidth,
+            smallWindowDevicePixelHeight,
+            SWP_NOZORDER | SWP_NOSIZE | SWP_NOREDRAW);
       },
       onTap: () {
         if (_player.playback.isPlaying) {
@@ -742,7 +757,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         onKeyEvent: _handleKeyEvent,
         autofocus: true,
         child: MouseRegion(
-          onHover: (_) => _cancelAndRestartTimer(),
+          onHover: (event) {
+            _cancelAndRestartTimer();
+          },
           onExit: (event) {
             if (mounted) {
               setState(() {

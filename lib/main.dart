@@ -4,6 +4,7 @@ import 'package:dart_vlc/dart_vlc.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/layout.dart';
 import 'package:ikaros/utils/screen_utils.dart';
+import 'package:win32/win32.dart';
 
 import 'component/route_observer.dart';
 
@@ -29,4 +30,6 @@ class MyApp extends StatelessWidget {
           : const MobileLayout(),
     );
   }
+
+
 }
