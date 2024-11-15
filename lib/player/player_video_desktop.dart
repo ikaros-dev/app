@@ -88,9 +88,10 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   var smallWindowWidth = defaultSmallWindowsWidth;
   var smallWindowHeight = defaultSmallWindowsHeight;
   late int _hwnd; // 存储窗口句柄
-  Offset _smallScreenInitialPosition = Offset.zero;
-  Offset _smallScreenLastPosition = Offset.zero;
-  bool _isDragging = false;
+  double offsetX = 0.0;
+  double offsetY = 0.0;
+  double clickOffsetX = 0.0;
+  double clickOffsetY = 0.0;
 
   @override
   void initState() {
@@ -706,32 +707,24 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   Widget build(BuildContext context) {
     return GestureDetector(
       onPanStart: (details) {
-        if (!_isSmallScreen) return;
-        debugPrint("onPanStart: ${details.localPosition}");
-        setState(() {
-          _smallScreenInitialPosition = details.localPosition;
-          _isDragging = true;
-        });
+        // 记录鼠标点击的相对位置（窗口内的偏移）
+        clickOffsetX = details.localPosition.dx;
+        clickOffsetY = details.localPosition.dy;
       },
       onPanUpdate: (details) {
-        if (!_isSmallScreen || !_isDragging) return;
-        debugPrint("onPanUpdate: localPosition:${details.localPosition}");
-        final dx = details.localPosition.dx - _smallScreenInitialPosition.dx;
-        final dy = details.localPosition.dy - _smallScreenInitialPosition.dy;
+        if (!_isSmallScreen) return;
+        // 计算窗口新位置，使点击位置与鼠标位置对齐
+        double dx = details.localPosition.dx - clickOffsetX;
+        double dy = details.localPosition.dy - clickOffsetY;
 
         setState(() {
-          _smallScreenLastPosition = Offset(dx, dy);
+          offsetX += dx;
+          offsetY += dy;
         });
+        // debugPrint("onPanUpdate: offsetX:${offsetX.toInt()} offsetY:${offsetY.toInt()}");
 
         // 调整窗口位置
-        SetWindowPos(_hwnd, HWND_TOPMOST, _smallScreenLastPosition.dx.toInt() + smallWindowWidth, _smallScreenLastPosition.dy.toInt() + smallWindowHeight, smallWindowWidth, smallWindowHeight, SWP_NOZORDER | SWP_NOSIZE | SWP_NOREDRAW);
-      },
-      onPanEnd: (details) {
-        if (!_isSmallScreen) return;
-        debugPrint("onPanEnd: ${details.localPosition}");
-        setState(() {
-          _isDragging = false;
-        });
+        SetWindowPos(_hwnd, HWND_TOPMOST, offsetX.toInt() + smallWindowWidth, offsetY.toInt() + smallWindowHeight, smallWindowWidth, smallWindowHeight, SWP_NOZORDER | SWP_NOSIZE | SWP_NOREDRAW);
       },
       onTap: () {
         if (_player.playback.isPlaying) {
