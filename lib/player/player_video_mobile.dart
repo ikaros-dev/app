@@ -255,6 +255,28 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     setState(() {});
   }
 
+  void reload(String url, {autoPlay = false}) async {
+    print("open for autPlay=$autoPlay and url=$url");
+    print("player.isReadyToInitialize=${_player.isReadyToInitialize}");
+    setState(() {
+      isLoading.value = true;
+    });
+    await _player.stop();
+    await _player.setMediaFromNetwork(url, autoPlay: autoPlay); // 设置视频源
+    _isPlaying = true;
+
+    // load new subtitles
+    if (_subtitleUrls != null && _subtitleUrls!.isNotEmpty) {
+      for (int i = 0; i < _subtitleUrls!.length; i++) {
+        print("add subtitle url to video, url: ${_subtitleUrls![i]}");
+        await _player.addSubtitleFromNetwork(_subtitleUrls![i],
+            isSelected: i == 0);
+      }
+    }
+
+    setState(() {});
+  }
+
   void _initDanmukuPool() async {
     _episode = await EpisodeApi().findById(_episodeId);
     if (_episode.id == -1 || _episode.group != "MAIN")

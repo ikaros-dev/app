@@ -90,7 +90,6 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   double offsetY = 0.0;
   double clickOffsetX = 0.0;
   double clickOffsetY = 0.0;
-  Pointer<Utf16> _currentCursor = IDC_ARROW;
 
   @override
   void initState() {
@@ -263,6 +262,15 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   }
 
   void open(String url, {autoStart: false}) {
+    isLoading.value = true;
+    _player.open(
+      Media.network(url),
+      autoStart: autoStart,
+    );
+  }
+
+  void reload(String url, {autoStart: false}) {
+    _player.stop();
     isLoading.value = true;
     _player.open(
       Media.network(url),

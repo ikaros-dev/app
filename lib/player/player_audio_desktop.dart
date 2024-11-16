@@ -32,6 +32,13 @@ class DesktopAudioPlayerState extends State<DesktopAudioPlayer> {
     _player.open(Media.network(audioUrl), autoStart: autoStart);
   }
 
+  void reload(String audioUrl, {autoStart: false}) {
+    _audioUrl = audioUrl;
+    _loadAlbumArt();
+    _player.stop();
+    _player.open(Media.network(audioUrl), autoStart: autoStart);
+  }
+
   Future<void> _loadAlbumArt() async {
     // TODO read cover and author form audio url.
     setState(() {});

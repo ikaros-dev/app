@@ -43,6 +43,17 @@ class MobileAudioPlayerState extends State<MobileAudioPlayer> {
     _player.play();
   }
 
+  Future<void> reload(String audioUrl) async {
+    setState(() {
+      _audioUrl = audioUrl;
+    });
+    await _loadAlbumArt();
+
+    _player.stop();
+    _player.setUrl(audioUrl);
+    _player.play();
+  }
+
   Future<void> _loadAlbumArt() async {
     // TODO read cover and author form audio url.
     setState(() {});

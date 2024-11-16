@@ -17,7 +17,6 @@ import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeRecord.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
-import 'package:ikaros/component/full_screen_Image.dart';
 import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
@@ -135,7 +134,6 @@ class _SubjectState extends State<SubjectPage> {
           }),
     );
   }
-
 
   Widget _buildLinkIconButton() {
     return IconButton(
@@ -655,7 +653,6 @@ class _SubjectState extends State<SubjectPage> {
     );
   }
 
-
   Widget _buildEpisodeSelectTabs() {
     var groups = _getEpisodeGroupEnums();
     var len = 0;
@@ -820,9 +817,17 @@ class _SubjectState extends State<SubjectPage> {
             ? null
             : () {
                 Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
+                // Navigator.of(context).push(MaterialPageRoute(
+                //     builder: (context) => SubjectEpisodePage(
+                //           episode: record.episode,
+                //           subject: _subject,
+                //         )));
+                EpisodeRecord episodeRecord = _episodeRecords
+                    .where((r) => r.episode.group == record.episode.group)
+                    .first;
                 Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => SubjectEpisodePage(
-                          episode: record.episode,
+                    builder: (context) => SubjectEpisodesPage(
+                          episodeRecord: episodeRecord,
                           subject: _subject,
                         )));
               },
