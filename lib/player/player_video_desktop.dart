@@ -1096,7 +1096,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                             PopupMenuButton(
                               iconSize: 24,
                               tooltip: "字幕轨道",
-                              icon: Icon(Icons.subtitles, color: Colors.white),
+                              icon: const Icon(Icons.subtitles, color: Colors.white),
                               onSelected: (String trackDesc) {
                                 if (trackDesc == "" || !trackDesc.contains(":"))
                                   return;
@@ -1126,10 +1126,10 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
                           // 右下角小窗置顶
                           IconButton(
-                            onPressed: _switchSmallScreen,
-                            icon: const Icon(
+                            onPressed: isLoading.value ? null : _switchSmallScreen,
+                            icon: Icon(
                               Icons.picture_in_picture_alt_outlined,
-                              color: Colors.white,
+                              color: isLoading.value ? Colors.grey : Colors.white,
                             ),
                           ),
 
