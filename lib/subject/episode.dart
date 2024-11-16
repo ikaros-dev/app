@@ -411,6 +411,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   final ValueNotifier<EpisodeRecord?> _currentEpisodeRecord =
       ValueNotifier(null);
   int _currentEpisodeResourceIndex = 0;
+  int _danmuCount = 0;
 
   @override
   void initState() {
@@ -502,6 +503,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
         _mobilePlayer.currentState?.setProgress(progress);
       }
       _mobilePlayer.currentState?.reload(videUrl, autoPlay: true);
+      _danmuCount = await _mobilePlayer.currentState?.getDanmuCount() ?? 0;
       setState(() {});
       return;
     }
@@ -510,8 +512,10 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     _desktopPlayer.currentState?.setTitle(videoTitle);
     _desktopPlayer.currentState?.setSubTitle(videoSubTitle);
     _desktopPlayer.currentState?.setEpisodeId(episodeRecord.episode.id);
-
     _desktopPlayer.currentState?.reload(videUrl, autoStart: true);
+
+    _danmuCount = await _desktopPlayer.currentState?.getDanmuCount() ?? 0;
+    setState(() {});
 
     if (subtitleUrls.isNotEmpty) {
       for (var subtitle in subtitleUrls) {
@@ -546,9 +550,9 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                 visible: !_isFullScreen,
                 child: Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
-                      child: _buildOther(),
-                    ))),
+                  padding: const EdgeInsets.fromLTRB(5, 0, 0, 0),
+                  child: _buildOther(),
+                ))),
           ],
         ),
       );
@@ -628,69 +632,73 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     bool selectResourcesButtonEnable = hasResources && resourcesSizeGtOne;
 
     return SingleChildScrollView(
-      child: Container(
+      child: Material(
         color: Colors.white,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSubjectDisplayRow(),
-            const SizedBox(
-              height: 5,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Row(
-                  children: [
-                    Text(
-                      "当前剧集",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.black,
-                        decoration: TextDecoration.none,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    _buildEpisodeSelectButton(),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: selectResourcesButtonEnable
-                          ? () async {
-                              await _showEpisodeResourcesDialog();
-                            }
-                          : null,
-                      label: Text(
-                        "选择附件",
+        child: Container(
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(
+                height: 5,
+              ),
+              _buildSubjectDisplayRow(),
+              const SizedBox(
+                height: 5,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Text(
+                        "当前剧集",
                         style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.black,
+                          decoration: TextDecoration.none,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      _buildEpisodeSelectButton(),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: selectResourcesButtonEnable
+                            ? () async {
+                          await _showEpisodeResourcesDialog();
+                        }
+                            : null,
+                        label: Text(
+                          "选择附件",
+                          style: TextStyle(
+                            color: selectResourcesButtonEnable
+                                ? Colors.black
+                                : Colors.grey,
+                          ),
+                        ),
+                        icon: Icon(
+                          selectResourcesButtonEnable
+                              ? Icons.snippet_folder_outlined
+                              : Icons.folder_outlined,
                           color: selectResourcesButtonEnable
                               ? Colors.black
                               : Colors.grey,
                         ),
-                      ),
-                      icon: Icon(
-                        selectResourcesButtonEnable
-                            ? Icons.snippet_folder_outlined
-                            : Icons.folder_outlined,
-                        color: selectResourcesButtonEnable
-                            ? Colors.black
-                            : Colors.grey,
-                      ),
-                    )
-                  ],
-                ),
-              ],
-            ),
-            Material(
-              child: Card(
+                      )
+                    ],
+                  ),
+                ],
+              ),
+              Card(
                 // margin: const EdgeInsets.all(10),
                 child: Container(
-                  constraints: const BoxConstraints(minHeight: 40),
+                  constraints: const BoxConstraints(minHeight: 50),
                   child: ListTile(
                     leading: DynamicBarIcon(),
                     title: Text(
@@ -712,8 +720,46 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                   ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(
+                height: 10,
+              ),
+              if (_danmuCount > 0)
+                const Text(
+                  "当前弹幕",
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.black,
+                    decoration: TextDecoration.none,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              if (_danmuCount > 0)
+                Card(
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 50),
+                    child: ListTile(
+                      leading: const Icon(Icons.subtitles_outlined),
+                      title: const Text(
+                        "弹弹Play",
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        "总计数量：$_danmuCount",
+                        style: const TextStyle(
+                          fontSize: 12,
+                          decoration: TextDecoration.none,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 10,),
+            ],
+          ),
         ),
       ),
     );
@@ -1016,7 +1062,10 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
           disabledBackgroundColor: Colors.grey[400],
           disabledForegroundColor: Colors.grey[600],
         ),
-        icon: (epRecord.episode.name == _currentEpisodeRecord.value?.episode.name && epRecord.episode.sequence == _currentEpisodeRecord.value?.episode.sequence)
+        icon: (epRecord.episode.name ==
+                    _currentEpisodeRecord.value?.episode.name &&
+                epRecord.episode.sequence ==
+                    _currentEpisodeRecord.value?.episode.sequence)
             ? DynamicBarIcon()
             : const Icon(Icons.play_circle_outline),
         label: Text(

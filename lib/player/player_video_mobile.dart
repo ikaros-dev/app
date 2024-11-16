@@ -169,6 +169,11 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     setState(() {});
   }
 
+  Future<int> getDanmuCount() async {
+    _initDanmukuPool();
+    return _commentEpisodes.length;
+  }
+
   void setSubTitle(String subTitle) {
     _subTitle = subTitle;
     setState(() {});

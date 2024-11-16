@@ -170,6 +170,12 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     setState(() {});
   }
 
+  Future<int> getDanmuCount() async {
+    await _initDanmukuPool();
+    return _commentEpisodes.length;
+  }
+
+
   void setSubTitle(String subTitle) {
     _subTitle = subTitle;
     setState(() {});
@@ -190,7 +196,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     setState(() {});
   }
 
-  void _initDanmukuPool() async {
+  Future<void> _initDanmukuPool() async {
     _episode = await EpisodeApi().findById(_episodeId);
     if (_episode.id == -1 || _episode.group != "MAIN") {
       return; // 根据条目名和序号只支持查询正片弹幕
