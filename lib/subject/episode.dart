@@ -598,7 +598,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
           ? MediaQuery.of(context).size.height
           : _isFullScreen
               ? MediaQuery.of(context).size.height
-              : 250,
+              : 200,
       width: MediaQuery.of(context).size.width,
       child: Platform.isAndroid || Platform.isIOS
           ? MobileVideoPlayer(
