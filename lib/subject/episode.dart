@@ -713,15 +713,6 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                 ),
               ),
             ),
-            // const Text(
-            //   "当前弹幕",
-            //   style: TextStyle(
-            //     fontSize: 18,
-            //     color: Colors.black,
-            //     decoration: TextDecoration.none,
-            //     fontWeight: FontWeight.bold,
-            //   ),
-            // ),
           ],
         ),
       ),
@@ -1025,7 +1016,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
           disabledBackgroundColor: Colors.grey[400],
           disabledForegroundColor: Colors.grey[600],
         ),
-        icon: epRecord == _currentEpisodeRecord.value
+        icon: (epRecord.episode.name == _currentEpisodeRecord.value?.episode.name && epRecord.episode.sequence == _currentEpisodeRecord.value?.episode.sequence)
             ? DynamicBarIcon()
             : const Icon(Icons.play_circle_outline),
         label: Text(
