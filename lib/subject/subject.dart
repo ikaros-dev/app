@@ -11,6 +11,7 @@ import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
+import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeRecord.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
@@ -41,7 +42,7 @@ class _SubjectState extends State<SubjectPage> {
   late List<Episode> _episodes = [];
   late List<EpisodeRecord> _episodeRecords = [];
   late SubjectCollection? _subjectCollection;
-  late CollectionType _collectionType;
+  CollectionType? _collectionType;
   late SettingConfig _settingConfig = SettingConfig();
 
   var _loadSubjectWithIdFuture;
@@ -266,6 +267,29 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   Row _buildEpisodeAndCollectionButtonsRow() {
+    SubjectType type = _subject.type;
+    bool allowType = true;
+    if (type == SubjectType.GAME || type == SubjectType.COMIC || type == SubjectType.NOVEL) {
+      // Toast.show(context, "当前类型[$type]不支持进入剧集页展示，请期待后续的新功能更新。");
+      allowType = false;
+    }
+    bool hasResource = false;
+    for (var r in _episodeRecords) {
+      if (r.resources.isNotEmpty) {
+        hasResource = true;
+        break;
+      }
+    }
+    bool toEpisodeBtnEnable = (hasResource && allowType);
+    String displayTitle = "继续观看";
+    if (!toEpisodeBtnEnable) {
+      if (!hasResource) {
+        displayTitle = "剧集无资源";
+      }
+      if (!allowType) {
+        displayTitle = "类型[${SubjectConst.typeCnMap[type.name]}]不支持";
+      }
+    }
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -277,19 +301,22 @@ class _SubjectState extends State<SubjectPage> {
         Row(
           children: [
             OutlinedButton.icon(
-              onPressed: () {
+              onPressed: !toEpisodeBtnEnable ? null : () {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => SubjectEpisodesPage(
                           subjectId: _subject.id,
                         )));
               },
-              label: const Text(
-                "继续观看",
-                style: TextStyle(color: Colors.black),
+              style: OutlinedButton.styleFrom(
+                disabledMouseCursor: SystemMouseCursors.forbidden
               ),
-              icon: const Icon(
-                Icons.play_circle_outline,
-                color: Colors.black,
+              label: Text(
+                displayTitle,
+                style: TextStyle(color: !toEpisodeBtnEnable ? Colors.grey : Colors.black),
+              ),
+              icon: Icon(
+                toEpisodeBtnEnable ? Icons.play_circle_outline : Icons.error_outline_sharp,
+                color: !toEpisodeBtnEnable ? Colors.grey : Colors.black,
               ),
             ),
             // _buildEpisodeSelectButton(),
@@ -585,6 +612,10 @@ class _SubjectState extends State<SubjectPage> {
     } else if (_collectionType == CollectionType.DISCARD) {
       _selectedCollectBtnLabelVal = "已抛弃";
       _selectedCollectBtnIconData = Icons.not_interested_sharp;
+    } else {
+      /// _collectionType is null
+      _selectedCollectBtnLabelVal = "收藏";
+      _selectedCollectBtnIconData = Icons.star_border_outlined;
     }
   }
 
