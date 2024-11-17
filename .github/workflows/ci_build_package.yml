@@ -149,8 +149,6 @@ jobs:
 
       - name: Create directory and move/rename file
         run: |
-          tree /?
-
           mkdir output
           
           Rename-Item -Path "output.zip" -Destination "output\\ikaros-windows-${{ github.ref_name }}.zip"
