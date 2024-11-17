@@ -11,14 +11,10 @@ import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
-import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
-import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeRecord.dart';
-import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/component/subject/subject.dart';
-import 'package:ikaros/consts/collection-const.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
@@ -269,45 +265,6 @@ class _SubjectState extends State<SubjectPage> {
     );
   }
 
-  Future<bool?> showEpisodesDialog() {
-    if (_subject.type == SubjectType.GAME ||
-        _subject.type == SubjectType.COMIC ||
-        _subject.type == SubjectType.NOVEL ||
-        _subject.type == SubjectType.OTHER) {
-      Toast.show(context,
-          "当前条目类型[${SubjectConst.typeCnMap[_subject.type.name] ?? "未知"}]不支持视频播放");
-      return Future.value();
-    }
-    return showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            "选集播放",
-            style: TextStyle(color: Colors.black),
-          ),
-          content: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.8,
-            child: _buildEpisodeSelectTabs(),
-          ),
-          actions: <Widget>[
-            // TextButton(
-            //   child: Text("确认"),
-            //   onPressed: () {
-            //     //关闭对话框并返回true
-            //     Navigator.of(context).pop(true);
-            //   },
-            // ),
-            // TextButton(
-            //   child: const Text("取消"),
-            //   onPressed: () => Navigator.of(context).pop(), // 关闭对话框
-            // ),
-          ],
-        );
-      },
-    );
-  }
-
   Row _buildEpisodeAndCollectionButtonsRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -323,8 +280,8 @@ class _SubjectState extends State<SubjectPage> {
               onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => SubjectEpisodesPage(
-                      subjectId: _subject.id,
-                    )));
+                          subjectId: _subject.id,
+                        )));
               },
               label: const Text(
                 "继续观看",
@@ -340,24 +297,6 @@ class _SubjectState extends State<SubjectPage> {
         ),
       ],
     );
-  }
-
-  Widget _buildEpisodeSelectButton() {
-    // 根据APP设置是否拆分剧集资源接口
-    return OutlinedButton.icon(
-      onPressed: () async {
-        await showEpisodesDialog();
-      },
-      label: const Text(
-        "选集",
-        style: TextStyle(color: Colors.black),
-      ),
-      icon: const Icon(
-        Icons.view_cozy_outlined,
-        color: Colors.black,
-      ),
-    );
-    ;
   }
 
   MenuAnchor _buildCollectionMenuAnchor() {
@@ -549,87 +488,7 @@ class _SubjectState extends State<SubjectPage> {
             },
           ),
         );
-        return OutlinedButton(
-          child: Text("selected"),
-          onPressed: () {
-            if (controller.isOpen) {
-              controller.close();
-            } else {
-              controller.open();
-            }
-          },
-        );
       },
-    );
-  }
-
-  Widget _buildCollectOperateWidget() {
-    if (_subjectCollection == null) {
-      return ElevatedButton(
-        onPressed: () {
-          _postCollectSubject();
-        },
-        child: const Text("收藏"),
-      );
-    } else {
-      return ElevatedButton(
-        onPressed: () {
-          _postUnCollectSubject();
-        },
-        child: const Text("取消收藏"),
-      );
-    }
-    ;
-  }
-
-  Widget _buildCollectTypeOperateWidget() {
-    if (_subjectCollection != null) {
-      return DropdownButton(
-        borderRadius: BorderRadius.circular(5),
-        value: _collectionType,
-        onChanged: (newValue) {
-          if (newValue == null) return;
-          setState(() {
-            _collectionType = newValue;
-          });
-          _postCollectSubjectWithoutRefresh(newValue);
-        },
-        items: CollectionType.values
-            .map((type) => DropdownMenuItem(
-                  value: type,
-                  child: Text(CollectionConst.typeCnMap[type.name] ?? "未知"),
-                ))
-            .toList(),
-      );
-    }
-    return Container();
-  }
-
-  Row _buildDetailsRow() {
-    return Row(
-      children: [
-        Wrap(
-          direction: Axis.vertical,
-          crossAxisAlignment: WrapCrossAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Text(
-                  "简介",
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Colors.black),
-                )
-              ],
-            ),
-            SizedBox(
-              width: MediaQuery.of(context).size.width - 2 * _globalPadding,
-              child: Text(_subject.summary!),
-            )
-          ],
-        ),
-      ],
     );
   }
 
@@ -668,224 +527,6 @@ class _SubjectState extends State<SubjectPage> {
               )),
             ],
           )),
-    );
-  }
-
-  Widget _buildEpisodeSelectTabs() {
-    var groups = _getEpisodeGroupEnums();
-    var len = 0;
-    if (groups.isNotEmpty) len = groups.length;
-    if (len == 0) return Container();
-    return DefaultTabController(
-        length: len,
-        child: Column(
-          children: [
-            Material(
-              //这里设置tab的背景色
-              child: _buildEpisodeSelectTabBar(),
-            ),
-            Expanded(flex: 1, child: _buildEpisodeSelectTabView()),
-          ],
-        ));
-  }
-
-  List<EpisodeGroup> _getEpisodeGroupEnums() {
-    var epGroups = <EpisodeGroup>[];
-    Set<String?> groupSet;
-    if (_settingConfig.enableEpisodeApiSplit) {
-      if (_episodes.isEmpty) return epGroups;
-      groupSet = _episodes.map((e) => e.group).toSet();
-    } else {
-      if (_episodeRecords.isEmpty) return epGroups;
-      groupSet = _episodeRecords.map((e) => e.episode.group).toSet();
-    }
-    if (groupSet.isEmpty) return epGroups;
-    for (var group in groupSet) {
-      var findEpGroups = EpisodeGroup.values.where((ep) => ep.name == group);
-      if (findEpGroups.isEmpty) continue;
-      var epGroup = findEpGroups.first;
-      epGroups.add(epGroup);
-    }
-    epGroups.sort((a, b) => Enum.compareByIndex(a, b));
-    return epGroups;
-  }
-
-  Widget _buildEpisodeSelectTabBar() {
-    var groups = _getEpisodeGroupEnums();
-    var tabs = groups
-        .map((g) => Text(
-              key: Key(g.toString()),
-              SubjectConst.episodeGroupCnMap[g.name]!,
-              style: const TextStyle(fontSize: 14),
-              overflow: TextOverflow.ellipsis,
-            ))
-        .map((text) => Tab(
-              key: text.key,
-              child: text,
-            ))
-        .toList();
-    if (tabs.isEmpty) return const TabBar(tabs: []);
-    return TabBar(
-        tabs: tabs, isScrollable: groups.isNotEmpty && groups.length != 1);
-  }
-
-  List<Episode>? _getEpisodesByGroup(String group) {
-    if (_episodes.isEmpty) return [];
-    var episodes = _episodes.where((ep) => ep.group == group).toList();
-    episodes.sort((me, ot) => me.sequence.compareTo(ot.sequence));
-    return episodes;
-  }
-
-  List<EpisodeRecord>? _getEpisodeRecordsByGroup(String group) {
-    if (_episodeRecords.isEmpty) return [];
-    var records = _episodeRecords
-        .where((record) => record.episode.group == group)
-        .toList();
-    records
-        .sort((me, ot) => me.episode.sequence.compareTo(ot.episode.sequence));
-    return records;
-  }
-
-  Widget _buildEpisodeButtonWidget(Episode ep) {
-    return FutureBuilder(
-        future: EpisodeApi().getEpisodeResourcesRefs(ep.id),
-        builder: (BuildContext context,
-            AsyncSnapshot<List<EpisodeResource>> snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              return Text(
-                  "Load EpisodeApi getEpisodeResourcesRefs error: ${snapshot.error}");
-            } else {
-              List<EpisodeResource> epResList = snapshot.data ?? List.empty();
-              return GestureDetector(
-                onLongPress: () async {
-                  bool isFinish = _episodeIsFinish(ep.id);
-                  await EpisodeCollectionApi()
-                      .updateCollectionFinish(ep.id, !isFinish);
-                  Toast.show(context, "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}");
-                  Navigator.pop(context);
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            SubjectPage(id: widget.id.toString())),
-                  );
-                },
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _episodeIsFinish(ep.id)
-                        ? Colors.green
-                        : Colors.lightBlueAccent,
-                    disabledBackgroundColor: Colors.grey[400],
-                    disabledForegroundColor: Colors.grey[600],
-                  ),
-                  onPressed: epResList.isEmpty
-                      ? null
-                      : () {
-                          Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => SubjectEpisodePage(
-                                    episode: ep,
-                                    subject: _subject,
-                                  )));
-                        },
-                  child: Text(
-                    "${ep.sequence} : ${ep.name}",
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              );
-            }
-          } else {
-            return const Center(
-              child: SizedBox(
-                width: 20, // 控制宽度
-                height: 20, // 控制高度
-                child: CircularProgressIndicator(),
-              ),
-            );
-          }
-        });
-  }
-
-  Widget _buildEpisodeRecordButtonWidget(EpisodeRecord record) {
-    List<EpisodeResource> epResList = record.resources;
-    return GestureDetector(
-      onLongPress: () async {
-        bool isFinish = _episodeIsFinish(record.episode.id);
-        await EpisodeCollectionApi()
-            .updateCollectionFinish(record.episode.id, !isFinish);
-        Toast.show(context, "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}");
-        Navigator.pop(context);
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => SubjectPage(id: widget.id.toString())),
-        );
-      },
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _episodeIsFinish(record.episode.id)
-              ? Colors.green
-              : Colors.lightBlueAccent,
-          disabledBackgroundColor: Colors.grey[400],
-          disabledForegroundColor: Colors.grey[600],
-        ),
-        onPressed: epResList.isEmpty
-            ? null
-            : () {
-                Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => SubjectEpisodesPage(
-                          subjectId: _subject.id,
-                        )));
-              },
-        child: Text(
-          "${record.episode.sequence} : ${record.episode.name}",
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
-  }
-
-  Widget _getEpisodesTabViewByGroup(String group) {
-    List<Container>? buttons;
-    if (_settingConfig.enableEpisodeApiSplit) {
-      buttons = _getEpisodesByGroup(group)
-          ?.map((ep) => Container(
-                margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
-                child:
-                    SizedBox(height: 40, child: _buildEpisodeButtonWidget(ep)),
-              ))
-          .toList();
-    } else {
-      buttons = _getEpisodeRecordsByGroup(group)
-          ?.map((ep) => Container(
-                margin: const EdgeInsets.fromLTRB(0, 2, 0, 2),
-                child: SizedBox(
-                    height: 40, child: _buildEpisodeRecordButtonWidget(ep)),
-              ))
-          .toList();
-    }
-
-    if (buttons == null) return Container();
-
-    return ListView(
-      children: buttons,
-    );
-  }
-
-  TabBarView _buildEpisodeSelectTabView() {
-    var groups = _getEpisodeGroupEnums();
-    var tabViews =
-        groups.map((g) => _getEpisodesTabViewByGroup(g.name)).toList();
-    if (tabViews.isEmpty) {
-      return const TabBarView(
-        children: [],
-      );
-    }
-    return TabBarView(
-      children: tabViews,
     );
   }
 
