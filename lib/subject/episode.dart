@@ -11,6 +11,7 @@ import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
+import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
@@ -386,11 +387,9 @@ class _SubjectEpisodeState extends State<SubjectEpisodePage> {
 }
 
 class SubjectEpisodesPage extends StatefulWidget {
-  final EpisodeRecord episodeRecord;
-  final Subject subject;
+  final int subjectId;
 
-  const SubjectEpisodesPage(
-      {super.key, required this.episodeRecord, required this.subject});
+  const SubjectEpisodesPage({super.key, required this.subjectId});
 
   @override
   State<StatefulWidget> createState() {
@@ -399,19 +398,48 @@ class SubjectEpisodesPage extends StatefulWidget {
 }
 
 class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
+  Subject? _subject;
   List<EpisodeRecord> _episodeRecords = [];
+  List<EpisodeCollection> _episodeCollections = List.empty();
   late GlobalKey<MobileVideoPlayerState> _mobilePlayer;
   late GlobalKey<MobileAudioPlayerState> _mobileAudioPlayer;
   late GlobalKey<DesktopVideoPlayerState> _desktopPlayer;
   late GlobalKey<DesktopAudioPlayerState> _desktopAudioPlayer;
 
   bool _isFullScreen = false;
-  var _loadApiBaseUrlFuture;
   String _apiBaseUrl = "";
   final ValueNotifier<EpisodeRecord?> _currentEpisodeRecord =
       ValueNotifier(null);
   int _currentEpisodeResourceIndex = 0;
   int _danmuCount = 0;
+
+  Future<void> _loadSubjectWithId() async {
+    _subject = await SubjectApi().findById(widget.subjectId);
+    setState(() {});
+  }
+
+  Future<void> _loadEpisodeRecordsWithSubjectId() async {
+    _episodeRecords =
+        await EpisodeApi().findRecordsBySubjectId(widget.subjectId);
+    _episodeRecords.sort((r1, r2)=> r1.episode.sequence.compareTo(r2.episode.sequence));
+    setState(() {});
+  }
+
+  Future<void> _loadEpisodeCollectionsWithSubjectId() async {
+    _episodeCollections =
+        await EpisodeCollectionApi().findListBySubjectId(widget.subjectId);
+    setState(() {});
+  }
+
+  /// 当前未看的 && 有附件绑定的 && 正片 => 第一个
+  Future<void> _loadCurrentEpisodeRecord() async {
+    _currentEpisodeRecord.value = _episodeRecords
+        .where((epRecord) => !_episodeIsFinish(epRecord.episode.id))
+        .where((epRecord) => epRecord.resources.isNotEmpty)
+        .where((epRecord) => epRecord.episode.group == EpisodeGroup.MAIN.name)
+        .firstOrNull;
+    setState(() {});
+  }
 
   @override
   void initState() {
@@ -421,40 +449,45 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     _mobileAudioPlayer = GlobalKey<MobileAudioPlayerState>();
     _desktopPlayer = GlobalKey<DesktopVideoPlayerState>();
     _desktopAudioPlayer = GlobalKey<DesktopAudioPlayerState>();
-
-    EpisodeApi()
-        .findRecordsBySubjectId(int.parse(widget.subject.id.toString()))
-        .then((epRecords) => setState(() {
-              _episodeRecords = epRecords;
-            }));
-
-    _loadApiBaseUrlFuture = _loadBaseUrl();
     _currentEpisodeRecord.addListener(reloadMediaPlayer);
-    _currentEpisodeRecord.value = widget.episodeRecord;
+
+    _loadApiBaseUrl();
+    _loadSubjectWithId();
+    _loadEpisodeRecordsWithSubjectId().then((_) {
+      _loadEpisodeCollectionsWithSubjectId().then((_){
+        _loadCurrentEpisodeRecord();
+      });
+    });
+  }
+
+  bool _episodeIsFinish(int episodeId) {
+    if (_episodeCollections.isEmpty) {
+      return false;
+    }
+    EpisodeCollection? epColl = _episodeCollections
+        .where((ep) => ep.episodeId == episodeId)
+        .firstOrNull;
+    return epColl?.finish ?? false;
   }
 
   Future<void> reloadMediaPlayer() async {
-    if (_currentEpisodeRecord.value == null) return;
+    if (_currentEpisodeRecord.value == null || _subject == null) return;
     EpisodeRecord episodeRecord = _currentEpisodeRecord.value!;
     if (episodeRecord.resources.isEmpty) return;
     EpisodeResource episodeResource =
         episodeRecord.resources[_currentEpisodeResourceIndex];
 
     if (_apiBaseUrl == "") {
-      AuthParams authParams = await AuthApi().getAuthParams();
-      setState(() {
-        _apiBaseUrl = authParams.baseUrl;
-      });
+      await _loadApiBaseUrl();
     }
 
-    String coverUrl =
-        UrlUtils.getCoverUrl(_apiBaseUrl, widget.subject.cover ?? "");
+    String coverUrl = UrlUtils.getCoverUrl(_apiBaseUrl, _subject?.cover ?? "");
     String videUrl = UrlUtils.getCoverUrl(_apiBaseUrl, episodeResource.url);
     String videoTitle = _getEpisodeName(episodeRecord.episode);
     String videoSubTitle = episodeResource.name;
 
     // 音频
-    if (widget.subject.type == SubjectType.MUSIC) {
+    if (_subject?.type == SubjectType.MUSIC) {
       if (Platform.isAndroid || Platform.isIOS) {
         _mobileAudioPlayer.currentState?.setTitle(videoTitle);
         _mobileAudioPlayer.currentState?.setCoverUrl(coverUrl);
@@ -576,7 +609,8 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   }
 
   Widget _buildMediaPlayer() {
-    return SubjectType.MUSIC == widget.subject.type
+    if (_subject == null) return const LinearProgressIndicator();
+    return SubjectType.MUSIC == _subject?.type
         ? _buildAudioPlayer()
         : _buildVideoPlayer();
   }
@@ -621,9 +655,8 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   }
 
   Widget _buildOther() {
-    if (_episodeRecords.isEmpty) return const LinearProgressIndicator();
-    Episode episode = _currentEpisodeRecord.value!.episode;
-    debugPrint("episode:${_getEpisodeName(episode)}");
+    if (_subject == null || _apiBaseUrl == "")
+      return const LinearProgressIndicator();
 
     bool hasResources = _currentEpisodeRecord.value != null &&
         _currentEpisodeRecord.value!.resources.isNotEmpty;
@@ -635,7 +668,8 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
       child: Material(
         color: Colors.white,
         child: Container(
-          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height),
+          constraints:
+              BoxConstraints(minHeight: MediaQuery.of(context).size.height),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -671,8 +705,8 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                       OutlinedButton.icon(
                         onPressed: selectResourcesButtonEnable
                             ? () async {
-                          await _showEpisodeResourcesDialog();
-                        }
+                                await _showEpisodeResourcesDialog();
+                              }
                             : null,
                         label: Text(
                           "选择附件",
@@ -695,31 +729,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                   ),
                 ],
               ),
-              Card(
-                // margin: const EdgeInsets.all(10),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 50),
-                  child: ListTile(
-                    leading: DynamicBarIcon(),
-                    title: Text(
-                      "${NumberUtils.doubleIsInt(episode.sequence) ? episode.sequence.toInt() : episode.sequence}: ${_getEpisodeName(episode)}",
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Text(
-                      _getEpisodeResourceName(),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        decoration: TextDecoration.none,
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              _buildCurrentEpisodeRecordCard(),
               const SizedBox(
                 height: 10,
               ),
@@ -757,8 +767,48 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 10,),
+              const SizedBox(
+                height: 10,
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentEpisodeRecordCard() {
+    Episode? episode = _currentEpisodeRecord.value?.episode;
+    debugPrint("episode:${_getEpisodeName(episode)}");
+
+    String title = "未选中剧集";
+    if (episode != null) {
+      title =
+          "${NumberUtils.doubleIsInt(episode.sequence) ? episode.sequence.toInt() : episode.sequence}: ${_getEpisodeName(episode)}";
+    }
+    return Card(
+      // margin: const EdgeInsets.all(10),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 50),
+        child: ListTile(
+          leading: episode == null
+              ? const Icon(Icons.play_circle_outline)
+              : DynamicBarIcon(),
+          title: Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          subtitle: Text(
+            _getEpisodeResourceName(),
+            style: const TextStyle(
+              fontSize: 12,
+              decoration: TextDecoration.none,
+              fontWeight: FontWeight.normal,
+            ),
           ),
         ),
       ),
@@ -805,7 +855,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
             ),
             const SizedBox(height: 10),
             Text(
-              "${SubjectConst.typeCnMap[widget.subject.type.name]} "
+              "${SubjectConst.typeCnMap[_subject?.type.name]} "
               "- 全${_episodeRecords.isNotEmpty ? _episodeRecords.length : _episodeRecords.length}话",
               style: const TextStyle(
                 fontSize: 14,
@@ -821,47 +871,37 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   }
 
   Widget _buildSubjectCover() {
-    return FutureBuilder<AuthParams>(
-        future: _loadApiBaseUrlFuture,
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              return Text("Load api base url error: ${snapshot.error}");
-            } else {
-              _apiBaseUrl = (snapshot.data as AuthParams).baseUrl;
-              return SizedBox(
-                width: 120,
-                child: SubjectCover(
-                  url: UrlUtils.getCoverUrl(_apiBaseUrl, widget.subject.cover),
-                  nsfw: widget.subject.nsfw,
-                ),
-              );
-            }
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        });
+    return SizedBox(
+      width: 120,
+      child: SubjectCover(
+        url: UrlUtils.getCoverUrl(_apiBaseUrl, _subject!.cover),
+        nsfw: _subject?.nsfw,
+      ),
+    );
   }
 
   String _getSubjectTitle() {
-    if (widget.subject.nameCn != null && "" != widget.subject.nameCn) {
-      return widget.subject.nameCn!;
+    if (_subject == null) return "";
+    if (_subject?.nameCn != null && "" != _subject?.nameCn) {
+      return _subject?.nameCn ?? "";
     }
-    return widget.subject.name;
+    return _subject?.name ?? "";
   }
 
   String _getAirTimeStr() {
-    if (widget.subject.airTime == null || "" == widget.subject.airTime) {
+    if (_subject == null) return "";
+    if (_subject?.airTime == null || "" == _subject?.airTime) {
       return "1970 年 1 月";
     }
-    DateTime dateTime = DateTime.parse(widget.subject.airTime!);
+    DateTime dateTime = DateTime.parse(_subject!.airTime!);
     return DateFormat('yyyy 年 MM 月').format(dateTime);
   }
 
-  Future<AuthParams> _loadBaseUrl() async {
-    return AuthApi().getAuthParams();
+  Future<void> _loadApiBaseUrl() async {
+    AuthParams authParams = await AuthApi().getAuthParams();
+    setState(() {
+      _apiBaseUrl = authParams.baseUrl;
+    });
   }
 
   Widget _buildEpisodeSelectButton() {
@@ -882,12 +922,12 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   }
 
   Future<bool?> _showEpisodesDialog() {
-    if (widget.subject.type == SubjectType.GAME ||
-        widget.subject.type == SubjectType.COMIC ||
-        widget.subject.type == SubjectType.NOVEL ||
-        widget.subject.type == SubjectType.OTHER) {
+    if (_subject?.type == SubjectType.GAME ||
+        _subject?.type == SubjectType.COMIC ||
+        _subject?.type == SubjectType.NOVEL ||
+        _subject?.type == SubjectType.OTHER) {
       Toast.show(context,
-          "当前条目类型[${SubjectConst.typeCnMap[widget.subject.type.name] ?? "未知"}]不支持视频播放");
+          "当前条目类型[${SubjectConst.typeCnMap[_subject?.type.name] ?? "未知"}]不支持视频播放");
       return Future.value();
     }
     return showDialog<bool>(
@@ -1067,7 +1107,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                 epRecord.episode.sequence ==
                     _currentEpisodeRecord.value?.episode.sequence)
             ? DynamicBarIcon()
-            : const Icon(Icons.play_circle_outline),
+            : (_episodeIsFinish(epRecord.episode.id) ? const Icon(Icons.check_circle_outline) : const Icon(Icons.play_circle_outline)),
         label: Text(
           "${NumberUtils.doubleIsInt(epRecord.episode.sequence) ? epRecord.episode.sequence.toInt() : epRecord.episode.sequence}: ${_getEpisodeName(epRecord.episode)}",
           style: const TextStyle(color: Colors.black),

@@ -318,7 +318,25 @@ class _SubjectState extends State<SubjectPage> {
           ],
         ),
         Row(
-          children: [_buildEpisodeSelectButton()],
+          children: [
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => SubjectEpisodesPage(
+                      subjectId: _subject.id,
+                    )));
+              },
+              label: const Text(
+                "继续观看",
+                style: TextStyle(color: Colors.black),
+              ),
+              icon: const Icon(
+                Icons.play_circle_outline,
+                color: Colors.black,
+              ),
+            ),
+            // _buildEpisodeSelectButton(),
+          ],
         ),
       ],
     );
@@ -819,8 +837,7 @@ class _SubjectState extends State<SubjectPage> {
                 Toast.show(context, "已自动加载第一个附件，剧集加载比较耗时，请耐心等待");
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => SubjectEpisodesPage(
-                          episodeRecord: record,
-                          subject: _subject,
+                          subjectId: _subject.id,
                         )));
               },
         child: Text(
