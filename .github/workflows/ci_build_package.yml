@@ -109,7 +109,7 @@ jobs:
           r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           r2-bucket: ${{ secrets.R2_BUCKET }}
           source-dir: build/app/outputs/flutter-apk
-          destination-dir: ./${{ github.ref_name }}/
+          destination-dir: ./${{ github.ref_name }}
 
 
   build_windows:
@@ -159,7 +159,7 @@ jobs:
           r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           r2-bucket: ${{ secrets.R2_BUCKET }}
           source-dir: output
-          destination-dir: ./${{ github.ref_name }}/
+          destination-dir: ./${{ github.ref_name }}
 
 
 #  build_macos:
