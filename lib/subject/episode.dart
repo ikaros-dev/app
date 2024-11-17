@@ -1096,6 +1096,16 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
       width: MediaQuery.of(context).size.width,
       constraints: const BoxConstraints(minHeight: 60),
       child: OutlinedButton.icon(
+        onLongPress: epRecord.resources.isEmpty
+            ? null
+            : () async {
+          bool isFinish = _episodeIsFinish(epRecord.episode.id);
+          await EpisodeCollectionApi()
+              .updateCollectionFinish(epRecord.episode.id, !isFinish);
+          Toast.show(context, "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}");
+          Navigator.pop(context);
+          await _loadEpisodeCollectionsWithSubjectId();
+        },
         onPressed: epRecord.resources.isEmpty
             ? null
             : () {
