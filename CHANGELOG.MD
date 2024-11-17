@@ -5,6 +5,7 @@
 # 20.2.1
 
 - 优化更新下载逻辑，使用Cloudflare R2下载包
+- 配置好action上传到Cloudflare R2
 
 # 20.2.0
 
