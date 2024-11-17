@@ -421,7 +421,8 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   Future<void> _loadEpisodeRecordsWithSubjectId() async {
     _episodeRecords =
         await EpisodeApi().findRecordsBySubjectId(widget.subjectId);
-    _episodeRecords.sort((r1, r2)=> r1.episode.sequence.compareTo(r2.episode.sequence));
+    _episodeRecords
+        .sort((r1, r2) => r1.episode.sequence.compareTo(r2.episode.sequence));
     setState(() {});
   }
 
@@ -454,7 +455,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     _loadApiBaseUrl();
     _loadSubjectWithId();
     _loadEpisodeRecordsWithSubjectId().then((_) {
-      _loadEpisodeCollectionsWithSubjectId().then((_){
+      _loadEpisodeCollectionsWithSubjectId().then((_) {
         _loadCurrentEpisodeRecord();
       });
     });
@@ -637,7 +638,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                   _isFullScreen = !_isFullScreen;
                 });
               },
-              onDanmukuPoolInitialed: (int count){
+              onDanmukuPoolInitialed: (int count) {
                 setState(() {
                   _danmuCount = count;
                 });
@@ -650,11 +651,11 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                   _isFullScreen = !_isFullScreen;
                 });
               },
-        onDanmukuPoolInitialed: (int count){
-          setState(() {
-            _danmuCount = count;
-          });
-        },
+              onDanmukuPoolInitialed: (int count) {
+                setState(() {
+                  _danmuCount = count;
+                });
+              },
             ),
     );
   }
@@ -720,6 +721,9 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                                 ? Colors.black
                                 : Colors.grey,
                           ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          disabledMouseCursor: SystemMouseCursors.forbidden,
                         ),
                         icon: Icon(
                           selectResourcesButtonEnable
@@ -1104,15 +1108,20 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                 Navigator.pop(context);
               },
         style: ElevatedButton.styleFrom(
+          alignment: Alignment.centerLeft,
           disabledBackgroundColor: Colors.grey[400],
           disabledForegroundColor: Colors.grey[600],
+          enabledMouseCursor: SystemMouseCursors.click,
+          disabledMouseCursor: SystemMouseCursors.forbidden,
         ),
         icon: (epRecord.episode.name ==
                     _currentEpisodeRecord.value?.episode.name &&
                 epRecord.episode.sequence ==
                     _currentEpisodeRecord.value?.episode.sequence)
             ? DynamicBarIcon()
-            : (_episodeIsFinish(epRecord.episode.id) ? const Icon(Icons.check_circle_outline) : const Icon(Icons.play_circle_outline)),
+            : (_episodeIsFinish(epRecord.episode.id)
+                ? const Icon(Icons.check_circle_outline)
+                : const Icon(Icons.play_circle_outline)),
         label: Text(
           "${NumberUtils.doubleIsInt(epRecord.episode.sequence) ? epRecord.episode.sequence.toInt() : epRecord.episode.sequence}: ${_getEpisodeName(epRecord.episode)}",
           style: const TextStyle(color: Colors.black),
