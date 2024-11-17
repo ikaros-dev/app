@@ -95,6 +95,8 @@ jobs:
 
       - name: Rename package files
         run: |
+          ls -R
+
           # 替换文件名中的 "app" 为 "ikaros-android"
           for f in *app*; do mv "$f" "${f/app/ikaros-android}"; done
           
@@ -146,6 +148,8 @@ jobs:
 
       - name: Create directory and move/rename file
         run: |
+          tree /?
+
           # 使用 PowerShell 创建目录
           mkdir output
           
