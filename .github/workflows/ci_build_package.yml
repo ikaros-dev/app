@@ -95,15 +95,11 @@ jobs:
 
       - name: Rename package files
         run: |
-          ls -R
-
           cd build/app/outputs/flutter-apk
 
           for f in *app*; do mv "$f" "${f/app/ikaros-android}"; done
           
           for f in *release*; do mv "$f" "${f/release/${{ github.ref_name }}}"; done
-          
-          cd ..
 
       - name: Upload Package To Cloudflare R2
         uses: ryand56/r2-upload-action@latest
@@ -112,7 +108,7 @@ jobs:
           r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
           r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           r2-bucket: ${{ secrets.R2_BUCKET }}
-          source-dir: flutter-apk
+          source-dir: build/app/outputs/flutter-apk
 
 
   build_windows:
@@ -151,7 +147,7 @@ jobs:
         run: |
           mkdir output
           
-          Rename-Item -Path "output.zip" -Destination "output\\ikaros-windows-${{ github.ref_name }}.zip"
+          Move-Item -Path "output.zip" -Destination "output\\ikaros-windows-${{ github.ref_name }}.zip"
         shell: pwsh
 
       - name: Upload Package To Cloudflare R2
