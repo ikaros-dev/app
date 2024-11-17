@@ -829,345 +829,687 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
               AnimatedOpacity(
                 duration: const Duration(milliseconds: 300),
                 opacity: _displayTapped ? 1.0 : 0.0,
-                child: Stack(
-                  children: [
-                    // 上方中间的标题文本
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Text(_title,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    decoration: TextDecoration.none)),
-                            Text(_subTitle,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    decoration: TextDecoration.none)),
-                          ],
-                        )
-                      ],
-                    ),
-                    // 上方左边的返回按钮
-                    Positioned(
-                      left: 15,
-                      top: 12.5,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
+                child: MouseRegion(
+                  cursor: _displayTapped ? SystemMouseCursors.basic : SystemMouseCursors.none,
+                  child: Stack(
+                    children: [
+                      // 上方中间的标题文本
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          IconButton(
-                              onPressed: () {
-                                if (!_isSmallScreen && !_isFullScreen) {
-                                  Navigator.of(context).pop();
-                                  return;
-                                }
-
-                                if (_isSmallScreen) {
-                                  _switchSmallScreen();
-                                  return;
-                                }
-
-                                if (_isFullScreen) {
-                                  _updateFullScreen();
-                                  return;
-                                }
-                              },
-                              iconSize: 30,
-                              icon: const Icon(
-                                Icons.arrow_back,
-                                color: Colors.white,
-                              ))
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(_title,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      decoration: TextDecoration.none)),
+                              Text(_subTitle,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      decoration: TextDecoration.none)),
+                            ],
+                          )
                         ],
                       ),
-                    ),
-
-                    // 上方右边的设置按钮
-                    if (!_isSmallScreen)
+                      // 上方左边的返回按钮
                       Positioned(
-                        right: 15,
+                        left: 15,
                         top: 12.5,
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             IconButton(
-                                onPressed: _openSettingsPanel,
+                                onPressed: () {
+                                  if (!_isSmallScreen && !_isFullScreen) {
+                                    Navigator.of(context).pop();
+                                    return;
+                                  }
+
+                                  if (_isSmallScreen) {
+                                    _switchSmallScreen();
+                                    return;
+                                  }
+
+                                  if (_isFullScreen) {
+                                    _updateFullScreen();
+                                    return;
+                                  }
+                                },
                                 iconSize: 30,
                                 icon: const Icon(
-                                  Icons.settings,
+                                  Icons.arrow_back,
                                   color: Colors.white,
                                 ))
                           ],
                         ),
                       ),
 
-                    // 右边的截图按钮
-                    if (Platform.isWindows && !_isSmallScreen)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 15),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                IconButton(
-                                  color: Colors.white,
+                      // 上方右边的设置按钮
+                      if (!_isSmallScreen)
+                        Positioned(
+                          right: 15,
+                          top: 12.5,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              IconButton(
+                                  onPressed: _openSettingsPanel,
                                   iconSize: 30,
-                                  icon: const Icon(Icons.photo_camera),
-                                  onPressed: _takeSnapshotOnWindows,
-                                ),
-                              ],
-                            ),
+                                  icon: const Icon(
+                                    Icons.settings,
+                                    color: Colors.white,
+                                  ))
+                            ],
                           ),
-                        ],
-                      ),
-
-                    /// 底部的控制UI
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            bottom: 60, right: 20, left: 20),
-                        child: StreamBuilder<PositionState>(
-                          stream: _player.positionStream,
-                          builder: (BuildContext context,
-                              AsyncSnapshot<PositionState> snapshot) {
-                            final durationState = snapshot.data;
-                            final progress =
-                                durationState?.position ?? Duration.zero;
-                            final total =
-                                durationState?.duration ?? Duration.zero;
-                            return Theme(
-                              data: ThemeData.dark(),
-                              child: ProgressBar(
-                                progress: progress,
-                                total: total,
-                                barHeight: 3,
-                                thumbRadius: 10.0,
-                                thumbGlowRadius: 30.0,
-                                timeLabelLocation: TimeLabelLocation.sides,
-                                timeLabelType: TimeLabelType.totalTime,
-                                timeLabelTextStyle:
-                                const TextStyle(color: Colors.white),
-                                onSeek: (duration) {
-                                  seek(duration);
-                                },
-                              ),
-                            );
-                          },
                         ),
-                      ),
-                    ),
-                    StreamBuilder<CurrentState>(
-                      stream: _player.currentStream,
-                      builder: (context, snapshot) {
-                        return Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 10,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                if ((snapshot.data?.medias.length ?? 0) > 1)
-                                  IconButton(
-                                    color: Colors.white,
-                                    iconSize: 30,
-                                    icon: const Icon(Icons.skip_previous),
-                                    onPressed: () => _player.previous(),
-                                  ),
-                                const SizedBox(width: 50),
-                                if (!_isSmallScreen)
-                                  IconButton(
-                                      color: Colors.white,
-                                      iconSize: 30,
-                                      icon: const Icon(Icons.replay_10),
-                                      onPressed: () {
-                                        seekPlus(
-                                            false, const Duration(seconds: 10));
-                                      }),
-                                const SizedBox(
-                                  width: 20,
-                                ),
 
-                                /// 播放暂停按钮
-                                IconButton(
-                                  color: Colors.white,
-                                  iconSize: 30,
-                                  icon: AnimatedIcon(
-                                      icon: AnimatedIcons.play_pause,
-                                      progress: playPauseController),
-                                  onPressed: _switchPlayerPauseOrPlay,
-                                ),
-                                const SizedBox(width: 20),
-                                if (!_isSmallScreen)
-                                  IconButton(
-                                      color: Colors.white,
-                                      iconSize: 30,
-                                      icon: const Icon(Icons.forward_10),
-                                      onPressed: () {
-                                        seekPlus(
-                                            true, const Duration(seconds: 10));
-                                      }),
-                                const SizedBox(
-                                  width: 20,
-                                ),
-                                if ((snapshot.data?.medias.length ?? 0) > 1)
-                                  IconButton(
-                                    color: Colors.white,
-                                    iconSize: 30,
-                                    icon: const Icon(Icons.skip_next),
-                                    onPressed: () => _player.next(),
-                                  ),
-                              ],
-                            ));
-                      },
-                    ),
-
-                    Positioned(
-                      right: 15,
-                      bottom: 12.5,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          // 倍速按钮
-                          if (!_isSmallScreen)
-                            IconButton(
-                              iconSize: 24,
-                              color: Colors.white,
-                              icon: Row(
-                                mainAxisSize: MainAxisSize.min,
+                      // 右边的截图按钮
+                      if (Platform.isWindows && !_isSmallScreen)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 15),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.speed),
-                                  const SizedBox(
-                                    width: 4,
+                                  IconButton(
+                                    color: Colors.white,
+                                    iconSize: 30,
+                                    icon: const Icon(Icons.photo_camera),
+                                    onPressed: _takeSnapshotOnWindows,
                                   ),
-                                  Text(
-                                    'x$_playbackSpeed',
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold),
-                                  )
                                 ],
                               ),
-                              onPressed: _updateSpeed,
-                              tooltip: "更改倍速",
                             ),
+                          ],
+                        ),
 
-                          /// 音量控制
-                          if (!_isSmallScreen)
-                            VolumeControl(
-                              player: _player,
-                              thumbColor: Colors.lightGreen,
-                              inactiveColor: Colors.grey,
-                              activeColor: Colors.blue,
-                              backgroundColor: const Color(0xff424242),
-                            ),
-
-                          /// 音频轨道按钮
-                          if (_player.audioTrackCount > 1 && !_isSmallScreen)
-                            PopupMenuButton(
-                              iconSize: 24,
-                              tooltip: "音频轨道",
-                              icon: const Icon(Icons.audiotrack,
-                                  color: Colors.white),
-                              onSelected: (String trackDesc) {
-                                int? id = _getTrackDescId(trackDesc);
-                                if (id == null) return;
-                                _player.setAudioTrack(id);
-                              },
-                              itemBuilder: (context) {
-                                final audioTrack = _player.audioTrack();
-                                return _player
-                                    .audioTrackDescription()
-                                    .where((track) => !track.startsWith("-1"))
-                                    .map(
-                                      (track) =>
-                                      PopupMenuItem(
-                                        value: track,
-                                        child: Text(track,
-                                            style: TextStyle(
-                                                fontSize: 14.0,
-                                                color: audioTrack ==
-                                                    _getTrackDescId(track)
-                                                    ? Colors.lightBlueAccent
-                                                    : Colors.black)),
-                                      ),
-                                )
-                                    .toList();
-                              },
-                            ),
-
-                          // 字幕轨道按钮
-                          if (_player.spuCount() > 0)
-                            PopupMenuButton(
-                              iconSize: 24,
-                              tooltip: "字幕轨道",
-                              icon: const Icon(Icons.subtitles,
-                                  color: Colors.white),
-                              onSelected: (String trackDesc) {
-                                if (trackDesc == "" || !trackDesc.contains(":"))
-                                  return;
-                                var trackProps = trackDesc.split(":");
-                                var trackId = int.parse(trackProps[0]);
-                                _player.setSpu(trackId);
-                              },
-                              itemBuilder: (context) {
-                                final spu = _player.spu();
-                                return _player
-                                    .spuTrackDescription()
-                                    .map(
-                                      (track) =>
-                                      PopupMenuItem(
-                                        value: track,
-                                        child: Text(track,
-                                            style: TextStyle(
-                                                fontSize: 14.0,
-                                                color: track.startsWith(
-                                                    spu.toString())
-                                                    ? Colors.lightBlueAccent
-                                                    : Colors.black)),
-                                      ),
-                                )
-                                    .toList();
-                              },
-                            ),
-
-                          // 右下角小窗置顶
-                          IconButton(
-                            onPressed:
-                            isLoading.value ? null : _switchSmallScreen,
-                            icon: Icon(
-                              Icons.picture_in_picture_alt_outlined,
-                              color:
-                              isLoading.value ? Colors.grey : Colors.white,
-                            ),
+                      /// 底部的控制UI
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                              bottom: 60, right: 20, left: 20),
+                          child: StreamBuilder<PositionState>(
+                            stream: _player.positionStream,
+                            builder: (BuildContext context,
+                                AsyncSnapshot<PositionState> snapshot) {
+                              final durationState = snapshot.data;
+                              final progress =
+                                  durationState?.position ?? Duration.zero;
+                              final total =
+                                  durationState?.duration ?? Duration.zero;
+                              return Theme(
+                                data: ThemeData.dark(),
+                                child: ProgressBar(
+                                  progress: progress,
+                                  total: total,
+                                  barHeight: 3,
+                                  thumbRadius: 10.0,
+                                  thumbGlowRadius: 30.0,
+                                  timeLabelLocation: TimeLabelLocation.sides,
+                                  timeLabelType: TimeLabelType.totalTime,
+                                  timeLabelTextStyle:
+                                  const TextStyle(color: Colors.white),
+                                  onSeek: (duration) {
+                                    seek(duration);
+                                  },
+                                ),
+                              );
+                            },
                           ),
-
-                          // 全屏控制按钮
-                          if (!_isSmallScreen)
-                            IconButton(
-                              iconSize: 24,
-                              icon: Icon(
-                                  _isFullScreen
-                                      ? Icons.fullscreen_exit
-                                      : Icons.fullscreen,
-                                  color: Colors.white),
-                              onPressed: _updateFullScreen,
-                            ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      StreamBuilder<CurrentState>(
+                        stream: _player.currentStream,
+                        builder: (context, snapshot) {
+                          return Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 10,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  if ((snapshot.data?.medias.length ?? 0) > 1)
+                                    IconButton(
+                                      color: Colors.white,
+                                      iconSize: 30,
+                                      icon: const Icon(Icons.skip_previous),
+                                      onPressed: () => _player.previous(),
+                                    ),
+                                  const SizedBox(width: 50),
+                                  if (!_isSmallScreen)
+                                    IconButton(
+                                        color: Colors.white,
+                                        iconSize: 30,
+                                        icon: const Icon(Icons.replay_10),
+                                        onPressed: () {
+                                          seekPlus(
+                                              false, const Duration(seconds: 10));
+                                        }),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+
+                                  /// 播放暂停按钮
+                                  IconButton(
+                                    color: Colors.white,
+                                    iconSize: 30,
+                                    icon: AnimatedIcon(
+                                        icon: AnimatedIcons.play_pause,
+                                        progress: playPauseController),
+                                    onPressed: _switchPlayerPauseOrPlay,
+                                  ),
+                                  const SizedBox(width: 20),
+                                  if (!_isSmallScreen)
+                                    IconButton(
+                                        color: Colors.white,
+                                        iconSize: 30,
+                                        icon: const Icon(Icons.forward_10),
+                                        onPressed: () {
+                                          seekPlus(
+                                              true, const Duration(seconds: 10));
+                                        }),
+                                  const SizedBox(
+                                    width: 20,
+                                  ),
+                                  if ((snapshot.data?.medias.length ?? 0) > 1)
+                                    IconButton(
+                                      color: Colors.white,
+                                      iconSize: 30,
+                                      icon: const Icon(Icons.skip_next),
+                                      onPressed: () => _player.next(),
+                                    ),
+                                ],
+                              ));
+                        },
+                      ),
+
+                      Positioned(
+                        right: 15,
+                        bottom: 12.5,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            // 倍速按钮
+                            if (!_isSmallScreen)
+                              IconButton(
+                                iconSize: 24,
+                                color: Colors.white,
+                                icon: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.speed),
+                                    const SizedBox(
+                                      width: 4,
+                                    ),
+                                    Text(
+                                      'x$_playbackSpeed',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    )
+                                  ],
+                                ),
+                                onPressed: _updateSpeed,
+                                tooltip: "更改倍速",
+                              ),
+
+                            /// 音量控制
+                            if (!_isSmallScreen)
+                              VolumeControl(
+                                player: _player,
+                                thumbColor: Colors.lightGreen,
+                                inactiveColor: Colors.grey,
+                                activeColor: Colors.blue,
+                                backgroundColor: const Color(0xff424242),
+                              ),
+
+                            /// 音频轨道按钮
+                            if (_player.audioTrackCount > 1 && !_isSmallScreen)
+                              PopupMenuButton(
+                                iconSize: 24,
+                                tooltip: "音频轨道",
+                                icon: const Icon(Icons.audiotrack,
+                                    color: Colors.white),
+                                onSelected: (String trackDesc) {
+                                  int? id = _getTrackDescId(trackDesc);
+                                  if (id == null) return;
+                                  _player.setAudioTrack(id);
+                                },
+                                itemBuilder: (context) {
+                                  final audioTrack = _player.audioTrack();
+                                  return _player
+                                      .audioTrackDescription()
+                                      .where((track) => !track.startsWith("-1"))
+                                      .map(
+                                        (track) =>
+                                        PopupMenuItem(
+                                          value: track,
+                                          child: Text(track,
+                                              style: TextStyle(
+                                                  fontSize: 14.0,
+                                                  color: audioTrack ==
+                                                      _getTrackDescId(track)
+                                                      ? Colors.lightBlueAccent
+                                                      : Colors.black)),
+                                        ),
+                                  )
+                                      .toList();
+                                },
+                              ),
+
+                            // 字幕轨道按钮
+                            if (_player.spuCount() > 0)
+                              PopupMenuButton(
+                                iconSize: 24,
+                                tooltip: "字幕轨道",
+                                icon: const Icon(Icons.subtitles,
+                                    color: Colors.white),
+                                onSelected: (String trackDesc) {
+                                  if (trackDesc == "" || !trackDesc.contains(":"))
+                                    return;
+                                  var trackProps = trackDesc.split(":");
+                                  var trackId = int.parse(trackProps[0]);
+                                  _player.setSpu(trackId);
+                                },
+                                itemBuilder: (context) {
+                                  final spu = _player.spu();
+                                  return _player
+                                      .spuTrackDescription()
+                                      .map(
+                                        (track) =>
+                                        PopupMenuItem(
+                                          value: track,
+                                          child: Text(track,
+                                              style: TextStyle(
+                                                  fontSize: 14.0,
+                                                  color: track.startsWith(
+                                                      spu.toString())
+                                                      ? Colors.lightBlueAccent
+                                                      : Colors.black)),
+                                        ),
+                                  )
+                                      .toList();
+                                },
+                              ),
+
+                            // 右下角小窗置顶
+                            IconButton(
+                              onPressed:
+                              isLoading.value ? null : _switchSmallScreen,
+                              icon: Icon(
+                                Icons.picture_in_picture_alt_outlined,
+                                color:
+                                isLoading.value ? Colors.grey : Colors.white,
+                              ),
+                            ),
+
+                            // 全屏控制按钮
+                            if (!_isSmallScreen)
+                              IconButton(
+                                iconSize: 24,
+                                icon: Icon(
+                                    _isFullScreen
+                                        ? Icons.fullscreen_exit
+                                        : Icons.fullscreen,
+                                    color: Colors.white),
+                                onPressed: _updateFullScreen,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+                // child: Stack(
+                //   children: [
+                //     // 上方中间的标题文本
+                //     Row(
+                //       mainAxisAlignment: MainAxisAlignment.center,
+                //       children: [
+                //         Column(
+                //           mainAxisAlignment: MainAxisAlignment.start,
+                //           children: [
+                //             Text(_title,
+                //                 style: const TextStyle(
+                //                     color: Colors.white,
+                //                     fontSize: 20,
+                //                     decoration: TextDecoration.none)),
+                //             Text(_subTitle,
+                //                 style: const TextStyle(
+                //                     color: Colors.white,
+                //                     fontSize: 10,
+                //                     decoration: TextDecoration.none)),
+                //           ],
+                //         )
+                //       ],
+                //     ),
+                //     // 上方左边的返回按钮
+                //     Positioned(
+                //       left: 15,
+                //       top: 12.5,
+                //       child: Row(
+                //         mainAxisAlignment: MainAxisAlignment.start,
+                //         children: [
+                //           IconButton(
+                //               onPressed: () {
+                //                 if (!_isSmallScreen && !_isFullScreen) {
+                //                   Navigator.of(context).pop();
+                //                   return;
+                //                 }
+                //
+                //                 if (_isSmallScreen) {
+                //                   _switchSmallScreen();
+                //                   return;
+                //                 }
+                //
+                //                 if (_isFullScreen) {
+                //                   _updateFullScreen();
+                //                   return;
+                //                 }
+                //               },
+                //               iconSize: 30,
+                //               icon: const Icon(
+                //                 Icons.arrow_back,
+                //                 color: Colors.white,
+                //               ))
+                //         ],
+                //       ),
+                //     ),
+                //
+                //     // 上方右边的设置按钮
+                //     if (!_isSmallScreen)
+                //       Positioned(
+                //         right: 15,
+                //         top: 12.5,
+                //         child: Row(
+                //           mainAxisAlignment: MainAxisAlignment.end,
+                //           children: [
+                //             IconButton(
+                //                 onPressed: _openSettingsPanel,
+                //                 iconSize: 30,
+                //                 icon: const Icon(
+                //                   Icons.settings,
+                //                   color: Colors.white,
+                //                 ))
+                //           ],
+                //         ),
+                //       ),
+                //
+                //     // 右边的截图按钮
+                //     if (Platform.isWindows && !_isSmallScreen)
+                //       Row(
+                //         mainAxisAlignment: MainAxisAlignment.end,
+                //         children: [
+                //           Padding(
+                //             padding: const EdgeInsets.only(right: 15),
+                //             child: Column(
+                //               mainAxisAlignment: MainAxisAlignment.center,
+                //               children: [
+                //                 IconButton(
+                //                   color: Colors.white,
+                //                   iconSize: 30,
+                //                   icon: const Icon(Icons.photo_camera),
+                //                   onPressed: _takeSnapshotOnWindows,
+                //                 ),
+                //               ],
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //
+                //     /// 底部的控制UI
+                //     Positioned(
+                //       left: 0,
+                //       right: 0,
+                //       bottom: 0,
+                //       child: Padding(
+                //         padding: const EdgeInsets.only(
+                //             bottom: 60, right: 20, left: 20),
+                //         child: StreamBuilder<PositionState>(
+                //           stream: _player.positionStream,
+                //           builder: (BuildContext context,
+                //               AsyncSnapshot<PositionState> snapshot) {
+                //             final durationState = snapshot.data;
+                //             final progress =
+                //                 durationState?.position ?? Duration.zero;
+                //             final total =
+                //                 durationState?.duration ?? Duration.zero;
+                //             return Theme(
+                //               data: ThemeData.dark(),
+                //               child: ProgressBar(
+                //                 progress: progress,
+                //                 total: total,
+                //                 barHeight: 3,
+                //                 thumbRadius: 10.0,
+                //                 thumbGlowRadius: 30.0,
+                //                 timeLabelLocation: TimeLabelLocation.sides,
+                //                 timeLabelType: TimeLabelType.totalTime,
+                //                 timeLabelTextStyle:
+                //                 const TextStyle(color: Colors.white),
+                //                 onSeek: (duration) {
+                //                   seek(duration);
+                //                 },
+                //               ),
+                //             );
+                //           },
+                //         ),
+                //       ),
+                //     ),
+                //     StreamBuilder<CurrentState>(
+                //       stream: _player.currentStream,
+                //       builder: (context, snapshot) {
+                //         return Positioned(
+                //             left: 0,
+                //             right: 0,
+                //             bottom: 10,
+                //             child: Row(
+                //               mainAxisSize: MainAxisSize.min,
+                //               mainAxisAlignment: MainAxisAlignment.start,
+                //               crossAxisAlignment: CrossAxisAlignment.end,
+                //               children: [
+                //                 if ((snapshot.data?.medias.length ?? 0) > 1)
+                //                   IconButton(
+                //                     color: Colors.white,
+                //                     iconSize: 30,
+                //                     icon: const Icon(Icons.skip_previous),
+                //                     onPressed: () => _player.previous(),
+                //                   ),
+                //                 const SizedBox(width: 50),
+                //                 if (!_isSmallScreen)
+                //                   IconButton(
+                //                       color: Colors.white,
+                //                       iconSize: 30,
+                //                       icon: const Icon(Icons.replay_10),
+                //                       onPressed: () {
+                //                         seekPlus(
+                //                             false, const Duration(seconds: 10));
+                //                       }),
+                //                 const SizedBox(
+                //                   width: 20,
+                //                 ),
+                //
+                //                 /// 播放暂停按钮
+                //                 IconButton(
+                //                   color: Colors.white,
+                //                   iconSize: 30,
+                //                   icon: AnimatedIcon(
+                //                       icon: AnimatedIcons.play_pause,
+                //                       progress: playPauseController),
+                //                   onPressed: _switchPlayerPauseOrPlay,
+                //                 ),
+                //                 const SizedBox(width: 20),
+                //                 if (!_isSmallScreen)
+                //                   IconButton(
+                //                       color: Colors.white,
+                //                       iconSize: 30,
+                //                       icon: const Icon(Icons.forward_10),
+                //                       onPressed: () {
+                //                         seekPlus(
+                //                             true, const Duration(seconds: 10));
+                //                       }),
+                //                 const SizedBox(
+                //                   width: 20,
+                //                 ),
+                //                 if ((snapshot.data?.medias.length ?? 0) > 1)
+                //                   IconButton(
+                //                     color: Colors.white,
+                //                     iconSize: 30,
+                //                     icon: const Icon(Icons.skip_next),
+                //                     onPressed: () => _player.next(),
+                //                   ),
+                //               ],
+                //             ));
+                //       },
+                //     ),
+                //
+                //     Positioned(
+                //       right: 15,
+                //       bottom: 12.5,
+                //       child: Row(
+                //         crossAxisAlignment: CrossAxisAlignment.end,
+                //         children: [
+                //           // 倍速按钮
+                //           if (!_isSmallScreen)
+                //             IconButton(
+                //               iconSize: 24,
+                //               color: Colors.white,
+                //               icon: Row(
+                //                 mainAxisSize: MainAxisSize.min,
+                //                 children: [
+                //                   const Icon(Icons.speed),
+                //                   const SizedBox(
+                //                     width: 4,
+                //                   ),
+                //                   Text(
+                //                     'x$_playbackSpeed',
+                //                     style: const TextStyle(
+                //                         color: Colors.white,
+                //                         fontSize: 16,
+                //                         fontWeight: FontWeight.bold),
+                //                   )
+                //                 ],
+                //               ),
+                //               onPressed: _updateSpeed,
+                //               tooltip: "更改倍速",
+                //             ),
+                //
+                //           /// 音量控制
+                //           if (!_isSmallScreen)
+                //             VolumeControl(
+                //               player: _player,
+                //               thumbColor: Colors.lightGreen,
+                //               inactiveColor: Colors.grey,
+                //               activeColor: Colors.blue,
+                //               backgroundColor: const Color(0xff424242),
+                //             ),
+                //
+                //           /// 音频轨道按钮
+                //           if (_player.audioTrackCount > 1 && !_isSmallScreen)
+                //             PopupMenuButton(
+                //               iconSize: 24,
+                //               tooltip: "音频轨道",
+                //               icon: const Icon(Icons.audiotrack,
+                //                   color: Colors.white),
+                //               onSelected: (String trackDesc) {
+                //                 int? id = _getTrackDescId(trackDesc);
+                //                 if (id == null) return;
+                //                 _player.setAudioTrack(id);
+                //               },
+                //               itemBuilder: (context) {
+                //                 final audioTrack = _player.audioTrack();
+                //                 return _player
+                //                     .audioTrackDescription()
+                //                     .where((track) => !track.startsWith("-1"))
+                //                     .map(
+                //                       (track) =>
+                //                       PopupMenuItem(
+                //                         value: track,
+                //                         child: Text(track,
+                //                             style: TextStyle(
+                //                                 fontSize: 14.0,
+                //                                 color: audioTrack ==
+                //                                     _getTrackDescId(track)
+                //                                     ? Colors.lightBlueAccent
+                //                                     : Colors.black)),
+                //                       ),
+                //                 )
+                //                     .toList();
+                //               },
+                //             ),
+                //
+                //           // 字幕轨道按钮
+                //           if (_player.spuCount() > 0)
+                //             PopupMenuButton(
+                //               iconSize: 24,
+                //               tooltip: "字幕轨道",
+                //               icon: const Icon(Icons.subtitles,
+                //                   color: Colors.white),
+                //               onSelected: (String trackDesc) {
+                //                 if (trackDesc == "" || !trackDesc.contains(":"))
+                //                   return;
+                //                 var trackProps = trackDesc.split(":");
+                //                 var trackId = int.parse(trackProps[0]);
+                //                 _player.setSpu(trackId);
+                //               },
+                //               itemBuilder: (context) {
+                //                 final spu = _player.spu();
+                //                 return _player
+                //                     .spuTrackDescription()
+                //                     .map(
+                //                       (track) =>
+                //                       PopupMenuItem(
+                //                         value: track,
+                //                         child: Text(track,
+                //                             style: TextStyle(
+                //                                 fontSize: 14.0,
+                //                                 color: track.startsWith(
+                //                                     spu.toString())
+                //                                     ? Colors.lightBlueAccent
+                //                                     : Colors.black)),
+                //                       ),
+                //                 )
+                //                     .toList();
+                //               },
+                //             ),
+                //
+                //           // 右下角小窗置顶
+                //           IconButton(
+                //             onPressed:
+                //             isLoading.value ? null : _switchSmallScreen,
+                //             icon: Icon(
+                //               Icons.picture_in_picture_alt_outlined,
+                //               color:
+                //               isLoading.value ? Colors.grey : Colors.white,
+                //             ),
+                //           ),
+                //
+                //           // 全屏控制按钮
+                //           if (!_isSmallScreen)
+                //             IconButton(
+                //               iconSize: 24,
+                //               icon: Icon(
+                //                   _isFullScreen
+                //                       ? Icons.fullscreen_exit
+                //                       : Icons.fullscreen,
+                //                   color: Colors.white),
+                //               onPressed: _updateFullScreen,
+                //             ),
+                //         ],
+                //       ),
+                //     ),
+                //   ],
+                // ),
               ),
 
               DanmakuView(
