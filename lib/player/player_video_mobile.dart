@@ -34,8 +34,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 /// basic on flutter_vlc_player.
 class MobileVideoPlayer extends StatefulWidget {
   Function? onFullScreenChange;
+  Function(int count)? onDanmukuPoolInitialed;
 
-  MobileVideoPlayer({super.key, this.onFullScreenChange});
+  MobileVideoPlayer({super.key, this.onFullScreenChange, this.onDanmukuPoolInitialed});
 
   @override
   State<StatefulWidget> createState() {
@@ -169,11 +170,6 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     setState(() {});
   }
 
-  Future<int> getDanmuCount() async {
-    _initDanmukuPool();
-    return _commentEpisodes.length;
-  }
-
   void setSubTitle(String subTitle) {
     _subTitle = subTitle;
     setState(() {});
@@ -304,6 +300,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
         .commentEpisodeId(searchEpisodeDetails.episodeId, 1);
     if (commentEpIdResp == null || commentEpIdResp.count == 0) return;
     _commentEpisodes.addAll(commentEpIdResp.comments);
+    widget.onDanmukuPoolInitialed?.call(_commentEpisodes.length);
   }
 
   void addSlave(String url, bool select) {

@@ -35,8 +35,10 @@ import 'package:win32/win32.dart';
 /// basic on dart_vlc.
 class DesktopVideoPlayer extends StatefulWidget {
   Function? onFullScreenChange;
+  Function(int count)? onDanmukuPoolInitialed;
 
-  DesktopVideoPlayer({super.key, this.onFullScreenChange});
+  DesktopVideoPlayer(
+      {super.key, this.onFullScreenChange, this.onDanmukuPoolInitialed});
 
   @override
   State<StatefulWidget> createState() {
@@ -170,12 +172,6 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     setState(() {});
   }
 
-  Future<int> getDanmuCount() async {
-    await _initDanmukuPool();
-    return _commentEpisodes.length;
-  }
-
-
   void setSubTitle(String subTitle) {
     _subTitle = subTitle;
     setState(() {});
@@ -219,11 +215,15 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         .commentEpisodeId(searchEpisodeDetails.episodeId, 1);
     if (commentEpIdResp == null || commentEpIdResp.count == 0) return;
     _commentEpisodes.addAll(commentEpIdResp.comments);
+
+    widget.onDanmukuPoolInitialed?.call(_commentEpisodes.length);
   }
 
   void _checkAndAddDanmuku(Duration lastPosition, Duration currentPosition) {
     for (CommentEpisode commentEp in List.from(_commentEpisodes)) {
-      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4)
+      if (!commentEp.p.contains(',') || commentEp.p
+          .split(',')
+          .length != 4)
         continue;
       String timeStr = commentEp.p.split(",")[0];
       double timeD = double.parse(timeStr);
@@ -249,7 +249,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   }
 
   void _addDanmuku(CommentEpisode commentEp) {
-    if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) {
+    if (!commentEp.p.contains(',') || commentEp.p
+        .split(',')
+        .length != 4) {
       return;
     }
     String danmuMode = commentEp.p.split(',')[1];
@@ -578,8 +580,14 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       builder: (context) {
         return SizedBox(
           height:
-              MediaQuery.of(context).size.height * (_isFullScreen ? 0.5 : 0.8),
-          width: MediaQuery.of(context).size.width * 0.8,
+          MediaQuery
+              .of(context)
+              .size
+              .height * (_isFullScreen ? 0.5 : 0.8),
+          width: MediaQuery
+              .of(context)
+              .size
+              .width * 0.8,
           child: Padding(
             padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
             child: Column(
@@ -724,7 +732,6 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     return value / devicePixelRatio; // 将Win32的物理像素转为Flutter的逻辑像素
   }
 
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -767,7 +774,8 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         }
       },
       child: KeyboardListener(
-        focusNode: FocusNode()..requestFocus(),
+        focusNode: FocusNode()
+          ..requestFocus(),
         onKeyEvent: _handleKeyEvent,
         autofocus: true,
         child: MouseRegion(
@@ -798,22 +806,22 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                 builder: (context, loading, child) {
                   return loading
                       ? const Center(
-                          child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
-                            SizedBox(height: 10),
-                            Text(
-                              "正在缓冲中...",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  decoration: TextDecoration.none),
-                            )
-                          ],
-                        )) // 在视频正中心显示加载指示器
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            "正在缓冲中...",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                decoration: TextDecoration.none),
+                          )
+                        ],
+                      )) // 在视频正中心显示加载指示器
                       : const SizedBox.shrink();
                 },
               ),
@@ -946,7 +954,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                                 timeLabelLocation: TimeLabelLocation.sides,
                                 timeLabelType: TimeLabelType.totalTime,
                                 timeLabelTextStyle:
-                                    const TextStyle(color: Colors.white),
+                                const TextStyle(color: Colors.white),
                                 onSeek: (duration) {
                                   seek(duration);
                                 },
@@ -1082,17 +1090,18 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                                     .audioTrackDescription()
                                     .where((track) => !track.startsWith("-1"))
                                     .map(
-                                      (track) => PopupMenuItem(
+                                      (track) =>
+                                      PopupMenuItem(
                                         value: track,
                                         child: Text(track,
                                             style: TextStyle(
                                                 fontSize: 14.0,
                                                 color: audioTrack ==
-                                                        _getTrackDescId(track)
+                                                    _getTrackDescId(track)
                                                     ? Colors.lightBlueAccent
                                                     : Colors.black)),
                                       ),
-                                    )
+                                )
                                     .toList();
                               },
                             ),
@@ -1102,7 +1111,8 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                             PopupMenuButton(
                               iconSize: 24,
                               tooltip: "字幕轨道",
-                              icon: const Icon(Icons.subtitles, color: Colors.white),
+                              icon: const Icon(Icons.subtitles,
+                                  color: Colors.white),
                               onSelected: (String trackDesc) {
                                 if (trackDesc == "" || !trackDesc.contains(":"))
                                   return;
@@ -1115,27 +1125,30 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                                 return _player
                                     .spuTrackDescription()
                                     .map(
-                                      (track) => PopupMenuItem(
+                                      (track) =>
+                                      PopupMenuItem(
                                         value: track,
                                         child: Text(track,
                                             style: TextStyle(
                                                 fontSize: 14.0,
                                                 color: track.startsWith(
-                                                        spu.toString())
+                                                    spu.toString())
                                                     ? Colors.lightBlueAccent
                                                     : Colors.black)),
                                       ),
-                                    )
+                                )
                                     .toList();
                               },
                             ),
 
                           // 右下角小窗置顶
                           IconButton(
-                            onPressed: isLoading.value ? null : _switchSmallScreen,
+                            onPressed:
+                            isLoading.value ? null : _switchSmallScreen,
                             icon: Icon(
                               Icons.picture_in_picture_alt_outlined,
-                              color: isLoading.value ? Colors.grey : Colors.white,
+                              color:
+                              isLoading.value ? Colors.grey : Colors.white,
                             ),
                           ),
 

@@ -536,8 +536,6 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
         _mobilePlayer.currentState?.setProgress(progress);
       }
       _mobilePlayer.currentState?.reload(videUrl, autoPlay: true);
-      _danmuCount = await _mobilePlayer.currentState?.getDanmuCount() ?? 0;
-      setState(() {});
       return;
     }
 
@@ -546,9 +544,6 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     _desktopPlayer.currentState?.setSubTitle(videoSubTitle);
     _desktopPlayer.currentState?.setEpisodeId(episodeRecord.episode.id);
     _desktopPlayer.currentState?.reload(videUrl, autoStart: true);
-
-    _danmuCount = await _desktopPlayer.currentState?.getDanmuCount() ?? 0;
-    setState(() {});
 
     if (subtitleUrls.isNotEmpty) {
       for (var subtitle in subtitleUrls) {
@@ -642,6 +637,11 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                   _isFullScreen = !_isFullScreen;
                 });
               },
+              onDanmukuPoolInitialed: (int count){
+                setState(() {
+                  _danmuCount = count;
+                });
+              },
             )
           : DesktopVideoPlayer(
               key: _desktopPlayer,
@@ -650,6 +650,11 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                   _isFullScreen = !_isFullScreen;
                 });
               },
+        onDanmukuPoolInitialed: (int count){
+          setState(() {
+            _danmuCount = count;
+          });
+        },
             ),
     );
   }
