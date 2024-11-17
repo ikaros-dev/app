@@ -97,12 +97,13 @@ jobs:
         run: |
           ls -R
 
-          # 替换文件名中的 "app" 为 "ikaros-android"
+          cd build/app/outputs/flutter-apk
+
           for f in *app*; do mv "$f" "${f/app/ikaros-android}"; done
           
-          # 替换文件名中的 "release" 为 GitHub 分支名
           for f in *release*; do mv "$f" "${f/release/${{ github.ref_name }}}"; done
-        
+          
+          cd ..
 
       - name: Upload Package To Cloudflare R2
         uses: ryand56/r2-upload-action@latest
@@ -111,7 +112,7 @@ jobs:
           r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
           r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           r2-bucket: ${{ secrets.R2_BUCKET }}
-          source-dir: build/app/outputs/flutter-apk
+          source-dir: flutter-apk
 
 
   build_windows:
@@ -150,11 +151,9 @@ jobs:
         run: |
           tree /?
 
-          # 使用 PowerShell 创建目录
           mkdir output
           
-          # 使用 PowerShell 移动并重命名文件
-          Rename-Item -Path "output.zip" -Destination "output/ikaros-windows-${{ github.ref_name }}.zip"
+          Rename-Item -Path "output.zip" -Destination "output\\ikaros-windows-${{ github.ref_name }}.zip"
         shell: pwsh
 
       - name: Upload Package To Cloudflare R2
