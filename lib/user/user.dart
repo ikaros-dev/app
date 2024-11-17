@@ -32,7 +32,7 @@ class UserPage extends StatefulWidget {
 class _UserPageState extends State<UserPage> {
   late String _appVersion;
   late SettingConfig config = SettingConfig();
-  late User? _me;
+  User? _me;
   late String _baseUrl;
   final FocusNode _proxyUrlFocusNode = FocusNode();
   final TextEditingController _proxyUrlController = TextEditingController();
@@ -74,12 +74,13 @@ class _UserPageState extends State<UserPage> {
     super.initState();
     _fetchAppVersion();
     _loadSettingConfig();
+    _fetchMe();
   }
 
-  Future<User?> _fetchMe() async {
+  Future<void> _fetchMe() async {
     await _fetchBaseUrl();
     _me = await UserApi().getMe();
-    return _me;
+    setState(() {});
   }
 
   Future<String> _fetchBaseUrl() async {
@@ -97,51 +98,40 @@ class _UserPageState extends State<UserPage> {
   }
 
   Widget _buildAppbarUser() {
-    return FutureBuilder(
-        future: _fetchMe(),
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              return Text("Load api base url error: ${snapshot.error}");
-            } else {
-              return Row(
-                children: [
-                  CircleAvatar(
-                    radius: 28, // 半径控制头像的大小
-                    backgroundImage: NetworkImage(
-                        UrlUtils.getCoverUrl(_baseUrl, _me?.avatar ?? "")),
+    if (_me == null) return const CircularProgressIndicator();
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 28, // 半径控制头像的大小
+          backgroundImage: NetworkImage(
+              UrlUtils.getCoverUrl(_baseUrl, _me?.avatar ?? "")),
+        ),
+        const SizedBox(
+          width: 10,
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              getAvatarTitle(_me),
+              style: const TextStyle(fontSize: 28),
+            ),
+            if (_me?.introduce != null)
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Text(
+                  _me?.introduce ?? "",
+                  style: const TextStyle(
+                    fontSize: 15, // 字体大小
+                    fontWeight: FontWeight.w500, // 字体粗细
+                    color: Colors.grey, // 字体颜色
                   ),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        getAvatarTitle(_me),
-                        style: const TextStyle(fontSize: 28),
-                      ),
-                      if (_me?.introduce != null)
-                        Align(
-                          alignment: Alignment.bottomCenter,
-                          child: Text(
-                            _me?.introduce ?? "",
-                            style: const TextStyle(
-                              fontSize: 15, // 字体大小
-                              fontWeight: FontWeight.w500, // 字体粗细
-                              color: Colors.grey, // 字体颜色
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              );
-            }
-          } else {
-            return const CircularProgressIndicator();
-          }
-        });
+                ),
+              ),
+          ],
+        ),
+      ],
+    );;
   }
 
   @override
