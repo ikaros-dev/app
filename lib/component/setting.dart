@@ -22,12 +22,12 @@ class Setting extends StatelessWidget {
                 // 标题部分，字体加重
                 Text(
                   title,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 // 副标题部分，较小的字体
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ],
             ),

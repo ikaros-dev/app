@@ -30,23 +30,18 @@ class UserPage extends StatefulWidget {
 }
 
 class _UserPageState extends State<UserPage> {
-  late String _appVersion;
-  late SettingConfig config = SettingConfig();
+  String? _appVersion;
+  SettingConfig config = SettingConfig();
   User? _me;
-  late String _baseUrl;
+  String _baseUrl = "";
   final FocusNode _proxyUrlFocusNode = FocusNode();
   final TextEditingController _proxyUrlController = TextEditingController();
   String _filePath = "";
-  double _updateDownloadProgress = 0;
+  final ValueNotifier<double> _updateDownloadProgress = ValueNotifier(0);
 
   Future<void> _fetchAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     _appVersion = packageInfo.version;
-  }
-
-  Future<String> _getAppVersion() async {
-    await _fetchAppVersion();
-    return _appVersion;
   }
 
   Future<void> _loadSettingConfig() async {
@@ -75,6 +70,7 @@ class _UserPageState extends State<UserPage> {
     _fetchAppVersion();
     _loadSettingConfig();
     _fetchMe();
+    _fetchAppVersion();
   }
 
   Future<void> _fetchMe() async {
@@ -83,10 +79,10 @@ class _UserPageState extends State<UserPage> {
     setState(() {});
   }
 
-  Future<String> _fetchBaseUrl() async {
+  Future<void> _fetchBaseUrl() async {
     AuthParams authParams = await AuthApi().getAuthParams();
     _baseUrl = authParams.baseUrl;
-    return _baseUrl;
+    setState(() {});
   }
 
   String getAvatarTitle(User? user) {
@@ -98,13 +94,13 @@ class _UserPageState extends State<UserPage> {
   }
 
   Widget _buildAppbarUser() {
-    if (_me == null) return const CircularProgressIndicator();
+    if (_me == null || _baseUrl == "") return const CircularProgressIndicator();
     return Row(
       children: [
         CircleAvatar(
           radius: 28, // 半径控制头像的大小
-          backgroundImage: NetworkImage(
-              UrlUtils.getCoverUrl(_baseUrl, _me?.avatar ?? "")),
+          backgroundImage:
+              NetworkImage(UrlUtils.getCoverUrl(_baseUrl, _me?.avatar ?? "")),
         ),
         const SizedBox(
           width: 10,
@@ -131,7 +127,8 @@ class _UserPageState extends State<UserPage> {
           ],
         ),
       ],
-    );;
+    );
+    ;
   }
 
   @override
@@ -140,10 +137,6 @@ class _UserPageState extends State<UserPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: _buildAppbarUser(),
-        // title: const CircleAvatar(
-        //   radius: 32.5, // 半径控制头像的大小
-        //   backgroundImage: NetworkImage('https://ikaros.run/img/favicon.ico'),
-        // ),
         actionsIconTheme: const IconThemeData(
           color: Colors.black,
           size: 35,
@@ -168,79 +161,59 @@ class _UserPageState extends State<UserPage> {
           ),
         ],
       ),
-      // appBar: PreferredSize(
-      //   preferredSize: const DartUi.Size.fromHeight(70.0),
-      //   child: AppBar(
-      //     backgroundColor: Colors.white,
-      //     title: const CircleAvatar(
-      //       radius: 32.5, // 半径控制头像的大小
-      //       backgroundImage: NetworkImage('https://ikaros.run/img/favicon.ico'),
-      //     ),
-      //     actionsIconTheme: const IconThemeData(
-      //       color: Colors.black,
-      //       size: 35,
-      //     ),
-      //     actions: <Widget>[
-      //       PopupMenuButton<String>(
-      //         itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
-      //           _selectView(Icons.update, "更新", "app_update"),
-      //           _selectView(Icons.exit_to_app_rounded, '退出', 'user_logout'),
-      //         ],
-      //         onSelected: (String action) {
-      //           // 点击选项的时候
-      //           switch (action) {
-      //             case 'user_logout':
-      //               _userLogout();
-      //               break;
-      //             case 'app_update':
-      //               _checkAppUpdate();
-      //               break;
-      //           }
-      //         },
-      //       ),
-      //     ],
-      //   ),
-      // ),
       body: ListView(
         children: [
           Setting(
             title: "版本号",
             subtitle: "这是APP当前的版本号",
-            rightWidget: FutureBuilder(
-                future: _getAppVersion(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (snapshot.hasError) {
-                      return Text(
-                          "Load app version error: ${snapshot.error ?? ""}");
-                    } else {
-                      if (_updateDownloadProgress > 0 &&
-                          _updateDownloadProgress < 100) {
-                        return Center(
+            rightWidget: ValueListenableBuilder<double>(
+                valueListenable: _updateDownloadProgress,
+                builder: (context, progress, child) {
+                  if (_updateDownloadProgress.value > 0 &&
+                      _updateDownloadProgress.value < 100) {
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Center(
                           child: CircularProgressIndicator(
-                            value: _updateDownloadProgress / 100, // 设置进度
-                            strokeWidth: 6.0, // 设置圆圈的宽度
+                            value: _updateDownloadProgress.value / 100, // 设置进度
+                            strokeWidth: 12.0, // 设置圆圈的宽度
                             valueColor: const AlwaysStoppedAnimation<Color>(
-                                Colors.pink), // 设置颜色
+                                Colors.blueAccent), // 设置颜色
                           ),
-                        );
-                      } else if (_updateDownloadProgress == 100) {
-                        return OutlinedButton(
-                            onPressed: () {
-                              _installPackage();
-                            },
-                            child: const Text("点击安装"));
-                      }
-                      return Text(
-                        "v${snapshot.data ?? "0.0.0"}",
-                        style: const TextStyle(fontSize: 20),
-                      );
-                    }
-                  } else {
-                    return const Center(
-                      child: CircularProgressIndicator(),
+                        ),
+                        Text(
+                          '${_updateDownloadProgress.value.toInt()}%', // 显示百分比
+                          style: const TextStyle(
+                              fontSize: 16.0, fontWeight: FontWeight.bold),
+                        ),
+                      ],
                     );
+                    return Center(
+                      child: CircularProgressIndicator(
+                        value: _updateDownloadProgress.value / 100,
+                        // 设置进度
+                        strokeWidth: 12.0,
+                        // 设置圆圈的宽度
+                        semanticsLabel: '安装包下载中',
+                        semanticsValue: '已完成 ${_updateDownloadProgress.value}%',
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                            Colors.blueAccent), // 设置颜色
+                      ),
+                    );
+                  } else if (_updateDownloadProgress.value == 100) {
+                    return OutlinedButton(
+                        onPressed: () {
+                          _installPackage();
+                        },
+                        child: const Text("点击安装"));
                   }
+                  return _appVersion != null
+                      ? Text(
+                          "v$_appVersion",
+                          style: const TextStyle(fontSize: 20),
+                        )
+                      : const CircularProgressIndicator();
                 }),
           ),
           Setting(
@@ -443,14 +416,11 @@ class _UserPageState extends State<UserPage> {
     if (!tmpUpdateFile.existsSync()) {
       _configProxy(Dio()).download(downloadUrl, _filePath,
           onReceiveProgress: (received, total) {
-        double progress = (received / total) * 100;
-        setState(() {
-          _updateDownloadProgress = progress;
-        });
+        _updateDownloadProgress.value = (received / total) * 100;
       });
     } else {
       setState(() {
-        _updateDownloadProgress = 100;
+        _updateDownloadProgress.value = 100;
       });
     }
   }
@@ -471,9 +441,7 @@ class _UserPageState extends State<UserPage> {
     if (Platform.isWindows) {
       _startUpdateProcess(_filePath);
     }
-    setState(() {
-      _updateDownloadProgress = 0;
-    });
+    _updateDownloadProgress.value = 0;
   }
 
   void _startUpdateProcess(String zipPath) async {
