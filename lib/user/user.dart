@@ -355,7 +355,7 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  Future<String> _getDownloadUrl(List assets) async {
+  Future<String> _getDownloadUrl(List assets, String tagName) async {
     if (!(Platform.isWindows || Platform.isAndroid)) {
       Toast.show(context, "操作失败：更新功能只支持Windows和Android平台");
       return "";
@@ -364,7 +364,7 @@ class _UserPageState extends State<UserPage> {
     for (var asset in assets) {
       if (asset['name'].contains(platform)) {
         String fileName = asset['name'];
-        return "https://pub-bf2151a8e446476eac3583b3e45d5cc8.r2.dev/$fileName";
+        return "https://pub-bf2151a8e446476eac3583b3e45d5cc8.r2.dev/$tagName/$fileName";
       }
     }
     return '';
@@ -397,7 +397,7 @@ class _UserPageState extends State<UserPage> {
     if (response.statusCode == 200) {
       final data = json.decode(response.data ?? "{}");
       String latestVersion = data['tag_name'];
-      String downloadUrl = await _getDownloadUrl(data['assets']);
+      String downloadUrl = await _getDownloadUrl(data['assets'], latestVersion);
       if ('v$_appVersion' == latestVersion) {
         Toast.show(context, "当前已经是最新版本:$_appVersion");
         return;
