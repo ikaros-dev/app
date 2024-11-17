@@ -36,6 +36,8 @@ class _UserPageState extends State<UserPage> {
   late String _baseUrl;
   final FocusNode _proxyUrlFocusNode = FocusNode();
   final TextEditingController _proxyUrlController = TextEditingController();
+  String _filePath = "";
+  double _updateDownloadProgress = 0;
 
   Future<void> _fetchAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -222,6 +224,23 @@ class _UserPageState extends State<UserPage> {
                       return Text(
                           "Load app version error: ${snapshot.error ?? ""}");
                     } else {
+                      if (_updateDownloadProgress > 0 &&
+                          _updateDownloadProgress < 100) {
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: _updateDownloadProgress / 100, // 设置进度
+                            strokeWidth: 6.0, // 设置圆圈的宽度
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                                Colors.pink), // 设置颜色
+                          ),
+                        );
+                      } else if (_updateDownloadProgress == 100) {
+                        return OutlinedButton(
+                            onPressed: () {
+                              _installPackage();
+                            },
+                            child: const Text("点击安装"));
+                      }
                       return Text(
                         "v${snapshot.data ?? "0.0.0"}",
                         style: const TextStyle(fontSize: 20),
@@ -344,7 +363,8 @@ class _UserPageState extends State<UserPage> {
     String platform = Platform.isAndroid ? 'android-arm64-v8a' : 'windows';
     for (var asset in assets) {
       if (asset['name'].contains(platform)) {
-        return asset['browser_download_url'];
+        String fileName = asset['name'];
+        return "https://pub-bf2151a8e446476eac3583b3e45d5cc8.r2.dev/$fileName";
       }
     }
     return '';
@@ -394,7 +414,7 @@ class _UserPageState extends State<UserPage> {
               title: const Text("更新确认"),
               content: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.8,
-                child: const Text("发现新版本，您确定要更新嘛？"),
+                child: Text("发现新版本$latestVersion，您确定要更新嘛？"),
               ),
               actions: [
                 ElevatedButton(
@@ -413,7 +433,7 @@ class _UserPageState extends State<UserPage> {
         return;
       }
       // 下载更新
-      Toast.show(context, "将要执行更新逻辑, 请耐心等待！完成后会自动重启应用！");
+      Toast.show(context, "将要执行更新逻辑, 请耐心等待！");
       _downloadUpdate(downloadUrl);
     } else {
       Toast.show(context, "获取GitHub的Release信息失败，请检查网络是否可以直连api.github.com.");
@@ -427,18 +447,30 @@ class _UserPageState extends State<UserPage> {
     String fileName = downloadUrl.substring(index + 1, downloadUrl.length);
 
     final directory = await getApplicationCacheDirectory();
-    final String filePath =
-        directory.path + (Platform.isWindows ? "\\" : "/") + fileName;
+    _filePath = directory.path + (Platform.isWindows ? "\\" : "/") + fileName;
 
-    File tmpUpdateFile = File(filePath);
+    File tmpUpdateFile = File(_filePath);
     if (!tmpUpdateFile.existsSync()) {
-      await _configProxy(Dio()).download(downloadUrl, filePath);
+      _configProxy(Dio()).download(downloadUrl, _filePath,
+          onReceiveProgress: (received, total) {
+        double progress = (received / total) * 100;
+        setState(() {
+          _updateDownloadProgress = progress;
+        });
+      });
+    } else {
+      setState(() {
+        _updateDownloadProgress = 100;
+      });
     }
+  }
 
+  void _installPackage() async {
+    if (_filePath == "") return;
     // 安卓直接打开apk文件即可跳转安装逻辑
     if (Platform.isAndroid) {
       if (await Permission.requestInstallPackages.request().isGranted) {
-        await OpenFile.open(filePath,
+        await OpenFile.open(_filePath,
             type: 'application/vnd.android.package-archive');
       } else {
         print('Install packages permission denied');
@@ -447,8 +479,11 @@ class _UserPageState extends State<UserPage> {
     }
     // windows需要起一个powershell，然后退出应用，让powershell执行解压命令覆盖指定目录，最后再启动目录
     if (Platform.isWindows) {
-      _startUpdateProcess(filePath);
+      _startUpdateProcess(_filePath);
     }
+    setState(() {
+      _updateDownloadProgress = 0;
+    });
   }
 
   void _startUpdateProcess(String zipPath) async {
