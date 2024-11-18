@@ -4,6 +4,7 @@
 
 # 20.3.1
 
+- 移除flutter_secure_storage
 
 # 20.3.0
 
