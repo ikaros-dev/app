@@ -5,6 +5,7 @@
 # 20.3.1
 
 - 移除flutter_secure_storage
+- 使用申请token的方式进行登录验证
 
 # 20.3.0
 

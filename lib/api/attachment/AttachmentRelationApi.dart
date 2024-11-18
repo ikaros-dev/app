@@ -12,11 +12,11 @@ class AttachmentRelationApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return Future(() => [error]);
     }
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl =
         "$baseUrl/api/v1alpha1/attachment/relation/videoSubtitle/subtitles/$attachmentId";
     try {

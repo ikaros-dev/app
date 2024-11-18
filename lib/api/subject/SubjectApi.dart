@@ -27,12 +27,12 @@ class SubjectApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return Future(() =>
           PagingWrap(page: page, size: size, total: 0, items: List.empty()));
     }
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/subjects/condition";
     try {
       final Map<String, Object?> queryParams = {
@@ -78,11 +78,11 @@ class SubjectApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return Future(() => error);
     }
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/subject/$id";
     try {
       BaseOptions options = BaseOptions();

@@ -18,11 +18,11 @@ class EpisodeApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return Future(() => error);
     }
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/episode/$id";
     try {
       BaseOptions options = BaseOptions();
@@ -45,11 +45,11 @@ class EpisodeApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return Future(() => List.empty());
     }
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/episodes/subjectId/$subjectId";
     try {
       BaseOptions options = BaseOptions();
@@ -78,11 +78,11 @@ class EpisodeApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return Future(() => List.empty());
     }
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/episode/records/subjectId/$subjectId";
     try {
       BaseOptions options = BaseOptions();
@@ -112,11 +112,11 @@ class EpisodeApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return Future(() => List.empty());
     }
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/episode/attachment/refs/$id";
     try {
       BaseOptions options = BaseOptions();

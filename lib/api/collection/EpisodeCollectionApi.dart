@@ -20,12 +20,12 @@ class EpisodeCollectionApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return error;
     }
 
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl =
         "$baseUrl/api/v1alpha1/collection/episode/$episodeId";
 
@@ -50,11 +50,11 @@ class EpisodeCollectionApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return result;
     }
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl =
         "$baseUrl/api/v1alpha1/collection/episodes/subjectId/$subjectId";
 
@@ -86,13 +86,12 @@ class EpisodeCollectionApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return;
     }
 
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
-    String userId = authParams.userId;
+    String basicAuth = authParams.authHeader;
     String apiUrl =
         "$baseUrl/api/v1alpha1/collection/episode/$episodeId";
 
@@ -115,7 +114,7 @@ class EpisodeCollectionApi {
       return;
     }
     if (kDebugMode) {
-      print("update episode collection. userId=$userId and episodeId=$episodeId"
+      print("update episode collection. and episodeId=$episodeId"
         " and currentTime:${seek.inMilliseconds} and duration:${duration.inMilliseconds}");
     }
     return;
@@ -126,12 +125,12 @@ class EpisodeCollectionApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return;
     }
 
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl =
         "$baseUrl/api/v1alpha1/collection/episode/finish/$episodeId/$isFinish";
 

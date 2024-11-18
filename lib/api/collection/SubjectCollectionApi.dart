@@ -12,7 +12,7 @@ class SubjectCollectionApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return null;
     }
 
@@ -20,8 +20,7 @@ class SubjectCollectionApi {
     size ??= 12;
 
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
-    String userId = authParams.userId;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/collection/subjects"
         "?page=$page&size=$size";
     if (type != null) {
@@ -48,14 +47,12 @@ class SubjectCollectionApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '' ||
-        authParams.userId == '') {
+        authParams.authHeader == '' ) {
       return null;
     }
 
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
-    String userId = authParams.userId;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/collection/subject/$subjectId";
 
     try {
@@ -78,14 +75,12 @@ class SubjectCollectionApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '' ||
-        authParams.userId == '') {
+        authParams.authHeader == '') {
       return;
     }
 
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
-    String userId = authParams.userId;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/collection/subject/collect"
     "?subjectId=$subjectId";
     if (type != null) {
@@ -116,13 +111,12 @@ class SubjectCollectionApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '' ||
-        authParams.userId == '') {
+        authParams.authHeader == '') {
       return;
     }
 
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/collection/subject/collect"
     "?subjectId=$subjectId";
 

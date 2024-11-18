@@ -14,11 +14,11 @@ class SubjectSyncApi {
     AuthParams authParams = await AuthApi().getAuthParams();
     if (authParams.baseUrl == '' ||
         authParams.username == '' ||
-        authParams.basicAuth == '') {
+        authParams.authHeader == '') {
       return List.empty();
     }
     String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.basicAuth;
+    String basicAuth = authParams.authHeader;
     String apiUrl = "$baseUrl/api/v1alpha1/subject/syncs/subjectId/$subjectId";
     try {
       BaseOptions options = BaseOptions();
