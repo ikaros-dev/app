@@ -41,8 +41,6 @@ class SharedPrefsUtils {
 
   static Future<void> saveSettingConfig(SettingConfig config) async {
     var prefs = await SharedPreferences.getInstance();
-    prefs.setBool(SharedPrefsKey.settingEnableEpisodeApiSplit,
-        config.enableEpisodeApiSplit);
     prefs.setBool(SharedPrefsKey.hideNsfwWhenSubjectsOpen,
         config.hideNsfwWhenSubjectsOpen);
     prefs.setString(SharedPrefsKey.proxyUrl, config.proxyUrl);
@@ -59,7 +57,6 @@ class SharedPrefsUtils {
             SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen;
     final String proxyUrl = prefs.getString(SharedPrefsKey.proxyUrl) ?? "";
     return SettingConfig(
-        enableEpisodeApiSplit: enableEpisodeApiSplit,
         hideNsfwWhenSubjectsOpen: hideNsfwWhenSubjectsOpen,
         proxyUrl: proxyUrl);
   }
@@ -172,16 +169,12 @@ class DanmuConfig {
 }
 
 class SettingConfig {
-  bool enableEpisodeApiSplit =
-      SharedPrefsDefaultValue.settingEnableEpisodeApiSplit;
   bool hideNsfwWhenSubjectsOpen =
       SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen;
   String proxyUrl = "";
 
   SettingConfig(
-      {this.enableEpisodeApiSplit =
-          SharedPrefsDefaultValue.settingEnableEpisodeApiSplit,
-      this.hideNsfwWhenSubjectsOpen =
+      {this.hideNsfwWhenSubjectsOpen =
           SharedPrefsDefaultValue.hideNsfwWhenSubjectsOpen,
       this.proxyUrl = ""});
 }

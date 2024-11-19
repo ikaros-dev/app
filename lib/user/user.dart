@@ -52,12 +52,6 @@ class _UserPageState extends State<UserPage> {
     setState(() {});
   }
 
-  void onEnableEpisodeApiSplitSwitchChange(val) async {
-    config.enableEpisodeApiSplit = val;
-    await SharedPrefsUtils.saveSettingConfig(config);
-    await _loadSettingConfig();
-  }
-
   void onHideNsfwWhenSubjectsOpenSwitchChange(val) async {
     config.hideNsfwWhenSubjectsOpen = val;
     await SharedPrefsUtils.saveSettingConfig(config);
@@ -215,13 +209,6 @@ class _UserPageState extends State<UserPage> {
                         )
                       : const CircularProgressIndicator();
                 }),
-          ),
-          Setting(
-            title: "条目详情页剧集接口拆分",
-            subtitle: "开启则每个剧集单独请求剧集资源，关闭则统一根据条目ID请求剧集和资源。",
-            rightWidget: Switch(
-                value: config.enableEpisodeApiSplit,
-                onChanged: onEnableEpisodeApiSplitSwitchChange),
           ),
           Setting(
             title: "隐藏NSFW条目",
