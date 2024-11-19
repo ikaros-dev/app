@@ -153,11 +153,13 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   void dispose() {
     WakelockPlus.disable();
     if (_episodeId > 0) {
-      EpisodeCollectionApi().updateCollection(
-          _episodeId, _player.value.position, _player.value.duration);
-      if (kDebugMode) {
-        print("保存剧集进度成功");
-      }
+      EpisodeCollectionApi().findCollection(_episodeId)
+          .then((epCollection){
+        if (epCollection.finish != null && !(epCollection.finish!)) {
+          EpisodeCollectionApi().updateCollection(_episodeId, _position, _duration);
+        }
+      });
+      debugPrint("保存剧集进度成功");
     }
 
     playPauseController.dispose();

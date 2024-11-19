@@ -35,6 +35,7 @@ import 'package:win32/win32.dart';
 /// basic on dart_vlc.
 class DesktopVideoPlayer extends StatefulWidget {
   Function? onFullScreenChange;
+  Function? onPlayCompleted;
   Function(int count)? onDanmukuPoolInitialed;
 
   DesktopVideoPlayer(
@@ -126,6 +127,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     _player.playbackStream.listen((data) {
       if (data.isCompleted) {
         EpisodeCollectionApi().updateCollectionFinish(_episodeId, true);
+        if (widget.onPlayCompleted != null) {
+          widget.onPlayCompleted?.call();
+        }
       }
     });
 
@@ -141,10 +145,13 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   void dispose() {
     WakelockPlus.disable();
     if (_episodeId > 0) {
-      EpisodeCollectionApi().updateCollection(_episodeId, _position, _duration);
-      if (kDebugMode) {
-        print("保存剧集进度成功");
-      }
+      EpisodeCollectionApi().findCollection(_episodeId)
+      .then((epCollection){
+        if (epCollection.finish != null && !(epCollection.finish!)) {
+          EpisodeCollectionApi().updateCollection(_episodeId, _position, _duration);
+        }
+      });
+      debugPrint("保存剧集进度成功");
     }
     _player.pause();
     playPauseStream.cancel();
