@@ -159,7 +159,7 @@ class LoginState extends State<LoginView> {
     );
   }
 
-  void login() {
+  void login() async {
     var state = (_formKey.currentState as FormState);
     bool result = state.validate();
     if (!result) {
@@ -167,22 +167,13 @@ class LoginState extends State<LoginView> {
       return;
     }
     state.save();
-    AuthApi()
-        .login(_baseUrl, _username, _password)
-        .then((value) => {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => const MyApp()))
-            })
-        .onError((error, stackTrace) => {
-              FlToast.Fluttertoast.showToast(
-                  msg:
-                      "登录失败 by username: $_username, password: $_password, error: $error",
-                  toastLength: FlToast.Toast.LENGTH_SHORT,
-                  gravity: FlToast.ToastGravity.CENTER,
-                  timeInSecForIosWeb: 5,
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
-                  fontSize: 16.0)
-            });
+    try {
+      await AuthApi().login(_baseUrl, _username, _password);
+      Toast.show(context, "登录成功");
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const MyApp()));
+    } catch (e, stackTrace) {
+      Toast.show(context, "登录失败 by username: $_username, password: $_password, error: $e");
+    } finally {}
   }
 }
