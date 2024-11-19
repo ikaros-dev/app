@@ -1,6 +1,6 @@
 name: ikaros
 description: ikaros app by flutter
-version: 20.3.1
+version: 20.3.2
 
 environment:
   sdk: '>=2.18.4 <=3.10.5'
@@ -38,7 +38,6 @@ dependencies:
   photo_manager: ^3.3.0
   app_links: ^6.3.2
   intl: ^0.19.0
-  flutter_secure_storage: ^4.2.1
 
 dev_dependencies:
   flutter_test:
