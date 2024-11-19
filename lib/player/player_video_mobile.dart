@@ -34,9 +34,10 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 /// basic on flutter_vlc_player.
 class MobileVideoPlayer extends StatefulWidget {
   Function? onFullScreenChange;
+  Function? onPlayCompleted;
   Function(int count)? onDanmukuPoolInitialed;
 
-  MobileVideoPlayer({super.key, this.onFullScreenChange, this.onDanmukuPoolInitialed});
+  MobileVideoPlayer({super.key, this.onFullScreenChange, this.onPlayCompleted, this.onDanmukuPoolInitialed});
 
   @override
   State<StatefulWidget> createState() {
@@ -125,6 +126,9 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
     if (_player.value.isEnded) {
       EpisodeCollectionApi().updateCollectionFinish(_episodeId, true);
+      if (widget.onPlayCompleted != null) {
+        widget.onPlayCompleted?.call();
+      }
     }
 
     setState(() {});

@@ -39,7 +39,7 @@ class DesktopVideoPlayer extends StatefulWidget {
   Function(int count)? onDanmukuPoolInitialed;
 
   DesktopVideoPlayer(
-      {super.key, this.onFullScreenChange, this.onDanmukuPoolInitialed});
+      {super.key, this.onFullScreenChange, this.onPlayCompleted, this.onDanmukuPoolInitialed});
 
   @override
   State<StatefulWidget> createState() {

@@ -108,6 +108,20 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     });
   }
 
+  void _onPlayCompleted() {
+    Toast.show(context, "剧集已经播放完成，3秒后切换下一集！", duration: const Duration(seconds: 3));
+    Future.delayed(const Duration(seconds: 3), (){
+      Toast.show(context, "切换下一集中...");
+      if (_currentEpisodeRecord.value == null) { return; }
+      _episodeRecords.where((epRecord) => epRecord.episode.group == _currentEpisodeRecord.value?.episode.group);
+      final index = _episodeRecords.indexOf(_currentEpisodeRecord.value!);
+      final nextIndex = index + 1;
+      if (nextIndex < _episodeRecords.length) {
+        _currentEpisodeRecord.value = _episodeRecords[nextIndex];
+      }
+    });
+  }
+
   bool _episodeIsFinish(int episodeId) {
     if (_episodeCollections.isEmpty) {
       return false;
@@ -119,6 +133,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   }
 
   Future<void> reloadMediaPlayer() async {
+    await _loadEpisodeCollectionsWithSubjectId();
     if (_currentEpisodeRecord.value == null || _subject == null) return;
     EpisodeRecord episodeRecord = _currentEpisodeRecord.value!;
     if (episodeRecord.resources.isEmpty) return;
@@ -285,6 +300,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                   _isFullScreen = !_isFullScreen;
                 });
               },
+              onPlayCompleted: _onPlayCompleted,
               onDanmukuPoolInitialed: (int count) {
                 setState(() {
                   _danmuCount = count;
@@ -298,6 +314,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                   _isFullScreen = !_isFullScreen;
                 });
               },
+              onPlayCompleted: _onPlayCompleted,
               onDanmukuPoolInitialed: (int count) {
                 setState(() {
                   _danmuCount = count;
@@ -746,13 +763,13 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
         onLongPress: epRecord.resources.isEmpty
             ? null
             : () async {
-          bool isFinish = _episodeIsFinish(epRecord.episode.id);
-          await EpisodeCollectionApi()
-              .updateCollectionFinish(epRecord.episode.id, !isFinish);
-          Toast.show(context, "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}");
-          Navigator.pop(context);
-          await _loadEpisodeCollectionsWithSubjectId();
-        },
+                bool isFinish = _episodeIsFinish(epRecord.episode.id);
+                await EpisodeCollectionApi()
+                    .updateCollectionFinish(epRecord.episode.id, !isFinish);
+                Toast.show(context, "更新剧集收藏状态为: ${isFinish ? "未看" : "看完"}");
+                Navigator.pop(context);
+                await _loadEpisodeCollectionsWithSubjectId();
+              },
         onPressed: epRecord.resources.isEmpty
             ? null
             : () {
