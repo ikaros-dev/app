@@ -91,8 +91,8 @@ class SubjectListState extends State<SubjectsPage> {
       _isSubjectLoading = true;
     });
     if (_baseUrl == '') {
-      AuthParams authParams = await AuthApi().getAuthParams();
-      if (authParams.baseUrl == '') {
+      AuthParams? authParams = await AuthApi().getAuthParams();
+      if (authParams == null) {
         if (mounted) {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => const LoginView()));
@@ -128,8 +128,8 @@ class SubjectListState extends State<SubjectsPage> {
 
   _loadMoreSubjects() async {
     if (_baseUrl == '') {
-      AuthParams authParams = await AuthApi().getAuthParams();
-      if (authParams.baseUrl == '') {
+      AuthParams? authParams = await AuthApi().getAuthParams();
+      if (authParams == null) {
         if (mounted) {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => const LoginView()));

@@ -2,20 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyrefresh/easy_refresh.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
+import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
-import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
-import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/component/full_screen_Image.dart';
 import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/collection-const.dart';
-import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
-import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 
@@ -49,8 +46,8 @@ class CollectionsState extends State<CollectionPage> {
       _isCollectionsLoading = true;
     });
     if (_baseUrl == '') {
-      AuthParams authParams = await AuthApi().getAuthParams();
-      if (authParams.baseUrl == '') {
+      AuthParams? authParams = await AuthApi().getAuthParams();
+      if (authParams == null) {
         if (mounted) {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => const LoginView()));
@@ -79,8 +76,8 @@ class CollectionsState extends State<CollectionPage> {
 
   _loadMoreSubjectCollections() async {
     if (_baseUrl == '') {
-      AuthParams authParams = await AuthApi().getAuthParams();
-      if (authParams.baseUrl == '') {
+      AuthParams? authParams = await AuthApi().getAuthParams();
+      if (authParams == null) {
         if (mounted) {
           Navigator.push(context,
               MaterialPageRoute(builder: (context) => const LoginView()));
@@ -208,14 +205,10 @@ class CollectionsState extends State<CollectionPage> {
       return;
     }
 
-    Subject subject = await SubjectApi().findById(subjectId);
-    // SubjectCollection? collection =
-    //     await SubjectCollectionApi().findCollectionBySubjectId(subjectId);
-
     Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => SubjectPage(
-          id: subjectId.toString(),
-        )));
+              id: subjectId.toString(),
+            )));
   }
 
   Widget buildSubjectCollectionsGridView() {
@@ -231,27 +224,27 @@ class CollectionsState extends State<CollectionPage> {
         return Column(
           children: [
             SubjectCover(
-              url: UrlUtils.getCoverUrl(_baseUrl, subjectCollections[index].cover),
+              url: UrlUtils.getCoverUrl(
+                  _baseUrl, subjectCollections[index].cover),
               nsfw: subjectCollections[index].nsfw,
-              onTap: (){
+              onTap: () {
                 _onSubjectCardTap(subjectCollections[index].subjectId);
               },
             ),
             Flexible(
                 child: Text(
-                  ((subjectCollections[index].nameCn == null ||
+              ((subjectCollections[index].nameCn == null ||
                       subjectCollections[index].nameCn == '')
-                      ? subjectCollections[index].name
-                      : subjectCollections[index].nameCn)!,
-                  maxLines: 2,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: true,
-                )),
+                  ? subjectCollections[index].name
+                  : subjectCollections[index].nameCn)!,
+              maxLines: 2,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+            )),
           ],
         );
-
 
         return GestureDetector(
           onTap: () {
@@ -329,7 +322,6 @@ class CollectionsState extends State<CollectionPage> {
                   ],
                 ),
               ),
-
               Flexible(
                   child: Text(
                 ((subjectCollections[index].nameCn == null ||

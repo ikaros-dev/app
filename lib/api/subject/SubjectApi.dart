@@ -1,39 +1,16 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
-import 'package:ikaros/api/subject/enums/SubjectType.dart';
+import 'package:ikaros/api/dio_client.dart';
 
 import 'model/Subject.dart';
 
 class SubjectApi {
-  Subject error = Subject(
-      id: -1,
-      type: SubjectType.OTHER,
-      name: "-1",
-      nsfw: false,
-      cover: "-1",
-      nameCn: '',
-      infobox: '',
-      summary: '',
-      airTime: '');
-
   Future<PagingWrap> listSubjectsByCondition(
       int page, int size, String name, String nameCn, bool? nsfw, String? type,
       {String? time, bool? airTimeDesc, bool? updateTimeDesc}) async {
-    AuthParams authParams = await AuthApi().getAuthParams();
-    if (authParams.baseUrl == '' ||
-        authParams.username == '' ||
-        authParams.authHeader == '') {
-      return Future(() =>
-          PagingWrap(page: page, size: size, total: 0, items: List.empty()));
-    }
-    String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.authHeader;
-    String apiUrl = "$baseUrl/api/v1alpha1/subjects/condition";
+    String apiUrl = "/api/v1alpha1/subjects/condition";
     try {
       final Map<String, Object?> queryParams = {
         'page': page.toString(),
@@ -56,12 +33,9 @@ class SubjectApi {
         queryParams.putIfAbsent("updateTimeDesc", () => updateTimeDesc);
       }
 
-      BaseOptions options = BaseOptions();
-      options.headers.putIfAbsent("Authorization", () => basicAuth);
-
       debugPrint("queryParams: $queryParams");
-      var response =
-          await Dio(options).get(apiUrl, queryParameters: queryParams);
+      var response = await DioClient.instance.dio
+          .get(apiUrl, queryParameters: queryParams);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return PagingWrap(
@@ -74,30 +48,19 @@ class SubjectApi {
     }
   }
 
-  Future<Subject> findById(int id) async {
-    AuthParams authParams = await AuthApi().getAuthParams();
-    if (authParams.baseUrl == '' ||
-        authParams.username == '' ||
-        authParams.authHeader == '') {
-      return Future(() => error);
-    }
-    String baseUrl = authParams.baseUrl;
-    String basicAuth = authParams.authHeader;
-    String apiUrl = "$baseUrl/api/v1alpha1/subject/$id";
+  Future<Subject?> findById(int id) async {
+    String apiUrl = "/api/v1alpha1/subject/$id";
     try {
-      BaseOptions options = BaseOptions();
-      options.headers.putIfAbsent("Authorization", () => basicAuth);
-
       // print("queryParams: $queryParams");
-      var response = await Dio(options).get(apiUrl);
+      var response = await DioClient.instance.dio.get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
-        return error;
+        return null;
       }
       return Subject.fromJson(response.data);
     } catch (e) {
       print(e);
-      return error;
+      return null;
     }
   }
 }

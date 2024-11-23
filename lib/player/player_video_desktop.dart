@@ -74,7 +74,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   Duration _position = Duration.zero;
   Duration _lastPosition = Duration.zero;
   late Episode _episode;
-  late Subject _subject;
+  late Subject? _subject;
   late List<SubjectSync> _syncs = [];
   late DanmakuController _danmuku;
   List<CommentEpisode> _commentEpisodes = [];
@@ -147,7 +147,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     if (_episodeId > 0) {
       EpisodeCollectionApi().findCollection(_episodeId)
       .then((epCollection){
-        if (epCollection.finish != null && !(epCollection.finish!)) {
+        if (epCollection != null && epCollection.finish != null && !(epCollection.finish!)) {
           EpisodeCollectionApi().updateCollection(_episodeId, _position, _duration);
         }
       });
@@ -206,11 +206,11 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     }
     _subject = await SubjectApi().findById(_episode.subjectId);
     _syncs = await SubjectSyncApi().getSyncsBySubjectId(_episode.subjectId);
-    if (_subject.id == -1 || _syncs.isEmpty) {
+    if (_subject == null) {
       return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
     }
     SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
-        .searchEpisodes(_subject.name, _episode.sequence.toInt().toString());
+        .searchEpisodes(_subject!.name, _episode.sequence.toInt().toString());
     if (searchEpsResp == null ||
         !searchEpsResp.success ||
         searchEpsResp.animes.isEmpty) return;
@@ -571,7 +571,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       }
     }
     String fileName =
-        '${_subject.id}_${_episodeId}_${_position.inMilliseconds}ms.png';
+        '${_subject?.id}_${_episodeId}_${_position.inMilliseconds}ms.png';
     File file = File('${directory.path}/$fileName');
     if (kDebugMode) {
       print("take snapshot to file: ${file.path}");

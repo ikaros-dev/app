@@ -181,9 +181,9 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     ;
 
     // 视频收藏
-    EpisodeCollection episodeCollection =
+    EpisodeCollection? episodeCollection =
         await EpisodeCollectionApi().findCollection(episodeResource.episodeId);
-    int progress = episodeCollection.progress ?? 0;
+    int progress = episodeCollection?.progress ?? 0;
 
     /// 移动端
     if (Platform.isAndroid || Platform.isIOS) {
@@ -571,7 +571,8 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   }
 
   Future<void> _loadApiBaseUrl() async {
-    AuthParams authParams = await AuthApi().getAuthParams();
+    AuthParams? authParams = await AuthApi().getAuthParams();
+    if (authParams == null) return;
     setState(() {
       _apiBaseUrl = authParams.baseUrl;
     });

@@ -37,7 +37,11 @@ class MobileVideoPlayer extends StatefulWidget {
   Function? onPlayCompleted;
   Function(int count)? onDanmukuPoolInitialed;
 
-  MobileVideoPlayer({super.key, this.onFullScreenChange, this.onPlayCompleted, this.onDanmukuPoolInitialed});
+  MobileVideoPlayer(
+      {super.key,
+      this.onFullScreenChange,
+      this.onPlayCompleted,
+      this.onDanmukuPoolInitialed});
 
   @override
   State<StatefulWidget> createState() {
@@ -65,7 +69,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   bool _progressIsLoaded = false;
   int _progress = 0;
   late Episode _episode;
-  late Subject _subject;
+  late Subject? _subject;
   late List<SubjectSync> _syncs = [];
   late DanmakuController _danmuku;
   List<CommentEpisode> _commentEpisodes = [];
@@ -157,10 +161,12 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   void dispose() {
     WakelockPlus.disable();
     if (_episodeId > 0) {
-      EpisodeCollectionApi().findCollection(_episodeId)
-          .then((epCollection){
-        if (epCollection.finish != null && !(epCollection.finish!)) {
-          EpisodeCollectionApi().updateCollection(_episodeId, _position, _duration);
+      EpisodeCollectionApi().findCollection(_episodeId).then((epCollection) {
+        if (epCollection != null &&
+            epCollection.finish != null &&
+            !(epCollection.finish!)) {
+          EpisodeCollectionApi()
+              .updateCollection(_episodeId, _position, _duration);
         }
       });
       debugPrint("保存剧集进度成功");
@@ -290,11 +296,11 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       return; // 根据条目名和序号只支持查询正片弹幕
     _subject = await SubjectApi().findById(_episode.subjectId);
     _syncs = await SubjectSyncApi().getSyncsBySubjectId(_episode.subjectId);
-    if (_subject.id == -1 || _syncs.isEmpty) {
+    if (_subject == null) {
       return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
     }
     SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
-        .searchEpisodes(_subject.name, _episode.sequence.toInt().toString());
+        .searchEpisodes(_subject!.name, _episode.sequence.toInt().toString());
     if (searchEpsResp == null ||
         !searchEpsResp.success ||
         searchEpsResp.animes.isEmpty) return;
@@ -385,7 +391,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     Uint8List pngBytes = await _player.takeSnapshot();
     // 已获取到权限
     String fileName =
-        '${_subject.id}_${_episodeId}_${_position.inMilliseconds}ms.png';
+        '${_subject?.id}_${_episodeId}_${_position.inMilliseconds}ms.png';
     await PhotoManager.editor.saveImage(pngBytes, filename: fileName);
     Toast.show(context, "截图已保存到相册");
 

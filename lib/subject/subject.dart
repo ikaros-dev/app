@@ -37,30 +37,26 @@ class SubjectPage extends StatefulWidget {
 }
 
 class _SubjectState extends State<SubjectPage> {
-  late String _apiBaseUrl;
-  late Subject _subject;
-  late List<Episode> _episodes = [];
-  late List<EpisodeRecord> _episodeRecords = [];
-  late SubjectCollection? _subjectCollection;
+  String _apiBaseUrl = "";
+  Subject? _subject;
+  List<Episode> _episodes = [];
+  List<EpisodeRecord> _episodeRecords = [];
+  SubjectCollection? _subjectCollection;
   CollectionType? _collectionType;
-  late SettingConfig _settingConfig = SettingConfig();
-
-  var _loadSubjectWithIdFuture;
-  var _loadApiBaseUrlFuture;
 
   static const double _globalPadding = 10.0;
 
   List<EpisodeCollection> _episodeCollections = List.empty();
 
-  late String _selectedCollectBtnLabelVal = "收藏";
-  late IconData _selectedCollectBtnIconData = Icons.star_border_outlined;
+  String _selectedCollectBtnLabelVal = "收藏";
+  IconData _selectedCollectBtnIconData = Icons.star_border_outlined;
   late MenuController _collectMenuController;
 
-  Future<Subject> _loadSubjectWithId() async {
+  Future<void> _loadSubjectWithId() async {
     _subject = await SubjectApi().findById(int.parse(widget.id.toString()));
     _episodeCollections = await EpisodeCollectionApi()
         .findListBySubjectId(int.parse(widget.id.toString()));
-    return _subject;
+    setState(() {    });
   }
 
   bool _episodeIsFinish(int episodeId) {
@@ -73,18 +69,20 @@ class _SubjectState extends State<SubjectPage> {
     return epColl?.finish ?? false;
   }
 
-  Future<AuthParams> _loadBaseUrl() async {
-    return AuthApi().getAuthParams();
+  Future<void> _loadBaseUrl() async {
+    AuthParams? authParams = await AuthApi().getAuthParams();
+    setState(() {
+      _apiBaseUrl = authParams?.baseUrl ?? "";
+    });
   }
 
   @override
   void initState() {
     super.initState();
-    _loadSubjectWithIdFuture = _loadSubjectWithId();
-    _loadApiBaseUrlFuture = _loadBaseUrl();
+    _loadSubjectWithId();
+    _loadBaseUrl();
     _fetchSubjectEpisodes();
     _fetchSubjectEpisodeRecords();
-    _fetchSettingConfig();
     _fetchSubjectCollection();
   }
 
@@ -101,34 +99,22 @@ class _SubjectState extends State<SubjectPage> {
         ),
         actions: [_buildLinkIconButton()],
       ),
-      body: FutureBuilder<Subject>(
-          future: _loadSubjectWithIdFuture,
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasError) {
-                return Text("Load subject error: ${snapshot.error}");
-              } else {
-                _subject = snapshot.data;
-                return SingleChildScrollView(
-                  child: Padding(
-                      padding: const EdgeInsets.all(_globalPadding),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildSubjectDisplayRow(),
-                          const SizedBox(height: 10),
-                          _buildEpisodeAndCollectionButtonsRow(),
-                          const SizedBox(height: 10),
-                          _buildMultiTabs(),
-                        ],
-                      )),
-                );
-              }
-            } else {
-              return const LinearProgressIndicator();
-            }
-          }),
+      body: _subject == null ? const LinearProgressIndicator()
+      : SingleChildScrollView(
+        child: Padding(
+            padding: const EdgeInsets.all(_globalPadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSubjectDisplayRow(),
+                const SizedBox(height: 10),
+                _buildEpisodeAndCollectionButtonsRow(),
+                const SizedBox(height: 10),
+                _buildMultiTabs(),
+              ],
+            )),
+      ),
     );
   }
 
@@ -136,7 +122,7 @@ class _SubjectState extends State<SubjectPage> {
     return IconButton(
         onPressed: () async {
           if (_apiBaseUrl == "") {
-            _apiBaseUrl = (await _loadBaseUrl()).baseUrl;
+            await _loadBaseUrl();
           }
           var url =
               "$_apiBaseUrl/console/#/subjects/subject/details/${widget.id}";
@@ -153,11 +139,11 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   Text _buildSubjectTitle() {
-    var name = (_subject.nameCn != null && _subject.nameCn != '')
-        ? _subject.nameCn!
-        : _subject.name;
+    var name = (_subject?.nameCn != null && _subject?.nameCn != '')
+        ? _subject?.nameCn!
+        : _subject?.name;
     return Text(
-      name,
+      name ?? "",
       overflow: TextOverflow.ellipsis,
       style:
           const TextStyle(color: Colors.black, backgroundColor: Colors.white),
@@ -165,10 +151,10 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   String _getSubjectTitle() {
-    if (_subject.nameCn != null && "" != _subject.nameCn) {
-      return _subject.nameCn!;
+    if (_subject?.nameCn != null && "" != _subject?.nameCn) {
+      return _subject?.nameCn ?? "";
     }
-    return _subject.name;
+    return _subject?.name ?? "";
   }
 
   Row _buildSubjectDisplayRow() {
@@ -202,7 +188,7 @@ class _SubjectState extends State<SubjectPage> {
               label: Text(_getAirTimeStr()),
             ),
             const SizedBox(height: 10),
-            Text("${SubjectConst.typeCnMap[_subject.type.name]} "
+            Text("${SubjectConst.typeCnMap[_subject?.type.name]} "
                 "- 全${_episodeRecords.isNotEmpty ? _episodeRecords.length : _episodes.length}话")
           ],
         ))
@@ -211,28 +197,14 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   Widget _buildSubjectCover() {
-    return FutureBuilder<AuthParams>(
-        future: _loadApiBaseUrlFuture,
-        builder: (BuildContext context, AsyncSnapshot snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (snapshot.hasError) {
-              return Text("Load api base url error: ${snapshot.error}");
-            } else {
-              _apiBaseUrl = (snapshot.data as AuthParams).baseUrl;
-              return SizedBox(
-                width: 120,
-                child: SubjectCover(
-                  url: UrlUtils.getCoverUrl(_apiBaseUrl, _subject.cover),
-                  nsfw: _subject.nsfw,
-                ),
-              );
-            }
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        });
+    if (_apiBaseUrl == "") return const LinearProgressIndicator();
+    return SizedBox(
+      width: 120,
+      child: SubjectCover(
+        url: UrlUtils.getCoverUrl(_apiBaseUrl, _subject?.cover ?? ""),
+        nsfw: _subject?.nsfw,
+      ),
+    );
   }
 
   Widget _buildSubjectTitleInfo() {
@@ -241,7 +213,7 @@ class _SubjectState extends State<SubjectPage> {
       crossAxisAlignment: WrapCrossAlignment.start,
       children: [
         Text(
-          _subject.nameCn ?? _subject.name,
+          _subject?.nameCn ?? _subject?.name ?? "",
           style: const TextStyle(
               fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black),
         ),
@@ -250,15 +222,15 @@ class _SubjectState extends State<SubjectPage> {
         // Text(_subject.type.toString(), overflow: TextOverflow.ellipsis,),
 
         Text(
-          _subject.name,
+          _subject?.name ?? "",
           overflow: TextOverflow.ellipsis,
         ),
 
-        Text(_subject.nameCn!, overflow: TextOverflow.ellipsis),
-        Text(_subject.nameCn!, overflow: TextOverflow.ellipsis),
-        Text(_subject.nameCn!, overflow: TextOverflow.ellipsis),
+        Text(_subject?.nameCn ?? "", overflow: TextOverflow.ellipsis),
+        Text(_subject?.nameCn ?? "", overflow: TextOverflow.ellipsis),
+        Text(_subject?.nameCn ?? "", overflow: TextOverflow.ellipsis),
 
-        Text(_subject.nsfw == true ? "是" : "否",
+        Text(_subject?.nsfw == true ? "是" : "否",
             overflow: TextOverflow.ellipsis),
 
         Text("${_episodes.length}", overflow: TextOverflow.ellipsis),
@@ -267,7 +239,7 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   Row _buildEpisodeAndCollectionButtonsRow() {
-    SubjectType type = _subject.type;
+    SubjectType? type = _subject?.type;
     bool allowType = true;
     if (type == SubjectType.GAME || type == SubjectType.COMIC || type == SubjectType.NOVEL) {
       // Toast.show(context, "当前类型[$type]不支持进入剧集页展示，请期待后续的新功能更新。");
@@ -287,7 +259,7 @@ class _SubjectState extends State<SubjectPage> {
         displayTitle = "剧集无资源";
       }
       if (!allowType) {
-        displayTitle = "类型[${SubjectConst.typeCnMap[type.name]}]不支持";
+        displayTitle = "类型[${SubjectConst.typeCnMap[type?.name]}]不支持";
       }
     }
     return Row(
@@ -304,7 +276,7 @@ class _SubjectState extends State<SubjectPage> {
               onPressed: !toEpisodeBtnEnable ? null : () {
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) => SubjectEpisodesPage(
-                          subjectId: _subject.id,
+                          subjectId: _subject?.id ?? -1,
                         )));
               },
               style: OutlinedButton.styleFrom(
@@ -539,13 +511,21 @@ class _SubjectState extends State<SubjectPage> {
                   child: TabBarView(
                 children: [
                   Text(
-                    _subject.summary!,
+<<<<<<< HEAD
+                    _subject?.summary ?? "",
+=======
+                    _subject.summary ?? "",
+>>>>>>> 6cc31aecb3a81493164d95a11433f5a22d243f50
                     style: const TextStyle(overflow: TextOverflow.ellipsis),
                     maxLines: 40,
                     softWrap: true,
                   ),
                   Text(
-                    _subject.infobox!,
+<<<<<<< HEAD
+                    _subject?.infobox ?? "",
+=======
+                    _subject.infobox ?? "",
+>>>>>>> 6cc31aecb3a81493164d95a11433f5a22d243f50
                     style: const TextStyle(overflow: TextOverflow.ellipsis),
                     maxLines: 40,
                     softWrap: true,
@@ -576,10 +556,6 @@ class _SubjectState extends State<SubjectPage> {
     setState(() {});
   }
 
-  Future<void> _fetchSettingConfig() async {
-    _settingConfig = await SharedPrefsUtils.getSettingConfig();
-    setState(() {});
-  }
 
   Future<void> _fetchSubjectCollection() async {
     _subjectCollection = await SubjectCollectionApi()
@@ -620,9 +596,9 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   String? _getSubjectName() {
-    if (_subject.nameCn != null && _subject.nameCn != "")
-      return _subject.nameCn;
-    return _subject.name;
+    if (_subject?.nameCn != null && _subject?.nameCn != "")
+      return _subject?.nameCn;
+    return _subject?.name;
   }
 
   Future<void> _postCollectSubject() async {
@@ -630,18 +606,20 @@ class _SubjectState extends State<SubjectPage> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-          builder: (context) => SubjectPage(id: _subject.id.toString())),
+          builder: (context) => SubjectPage(id: _subject?.id.toString())),
     );
   }
 
   Future<void> _postCollectSubjectWithoutRefresh(CollectionType type) async {
+    if (_subject == null) return;
     await SubjectCollectionApi()
-        .updateCollection(_subject.id, type, _subject.nsfw);
+        .updateCollection(_subject!.id, type, _subject!.nsfw);
     Toast.show(context, "收藏番剧[${_getSubjectName()}]成功.");
   }
 
   Future<void> _postUnCollectSubject() async {
-    await SubjectCollectionApi().removeCollection(_subject.id);
+    if (_subject == null) return;
+    await SubjectCollectionApi().removeCollection(_subject!.id);
     Toast.show(context, "取消收藏番剧[${_getSubjectName()}]成功.");
     // Navigator.pushReplacement(
     //   context,
@@ -651,8 +629,9 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   String _getAirTimeStr() {
-    if (_subject.airTime == null || "" == _subject.airTime) return "1970 年 1 月";
-    DateTime dateTime = DateTime.parse(_subject.airTime!);
+    if (_subject == null) return "";
+    if (_subject!.airTime == null || "" == _subject!.airTime) return "1970 年 1 月";
+    DateTime dateTime = DateTime.parse(_subject!.airTime!);
     return DateFormat('yyyy 年 MM 月').format(dateTime);
   }
 }

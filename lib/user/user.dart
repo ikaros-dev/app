@@ -74,8 +74,8 @@ class _UserPageState extends State<UserPage> {
   }
 
   Future<void> _fetchBaseUrl() async {
-    AuthParams authParams = await AuthApi().getAuthParams();
-    _baseUrl = authParams.baseUrl;
+    AuthParams? authParams = await AuthApi().getAuthParams();
+    _baseUrl = authParams?.baseUrl ?? "";
     setState(() {});
   }
 
