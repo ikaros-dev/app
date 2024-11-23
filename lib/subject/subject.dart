@@ -511,21 +511,13 @@ class _SubjectState extends State<SubjectPage> {
                   child: TabBarView(
                 children: [
                   Text(
-<<<<<<< HEAD
                     _subject?.summary ?? "",
-=======
-                    _subject.summary ?? "",
->>>>>>> 6cc31aecb3a81493164d95a11433f5a22d243f50
                     style: const TextStyle(overflow: TextOverflow.ellipsis),
                     maxLines: 40,
                     softWrap: true,
                   ),
                   Text(
-<<<<<<< HEAD
                     _subject?.infobox ?? "",
-=======
-                    _subject.infobox ?? "",
->>>>>>> 6cc31aecb3a81493164d95a11433f5a22d243f50
                     style: const TextStyle(overflow: TextOverflow.ellipsis),
                     maxLines: 40,
                     softWrap: true,
