@@ -8,7 +8,8 @@ class UserApi {
   Future<User?> getMe() async {
     String apiUrl = "/api/v1alpha1/user/me";
     try {
-      Response response = await DioClient.instance.dio.get(apiUrl);
+      Dio dio = await DioClient.getDio();
+      Response response = await dio.get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return null;

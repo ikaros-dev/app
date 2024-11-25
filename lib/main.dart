@@ -5,7 +5,6 @@ import 'package:ikaros/utils/screen_utils.dart';
 import 'api/dio_client.dart';
 
 void main() {
-  DioClient.instance.ensureInit();
   runApp(const MyApp());
 }
 

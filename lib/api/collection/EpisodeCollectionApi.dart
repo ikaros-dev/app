@@ -12,7 +12,8 @@ class EpisodeCollectionApi {
   Future<EpisodeCollection?> findCollection(int episodeId) async {
     String apiUrl = "/api/v1alpha1/collection/episode/$episodeId";
     try {
-      var response = await DioClient.instance.dio.get(apiUrl);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return null;
@@ -29,7 +30,8 @@ class EpisodeCollectionApi {
 
     String apiUrl = "/api/v1alpha1/collection/episodes/subjectId/$subjectId";
     try {
-      var response = await DioClient.instance.dio.get(apiUrl);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return result;
@@ -61,7 +63,8 @@ class EpisodeCollectionApi {
     // if (kDebugMode) {
     //   print("apiUrl:$apiUrl   basicAuth:$basicAuth");
     // }
-    var response = await DioClient.instance.dio.put(apiUrl, queryParameters: queryParams);
+    Dio dio = await DioClient.getDio();
+    var response = await dio.put(apiUrl, queryParameters: queryParams);
     if (response.statusCode != 200) {
       if (kDebugMode) {
         print("response status code: ${response.statusCode}");
@@ -78,7 +81,8 @@ class EpisodeCollectionApi {
   Future updateCollectionFinish(int episodeId, bool isFinish) async {
     String apiUrl =
         "/api/v1alpha1/collection/episode/finish/$episodeId/$isFinish";
-    var response = await DioClient.instance.dio.put(apiUrl);
+    Dio dio = await DioClient.getDio();
+    var response = await dio.put(apiUrl);
     if (response.statusCode != 200) {
       print("response status code: ${response.statusCode}");
       return;

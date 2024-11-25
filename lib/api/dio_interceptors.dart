@@ -33,14 +33,15 @@ class AuthExpireInterceptor extends Interceptor {
       if (authParams == null) {
         await AuthApi().logout();
       } else {
-        String newToken = await AuthApi().refreshToken(authParams.refreshToken);
         try {
+          String newToken = await AuthApi().refreshToken(authParams.refreshToken);
           // 2. 更新请求头
           final options = err.requestOptions;
           options.headers['Authorization'] = 'Bearer $newToken';
 
           // 3. 重新发起请求
-          final retryResponse = await Dio().request(
+          final dio = await DioClient.getDio();
+          final retryResponse = await dio.request(
             options.path,
             options: Options(
               method: options.method,
@@ -54,6 +55,7 @@ class AuthExpireInterceptor extends Interceptor {
           return handler.resolve(retryResponse);
         } catch (e) {
           // 刷新 Token 或重试失败，抛出错误
+          await AuthApi().logout();
           return handler.reject(err);
         }
       }

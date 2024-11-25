@@ -16,8 +16,8 @@ class SubjectSyncApi {
     try {
 
       // print("queryParams: $queryParams");
-      Response<List<dynamic>?> response =
-          await DioClient.instance.dio.get<List>(apiUrl);
+      Dio dio = await DioClient.getDio();
+      Response<List<dynamic>?> response = await dio.get<List>(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return List.empty();

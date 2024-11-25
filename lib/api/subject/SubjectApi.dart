@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/dio_client.dart';
@@ -34,8 +35,8 @@ class SubjectApi {
       }
 
       debugPrint("queryParams: $queryParams");
-      var response = await DioClient.instance.dio
-          .get(apiUrl, queryParameters: queryParams);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl, queryParameters: queryParams);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return PagingWrap(
@@ -52,7 +53,8 @@ class SubjectApi {
     String apiUrl = "/api/v1alpha1/subject/$id";
     try {
       // print("queryParams: $queryParams");
-      var response = await DioClient.instance.dio.get(apiUrl);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return null;

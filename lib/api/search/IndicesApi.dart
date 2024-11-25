@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:ikaros/api/dio_client.dart';
 import 'package:ikaros/api/search/model/SubjectSearchResult.dart';
@@ -15,8 +16,8 @@ class IndicesApi {
         // 在这里添加更多查询参数
       };
 
-      var response = await DioClient.instance.dio
-          .get(apiUrl, queryParameters: queryParams);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl, queryParameters: queryParams);
       if (response.statusCode != 200) {
         return null;
       }

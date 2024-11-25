@@ -44,27 +44,27 @@ class AuthApi {
       "code": ""
     });
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString(SharedPreferencesKeyAuthBaseUrl, baseUrl);
-    prefs.setString(SharedPreferencesKeyAuthUsername, username);
-    prefs.setString(SharedPreferencesKeyAuthToken, response.data['accessToken']);
-    prefs.setString(SharedPreferencesKeyAuthRefreshToken, response.data['refreshToken']);
-    DioClient.instance.rebuild(baseUrl: baseUrl);
+    await prefs.setString(SharedPreferencesKeyAuthBaseUrl, baseUrl);
+    await prefs.setString(SharedPreferencesKeyAuthUsername, username);
+    await prefs.setString(SharedPreferencesKeyAuthToken, response.data['accessToken']);
+    await prefs.setString(SharedPreferencesKeyAuthRefreshToken, response.data['refreshToken']);
+    await DioClient.rebuild(baseUrl: baseUrl);
   }
 
   Future logout() async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.remove(SharedPreferencesKeyAuthBaseUrl);
-    prefs.remove(SharedPreferencesKeyAuthUsername);
-    prefs.remove(SharedPreferencesKeyAuthToken);
-    prefs.remove(SharedPreferencesKeyAuthRefreshToken);
-    prefs.reload();
+    await prefs.remove(SharedPreferencesKeyAuthBaseUrl);
+    await prefs.remove(SharedPreferencesKeyAuthUsername);
+    await prefs.remove(SharedPreferencesKeyAuthToken);
+    await prefs.remove(SharedPreferencesKeyAuthRefreshToken);
   }
 
   Future<String> refreshToken(String refreshToken) async {
     String url = "/api/v1alpha1/security/auth/token/jwt/refresh";
-    var response = await DioClient.instance.dio.put(url);
+    Dio dio = await DioClient.getDio();
+    var response = await dio.put(url, data: refreshToken);
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString(SharedPreferencesKeyAuthToken, response.data);
+    await prefs.setString(SharedPreferencesKeyAuthToken, response.data);
     return response.data;
   }
 }

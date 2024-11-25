@@ -6,6 +6,8 @@ import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/user/user.dart';
 import 'package:ikaros/utils/message_utils.dart';
 
+import 'api/dio_client.dart';
+
 /// 主页面 移动端
 class MobileLayout extends StatefulWidget {
   const MobileLayout({Key? key}) : super(key: key);
@@ -130,6 +132,12 @@ class _DesktopLayoutState extends State<DesktopLayout> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override

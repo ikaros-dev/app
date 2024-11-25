@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
@@ -19,7 +20,8 @@ class SubjectCollectionApi {
     }
 
     try {
-      var response = await DioClient.instance.dio.get(apiUrl);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return null;
@@ -34,7 +36,8 @@ class SubjectCollectionApi {
   Future<SubjectCollection?> findCollectionBySubjectId(int subjectId) async {
     String apiUrl = "/api/v1alpha1/collection/subject/$subjectId";
     try {
-      var response = await DioClient.instance.dio.get(apiUrl);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return null;
@@ -59,7 +62,8 @@ class SubjectCollectionApi {
     }
 
     try {
-      var response = await DioClient.instance.dio.post(apiUrl);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.post(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return;
@@ -75,7 +79,8 @@ class SubjectCollectionApi {
     String apiUrl = "/api/v1alpha1/collection/subject/collect"
         "?subjectId=$subjectId";
     try {
-      var response = await DioClient.instance.dio.delete(apiUrl);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.delete(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return;

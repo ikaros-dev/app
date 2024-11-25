@@ -5,16 +5,19 @@ import 'auth/AuthApi.dart';
 import 'auth/AuthParams.dart';
 
 class DioClient {
-  static final DioClient _instance = DioClient._internal();
-  Dio _dio = Dio();
-  BaseOptions _options = BaseOptions();
-  bool _isInitialized = false;
+  static BaseOptions _options = BaseOptions();
+  static bool _isInitialized = false;
+  static Dio _dio = Dio();
 
-  DioClient._internal();
+  static Future<Dio> getDio() async {
+    if (!_isInitialized) {
+      await rebuild();
+      _isInitialized = true;
+    }
+    return _dio;
+  }
 
-  static DioClient get instance => _instance;
-
-  Future<void> rebuild({String baseUrl = ""}) async {
+  static Future<void> rebuild({String baseUrl = ""}) async {
     if (baseUrl != "") {
       _options = BaseOptions(baseUrl: baseUrl);
     } else {
@@ -28,17 +31,8 @@ class DioClient {
     _dio.interceptors.addAll([
       // LogInterceptor(requestBody: true, responseBody: true), // 日志拦截器
       AuthInterceptor(), // 认证拦截器
-      AuthExpireInterceptor(), // 重试拦截器
+      AuthExpireInterceptor(), // Token失效重新刷新拦截器
     ]);
   }
 
-  void ensureInit() {
-    if (!_isInitialized) {
-      rebuild().then((_) {
-        _isInitialized = true;
-      });
-    }
-  }
-
-  Dio get dio => _dio;
 }

@@ -12,7 +12,8 @@ class EpisodeApi {
     String apiUrl = "/api/v1alpha1/episode/$id";
     try {
       // print("queryParams: $queryParams");
-      var response = await DioClient.instance.dio.get(apiUrl);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return error;
@@ -28,8 +29,8 @@ class EpisodeApi {
     String apiUrl = "/api/v1alpha1/episodes/subjectId/$subjectId";
     try {
       // print("queryParams: $queryParams");
-      Response<List<dynamic>?> response =
-          await DioClient.instance.dio.get<List>(apiUrl);
+      Dio dio = await DioClient.getDio();
+      Response<List<dynamic>?> response = await dio.get<List>(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return List.empty();
@@ -50,8 +51,8 @@ class EpisodeApi {
     String apiUrl = "/api/v1alpha1/episode/records/subjectId/$subjectId";
     try {
       // print("queryParams: $queryParams");
-      Response<List<dynamic>?> response =
-          await DioClient.instance.dio.get<List>(apiUrl);
+      Dio dio = await DioClient.getDio();
+      Response<List<dynamic>?> response = await dio.get<List>(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return List.empty();
@@ -72,8 +73,8 @@ class EpisodeApi {
     String apiUrl = "/api/v1alpha1/episode/attachment/refs/$id";
     try {
       // print("queryParams: $queryParams");
-      Response<List<dynamic>?> response =
-          await DioClient.instance.dio.get<List>(apiUrl);
+      Dio dio = await DioClient.getDio();
+      Response<List<dynamic>?> response = await dio.get<List>(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return List.empty();

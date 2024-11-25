@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:ikaros/api/attachment/model/VideoSubtitle.dart';
 import 'package:ikaros/api/dio_client.dart';
 
@@ -9,7 +10,8 @@ class AttachmentRelationApi {
         "/api/v1alpha1/attachment/relation/videoSubtitle/subtitles/$attachmentId";
     try {
       // print("queryParams: $queryParams");
-      var response = await DioClient.instance.dio.get(apiUrl);
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl);
       // print("response status code: ${response.statusCode}");
       if (response.statusCode != 200) {
         return [];
