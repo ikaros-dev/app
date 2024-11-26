@@ -56,7 +56,7 @@ class _SubjectState extends State<SubjectPage> {
     _subject = await SubjectApi().findById(int.parse(widget.id.toString()));
     _episodeCollections = await EpisodeCollectionApi()
         .findListBySubjectId(int.parse(widget.id.toString()));
-    setState(() {    });
+    setState(() {});
   }
 
   bool _episodeIsFinish(int episodeId) {
@@ -99,22 +99,23 @@ class _SubjectState extends State<SubjectPage> {
         ),
         actions: [_buildLinkIconButton()],
       ),
-      body: _subject == null ? const LinearProgressIndicator()
-      : SingleChildScrollView(
-        child: Padding(
-            padding: const EdgeInsets.all(_globalPadding),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSubjectDisplayRow(),
-                const SizedBox(height: 10),
-                _buildEpisodeAndCollectionButtonsRow(),
-                const SizedBox(height: 10),
-                _buildMultiTabs(),
-              ],
-            )),
-      ),
+      body: _subject == null
+          ? const LinearProgressIndicator()
+          : SingleChildScrollView(
+              child: Padding(
+                  padding: const EdgeInsets.all(_globalPadding),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSubjectDisplayRow(),
+                      const SizedBox(height: 10),
+                      _buildEpisodeAndCollectionButtonsRow(),
+                      const SizedBox(height: 10),
+                      _buildMultiTabs(),
+                    ],
+                  )),
+            ),
     );
   }
 
@@ -241,7 +242,9 @@ class _SubjectState extends State<SubjectPage> {
   Row _buildEpisodeAndCollectionButtonsRow() {
     SubjectType? type = _subject?.type;
     bool allowType = true;
-    if (type == SubjectType.GAME || type == SubjectType.COMIC || type == SubjectType.NOVEL) {
+    if (type == SubjectType.GAME ||
+        type == SubjectType.COMIC ||
+        type == SubjectType.NOVEL) {
       // Toast.show(context, "当前类型[$type]不支持进入剧集页展示，请期待后续的新功能更新。");
       allowType = false;
     }
@@ -273,21 +276,25 @@ class _SubjectState extends State<SubjectPage> {
         Row(
           children: [
             OutlinedButton.icon(
-              onPressed: !toEpisodeBtnEnable ? null : () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => SubjectEpisodesPage(
-                          subjectId: _subject?.id ?? -1,
-                        )));
-              },
+              onPressed: !toEpisodeBtnEnable
+                  ? null
+                  : () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => SubjectEpisodesPage(
+                                subjectId: _subject?.id ?? -1,
+                              )));
+                    },
               style: OutlinedButton.styleFrom(
-                disabledMouseCursor: SystemMouseCursors.forbidden
-              ),
+                  disabledMouseCursor: SystemMouseCursors.forbidden),
               label: Text(
                 displayTitle,
-                style: TextStyle(color: !toEpisodeBtnEnable ? Colors.grey : Colors.black),
+                style: TextStyle(
+                    color: !toEpisodeBtnEnable ? Colors.grey : Colors.black),
               ),
               icon: Icon(
-                toEpisodeBtnEnable ? Icons.play_circle_outline : Icons.error_outline_sharp,
+                toEpisodeBtnEnable
+                    ? Icons.play_circle_outline
+                    : Icons.error_outline_sharp,
                 color: !toEpisodeBtnEnable ? Colors.grey : Colors.black,
               ),
             ),
@@ -516,11 +523,13 @@ class _SubjectState extends State<SubjectPage> {
                     maxLines: 40,
                     softWrap: true,
                   ),
-                  Text(
-                    _subject?.infobox ?? "",
-                    style: const TextStyle(overflow: TextOverflow.ellipsis),
-                    maxLines: 40,
-                    softWrap: true,
+                  SingleChildScrollView(
+                    child: Text(
+                      _subject?.infobox ?? "",
+                      style: const TextStyle(overflow: TextOverflow.ellipsis),
+                      maxLines: 100,
+                      softWrap: true,
+                    ),
                   ),
                 ],
               )),
@@ -547,7 +556,6 @@ class _SubjectState extends State<SubjectPage> {
     }
     setState(() {});
   }
-
 
   Future<void> _fetchSubjectCollection() async {
     _subjectCollection = await SubjectCollectionApi()
@@ -622,7 +630,8 @@ class _SubjectState extends State<SubjectPage> {
 
   String _getAirTimeStr() {
     if (_subject == null) return "";
-    if (_subject!.airTime == null || "" == _subject!.airTime) return "1970 年 1 月";
+    if (_subject!.airTime == null || "" == _subject!.airTime)
+      return "1970 年 1 月";
     DateTime dateTime = DateTime.parse(_subject!.airTime!);
     return DateFormat('yyyy 年 MM 月').format(dateTime);
   }
