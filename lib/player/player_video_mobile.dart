@@ -10,6 +10,7 @@ import 'package:ikaros/api/dandanplay/DandanplayCommentApi.dart';
 import 'package:ikaros/api/dandanplay/DandanplaySearchApi.dart';
 import 'package:ikaros/api/dandanplay/model/CommentEpisode.dart';
 import 'package:ikaros/api/dandanplay/model/CommentEpisodeIdResponse.dart';
+import 'package:ikaros/api/dandanplay/model/IkarosDanmukuEpisodesResponse.dart';
 import 'package:ikaros/api/dandanplay/model/SearchEpisodeDetails.dart';
 import 'package:ikaros/api/dandanplay/model/SearchEpisodesAnime.dart';
 import 'package:ikaros/api/dandanplay/model/SearchEpisodesResponse.dart';
@@ -295,10 +296,9 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     if (_subject == null) {
       return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
     }
-    SearchEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
+    IkarosDanmukuEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
         .searchEpisodes(_subject!.name, _episode.sequence.toInt().toString());
     if (searchEpsResp == null ||
-        !searchEpsResp.success ||
         searchEpsResp.animes.isEmpty) return;
     SearchEpisodesAnime searchEpisodesAnime = searchEpsResp.animes.first;
     if (searchEpisodesAnime.episodes.isEmpty) return;

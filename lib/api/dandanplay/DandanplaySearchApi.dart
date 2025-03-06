@@ -4,16 +4,15 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import 'model/SearchEpisodesResponse.dart';
+import 'model/IkarosDanmukuEpisodesResponse.dart';
 
 class DandanplaySearchApi {
-  Future<SearchEpisodesResponse?> searchEpisodes(
+  Future<IkarosDanmukuEpisodesResponse?> searchEpisodes(
       String anime, String episode) async {
-    String apiUrl = "https://api.dandanplay.net/api/v2/search/episodes";
+    String apiUrl = "https://danmuku.ikaros.run/api/dandanplay/search/episodes";
     try {
       final queryParams = {
         'anime': anime,
-        'episode': episode,
       };
 
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -30,7 +29,7 @@ class DandanplaySearchApi {
         return null;
       }
 
-      return SearchEpisodesResponse.fromJson(response.data);
+      return IkarosDanmukuEpisodesResponse.fromJson(response.data);
     } catch (e) {
       print(e);
       return null;
