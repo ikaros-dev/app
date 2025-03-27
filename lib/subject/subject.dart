@@ -20,6 +20,7 @@ import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/SubjectRelation.dart';
 import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
+import 'package:ikaros/layout.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
@@ -101,12 +102,26 @@ class _SubjectState extends State<SubjectPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: "Back",
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+        leadingWidth: 96,
+        leading: Row(
+          children: [
+            IconButton(
+              tooltip: "Back",
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            IconButton(onPressed: (){
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => ScreenUtils.screenWidthGt600(context)
+                    ? const DesktopLayout()
+                    : const MobileLayout()),
+                    (Route<dynamic> route) => false,
+              );
+            }, icon: const Icon(Icons.home_outlined))
+          ],
         ),
         actions: [_buildLinkIconButton()],
       ),
