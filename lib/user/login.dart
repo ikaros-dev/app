@@ -170,12 +170,19 @@ class LoginState extends State<LoginView> {
     }
     state.save();
     try {
+      // 对字符串做简单的兼容性处理
+      if (_baseUrl.endsWith("/")) {
+        _baseUrl = _baseUrl.substring(0, _baseUrl.length - 1);
+      }
+      _username = _username.trim();
+      _password = _password.trim();
       await AuthApi().login(_baseUrl, _username, _password);
       Toast.show(context, "登录成功");
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const MyApp()));
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => const MyApp()));
     } catch (e) {
-      Toast.show(context, "登录失败 by username: $_username, password: $_password, error: $e");
+      Toast.show(context,
+          "登录失败 by username: $_username, password: $_password, error: $e");
     } finally {}
   }
 }
