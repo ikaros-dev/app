@@ -11,10 +11,13 @@ import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
+import 'package:ikaros/api/subject/SubjectRelationApi.dart';
+import 'package:ikaros/api/subject/enums/SubjectRelationType.dart';
 import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeRecord.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/api/subject/model/SubjectRelation.dart';
 import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/message_utils.dart';
@@ -38,6 +41,7 @@ class SubjectPage extends StatefulWidget {
 class _SubjectState extends State<SubjectPage> {
   String _apiBaseUrl = "";
   Subject? _subject;
+  List<SubjectRelation> _subjectRelations = [];
   List<Episode> _episodes = [];
   List<EpisodeRecord> _episodeRecords = [];
   SubjectCollection? _subjectCollection;
@@ -56,6 +60,11 @@ class _SubjectState extends State<SubjectPage> {
     _episodeCollections = await EpisodeCollectionApi()
         .findListBySubjectId(int.parse(widget.id.toString()));
     setState(() {});
+  }
+
+  Future<void> _loadSubjectRelationsWithId() async {
+    _subjectRelations =
+        await SubjectRelationApi().findById(int.parse(widget.id.toString()));
   }
 
   bool _episodeIsFinish(int episodeId) {
@@ -79,6 +88,7 @@ class _SubjectState extends State<SubjectPage> {
   void initState() {
     super.initState();
     _loadSubjectWithId();
+    _loadSubjectRelationsWithId();
     _loadBaseUrl();
     _fetchSubjectEpisodes();
     _fetchSubjectEpisodeRecords();
@@ -101,22 +111,20 @@ class _SubjectState extends State<SubjectPage> {
       body: _subject == null
           ? const LinearProgressIndicator()
           : SingleChildScrollView(
-        child: Padding(
-            padding: const EdgeInsets.all(_globalPadding),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSubjectDisplayRow(),
-                const SizedBox(height: 10),
-                _buildEpisodeAndCollectionButtonsRow(),
-                const SizedBox(height: 10),
-                _buildMultiTabs(),
-                const SizedBox(height: 10),
-                _buildRelationRow(),
-              ],
-            )),
-      ),
+              child: Padding(
+                  padding: const EdgeInsets.all(_globalPadding),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSubjectDisplayRow(),
+                      const SizedBox(height: 10),
+                      _buildEpisodeAndCollectionButtonsRow(),
+                      const SizedBox(height: 10),
+                      _buildMultiTabs(),
+                    ],
+                  )),
+            ),
     );
   }
 
@@ -148,7 +156,7 @@ class _SubjectState extends State<SubjectPage> {
       name ?? "",
       overflow: TextOverflow.ellipsis,
       style:
-      const TextStyle(color: Colors.black, backgroundColor: Colors.white),
+          const TextStyle(color: Colors.black, backgroundColor: Colors.white),
     );
   }
 
@@ -172,30 +180,28 @@ class _SubjectState extends State<SubjectPage> {
         // 右边标题
         Expanded(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _getSubjectTitle(),
-                  softWrap: true,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 3,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Colors.black),
-                ),
-                const SizedBox(height: 10),
-                Chip(
-                  label: Text(_getAirTimeStr()),
-                ),
-                const SizedBox(height: 10),
-                Text("${SubjectConst.typeCnMap[_subject?.type.name]} "
-                    "- 全${_episodeRecords.isNotEmpty
-                    ? _episodeRecords.length
-                    : _episodes.length}话")
-              ],
-            ))
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _getSubjectTitle(),
+              softWrap: true,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 3,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.black),
+            ),
+            const SizedBox(height: 10),
+            Chip(
+              label: Text(_getAirTimeStr()),
+            ),
+            const SizedBox(height: 10),
+            Text("${SubjectConst.typeCnMap[_subject?.type.name]} "
+                "- 全${_episodeRecords.isNotEmpty ? _episodeRecords.length : _episodes.length}话")
+          ],
+        ))
       ],
     );
   }
@@ -282,12 +288,11 @@ class _SubjectState extends State<SubjectPage> {
               onPressed: !toEpisodeBtnEnable
                   ? null
                   : () {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        SubjectEpisodesPage(
-                          subjectId: _subject?.id ?? -1,
-                        )));
-              },
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => SubjectEpisodesPage(
+                                subjectId: _subject?.id ?? -1,
+                              )));
+                    },
               style: OutlinedButton.styleFrom(
                   disabledMouseCursor: SystemMouseCursors.forbidden),
               label: Text(
@@ -310,10 +315,7 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   MenuAnchor _buildCollectionMenuAnchor() {
-    final double btnWidth = MediaQuery
-        .of(context)
-        .size
-        .width * 0.3;
+    final double btnWidth = MediaQuery.of(context).size.width * 0.3;
     return MenuAnchor(
       childFocusNode: FocusNode(),
       menuChildren: <Widget>[
@@ -329,8 +331,7 @@ class _SubjectState extends State<SubjectPage> {
                     color: _selectedCollectBtnLabelVal == "已想看"
                         ? Colors.blue
                         : Colors.black)),
-            onPressed: () async =>
-            {
+            onPressed: () async => {
               debugPrint("想看"),
               _selectedCollectBtnLabelVal = "已想看",
               _selectedCollectBtnIconData = Icons.calendar_month,
@@ -357,8 +358,7 @@ class _SubjectState extends State<SubjectPage> {
                     color: _selectedCollectBtnLabelVal == "已在看"
                         ? Colors.blue
                         : Colors.black)),
-            onPressed: () async =>
-            {
+            onPressed: () async => {
               debugPrint("在看"),
               _selectedCollectBtnLabelVal = "已在看",
               _selectedCollectBtnIconData = Icons.play_circle_outline,
@@ -378,16 +378,15 @@ class _SubjectState extends State<SubjectPage> {
           child: TextButton.icon(
             icon: Icon(Icons.check_circle_outlined,
                 color:
-                _selectedCollectBtnIconData == Icons.check_circle_outlined
-                    ? Colors.blue
-                    : Colors.black),
+                    _selectedCollectBtnIconData == Icons.check_circle_outlined
+                        ? Colors.blue
+                        : Colors.black),
             label: Text("看过",
                 style: TextStyle(
                     color: _selectedCollectBtnLabelVal == "已看过"
                         ? Colors.blue
                         : Colors.black)),
-            onPressed: () async =>
-            {
+            onPressed: () async => {
               debugPrint("看过"),
               _selectedCollectBtnLabelVal = "已看过",
               _selectedCollectBtnIconData = Icons.check_circle_outlined,
@@ -414,8 +413,7 @@ class _SubjectState extends State<SubjectPage> {
                     color: _selectedCollectBtnLabelVal == "已搁置"
                         ? Colors.blue
                         : Colors.black)),
-            onPressed: () async =>
-            {
+            onPressed: () async => {
               debugPrint("搁置"),
               _selectedCollectBtnLabelVal = "已搁置",
               _selectedCollectBtnIconData = Icons.access_time,
@@ -442,8 +440,7 @@ class _SubjectState extends State<SubjectPage> {
                     color: _selectedCollectBtnLabelVal == "已抛弃"
                         ? Colors.blue
                         : Colors.black)),
-            onPressed: () async =>
-            {
+            onPressed: () async => {
               debugPrint("抛弃"),
               _selectedCollectBtnLabelVal = "已抛弃",
               _selectedCollectBtnIconData = Icons.not_interested_sharp,
@@ -469,8 +466,7 @@ class _SubjectState extends State<SubjectPage> {
               "取消",
               style: TextStyle(color: Colors.red),
             ),
-            onPressed: () async =>
-            {
+            onPressed: () async => {
               debugPrint("取消"),
               _selectedCollectBtnLabelVal = "收藏",
               _selectedCollectBtnIconData = Icons.star_border_outlined,
@@ -512,58 +508,151 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   Widget _buildMultiTabs() {
+    List<Tab> barTabs = [
+      const Tab(text: '介绍'),
+      const Tab(text: '信息'),
+    ];
+    int viewLength = 2;
+    List<Widget> barViews = [
+      Text(
+        _subject?.summary ?? "",
+        style: const TextStyle(overflow: TextOverflow.ellipsis),
+        maxLines: 40,
+        softWrap: true,
+      ),
+      SingleChildScrollView(
+        child: Text(
+          _subject?.infobox ?? "",
+          style: const TextStyle(overflow: TextOverflow.ellipsis),
+          maxLines: 100,
+          softWrap: true,
+        ),
+      ),
+    ];
+    if (_subjectRelations.isNotEmpty) {
+      barTabs.add(const Tab(
+        text: "关联",
+      ));
+      viewLength = 3;
+      barViews.add(_buildSubjectRelationsMultiTabs());
+    }
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 100, maxHeight: 550),
       child: DefaultTabController(
-          length: 2,
+          length: viewLength,
           child: Column(
             children: [
-              const Padding(
-                padding: EdgeInsets.all(10),
+              Padding(
+                padding: const EdgeInsets.all(10),
                 child: TabBar(
-                  tabs: [
-                    Tab(text: '介绍'),
-                    Tab(text: '信息'),
-                  ],
+                  tabs: barTabs,
                 ),
               ),
               Expanded(
                   child: TabBarView(
-                    children: [
-                      Text(
-                        _subject?.summary ?? "",
-                        style: const TextStyle(overflow: TextOverflow.ellipsis),
-                        maxLines: 40,
-                        softWrap: true,
-                      ),
-                      SingleChildScrollView(
-                        child: Text(
-                          _subject?.infobox ?? "",
-                          style: const TextStyle(
-                              overflow: TextOverflow.ellipsis),
-                          maxLines: 100,
-                          softWrap: true,
-                        ),
-                      ),
-                    ],
-                  )),
+                children: barViews,
+              )),
             ],
           )),
     );
   }
 
-  Widget _buildRelationRow() {
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 100, maxHeight: 550),
-      child: Container(
-        child: Text("Relations"),
-      ),
-    );
+  Widget _buildSubjectRelationsMultiTabs() {
+    Set<SubjectRelationType> types =
+        _subjectRelations.map((subRel) => subRel.relationType).toSet();
+    int viewLength = types.length;
+    List<Tab> barTabs = types
+        .map((type) => SubjectConst.relationTypeCnMap[type.name])
+        .map((name) => Tab(
+              text: name,
+            ))
+        .toList();
+    List<Widget> barViews = [];
+    for (var type in types) {
+      var _relSubIds = _subjectRelations
+          .where((subRel) => subRel.relationType == type)
+          .first
+          .relationSubjects;
+      List<Widget> views = _relSubIds
+          .map((id) => FutureBuilder<Subject?>(
+              future: SubjectApi().findById(id),
+              builder: (context, AsyncSnapshot<Subject?> snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  return SizedBox(
+                    width: 240,
+                    child: Column(
+                      children: [
+                        SubjectCover(
+                          url: UrlUtils.getCoverUrl(
+                              _apiBaseUrl, snapshot.data?.cover ?? "Not Cover"),
+                          nsfw: snapshot.data?.nsfw,
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => SubjectPage(
+                                  id: snapshot.data?.id.toString(),
+                                )));
+                          },
+                        ),
+                        Flexible(
+                            child: Text(
+                              ((snapshot.data?.nameCn == null ||
+                                  snapshot.data?.nameCn == '')
+                                  ? snapshot.data?.name
+                                  : snapshot.data?.nameCn) ?? "Unknown",
+                              maxLines: 2,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: true,
+                            )),
+                      ],
+                    )
+                  );
+                }
+              }))
+          .map((subCov) => Padding(
+                padding: const EdgeInsets.all(_globalPadding),
+                child: subCov,
+              ))
+          .toList();
+
+      SingleChildScrollView view = SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Padding(
+          padding: const EdgeInsets.all(_globalPadding),
+          child: Row(
+            children: views,
+          ),
+        ),
+      );
+      barViews.add(view);
+    }
+
+    return DefaultTabController(
+        length: viewLength,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: TabBar(
+                tabs: barTabs,
+              ),
+            ),
+            Expanded(
+                child: TabBarView(
+              children: barViews,
+            )),
+          ],
+        ));
   }
 
   Future<void> _fetchSubjectEpisodes() async {
     _episodes =
-    await EpisodeApi().findBySubjectId(int.parse(widget.id.toString()));
+        await EpisodeApi().findBySubjectId(int.parse(widget.id.toString()));
     if (_episodes.isEmpty) {
       debugPrint("获取条目剧集失败");
     }
