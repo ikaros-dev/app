@@ -21,8 +21,10 @@ import 'package:ikaros/api/subject/model/SubjectRelation.dart';
 import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/screen_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 import 'package:intl/intl.dart';
+import 'package:photo_manager/platform_utils.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'episode.dart';
@@ -569,11 +571,11 @@ class _SubjectState extends State<SubjectPage> {
         .toList();
     List<Widget> barViews = [];
     for (var type in types) {
-      var _relSubIds = _subjectRelations
+      var relSubIds = _subjectRelations
           .where((subRel) => subRel.relationType == type)
           .first
           .relationSubjects;
-      List<Widget> views = _relSubIds
+      List<Widget> views = relSubIds
           .map((id) => FutureBuilder<Subject?>(
               future: SubjectApi().findById(id),
               builder: (context, AsyncSnapshot<Subject?> snapshot) {
@@ -583,7 +585,7 @@ class _SubjectState extends State<SubjectPage> {
                   return Text('Error: ${snapshot.error}');
                 } else {
                   return SizedBox(
-                    width: 240,
+                    width: ScreenUtils.isDesktop(context) ? 240 : 120,
                     child: Column(
                       children: [
                         SubjectCover(
