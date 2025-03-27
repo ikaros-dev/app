@@ -11,19 +11,13 @@ class EpisodeCollection {
   @JsonKey(name: "episode_id")
   final int episodeId;
 
-  /**
-   * 是否已经看过.
-   */
+  /// 是否已经看过.
   final bool? finish;
 
-  /**
-   * 观看进度，时间戳，单位 milliseconds.
-   */
+  /// 观看进度，时间戳，单位 milliseconds.
   final int? progress;
 
-  /**
-   * 总时长，时间戳.
-   */
+  /// 总时长，时间戳.
   final int? duration;
 
   @JsonKey(name: "subject_id")

@@ -1,10 +1,8 @@
 import 'dart:core';
 
-import 'package:ikaros/api/subject/model/SubjectSync.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import '../enums/SubjectType.dart';
-import 'Episode.dart';
 
 part 'Subject.g.dart';
 

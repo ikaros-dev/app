@@ -17,7 +17,6 @@ import 'package:ikaros/api/dandanplay/model/CommentEpisodeIdResponse.dart';
 import 'package:ikaros/api/dandanplay/model/IkarosDanmukuEpisodesResponse.dart';
 import 'package:ikaros/api/dandanplay/model/SearchEpisodeDetails.dart';
 import 'package:ikaros/api/dandanplay/model/SearchEpisodesAnime.dart';
-import 'package:ikaros/api/dandanplay/model/SearchEpisodesResponse.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/SubjectSyncApi.dart';
@@ -81,8 +80,8 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late Subject? _subject;
   late List<SubjectSync> _syncs = [];
   late DanmakuController _danmuku;
-  List<CommentEpisode> _commentEpisodes = [];
-  List<CommentEpisode> _commentRomovedEpisodes = [];
+  final List<CommentEpisode> _commentEpisodes = [];
+  final List<CommentEpisode> _commentRomovedEpisodes = [];
   late Lock lock = Lock();
   late DanmuConfig _danmuConfig = DanmuConfig();
   late bool _danmuConfigChange = false;
@@ -229,8 +228,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   void _checkAndAddDanmuku(Duration lastPosition, Duration currentPosition) {
     for (CommentEpisode commentEp in List.from(_commentEpisodes)) {
-      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4)
+      if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) {
         continue;
+      }
       String timeStr = commentEp.p.split(",")[0];
       double timeD = double.parse(timeStr);
       Duration time = Duration(seconds: timeD.toInt());
@@ -273,7 +273,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     _danmuku.addItems(items);
   }
 
-  void open(String url, {autoStart: false}) {
+  void open(String url, {autoStart = false}) {
     isLoading.value = true;
     _player.open(
       Media.network(url),
@@ -281,7 +281,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     );
   }
 
-  void reload(String url, {autoStart: false}) {
+  void reload(String url, {autoStart = false}) {
     _player.stop();
     isLoading.value = true;
     _player.open(
@@ -344,16 +344,16 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     if (!Platform.isWindows) return;
 
     final hWnd = GetForegroundWindow();
-    final style = GetWindowLongPtr(hWnd, GWL_STYLE);
-    final exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+    final style = GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
+    final exStyle = GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
 
     // 隐藏标题栏和任务栏
-    SetWindowLongPtr(hWnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
-    SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle | WS_EX_TOPMOST);
+    SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style & ~WINDOW_STYLE.WS_OVERLAPPEDWINDOW);
+    SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, exStyle | WINDOW_EX_STYLE.WS_EX_TOPMOST);
 
     // 获取屏幕尺寸
-    final screenWidth = GetSystemMetrics(SM_CXSCREEN); // 屏幕宽度
-    final screenHeight = GetSystemMetrics(SM_CYSCREEN); // 屏幕高度
+    final screenWidth = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXSCREEN); // 屏幕宽度
+    final screenHeight = GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYSCREEN); // 屏幕高度
 
     // 计算窗口右下角的位置
     final x = screenWidth - smallWindowDevicePixelWidth;
@@ -373,7 +373,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       // 指定的窗口宽度
       smallWindowDevicePixelHeight,
       // 指定的窗口高度
-      SWP_NOACTIVATE | SWP_SHOWWINDOW, // 不激活窗口，显示窗口
+      SET_WINDOW_POS_FLAGS.SWP_NOACTIVATE | SET_WINDOW_POS_FLAGS.SWP_SHOWWINDOW, // 不激活窗口，显示窗口
     );
   }
 
@@ -397,12 +397,12 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   void _enterImmersiveFullscreen() {
     if (!Platform.isWindows) return;
     final hWnd = GetForegroundWindow();
-    final style = GetWindowLongPtr(hWnd, GWL_STYLE);
-    final exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+    final style = GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
+    final exStyle = GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
 
     // 隐藏标题栏和任务栏
-    SetWindowLongPtr(hWnd, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
-    SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle | WS_EX_TOPMOST);
+    SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style & ~WINDOW_STYLE.WS_OVERLAPPEDWINDOW);
+    SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, exStyle | WINDOW_EX_STYLE.WS_EX_TOPMOST);
 
     // 设置窗口位置和大小，覆盖整个屏幕
     SetWindowPos(
@@ -410,9 +410,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       NULL,
       0,
       0,
-      GetSystemMetrics(SM_CXSCREEN),
-      GetSystemMetrics(SM_CYSCREEN),
-      SWP_NOZORDER | SWP_FRAMECHANGED,
+      GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXSCREEN),
+      GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYSCREEN),
+      SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED,
     );
   }
 
@@ -420,12 +420,12 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   void _exitImmersiveFullscreen() {
     if (!Platform.isWindows) return;
     final hWnd = GetForegroundWindow();
-    final style = GetWindowLongPtr(hWnd, GWL_STYLE);
-    final exStyle = GetWindowLongPtr(hWnd, GWL_EXSTYLE);
+    final style = GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE);
+    final exStyle = GetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE);
 
     // 还原标题栏和任务栏
-    SetWindowLongPtr(hWnd, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
-    SetWindowLongPtr(hWnd, GWL_EXSTYLE, exStyle & ~WS_EX_TOPMOST);
+    SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_STYLE, style | WINDOW_STYLE.WS_OVERLAPPEDWINDOW);
+    SetWindowLongPtr(hWnd, WINDOW_LONG_PTR_INDEX.GWL_EXSTYLE, exStyle & ~WINDOW_EX_STYLE.WS_EX_TOPMOST);
 
     // 还原窗口位置和大小
     SetWindowPos(
@@ -433,9 +433,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       HWND_NOTOPMOST,
       0,
       0,
-      GetSystemMetrics(SM_CXSCREEN) * 3 ~/ 4,
-      GetSystemMetrics(SM_CYSCREEN) * 3 ~/ 4,
-      SWP_NOZORDER | SWP_FRAMECHANGED,
+      GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CXSCREEN) * 3 ~/ 4,
+      GetSystemMetrics(SYSTEM_METRICS_INDEX.SM_CYSCREEN) * 3 ~/ 4,
+      SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_FRAMECHANGED,
     );
   }
 
@@ -547,7 +547,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     if (!Platform.isWindows) return;
     final ptr = calloc<Pointer<Utf16>>();
     final guid = calloc<GUID>()..ref.setGUID(FOLDERID_Pictures);
-    final hr = SHGetKnownFolderPath(guid, KF_FLAG_DEFAULT, NULL, ptr);
+    final hr = SHGetKnownFolderPath(guid, KNOWN_FOLDER_FLAG.KF_FLAG_DEFAULT, NULL, ptr);
 
     String path;
     if (hr == S_OK) {
@@ -758,7 +758,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
             offsetY.toInt() + smallWindowDevicePixelHeight,
             smallWindowDevicePixelWidth,
             smallWindowDevicePixelHeight,
-            SWP_NOZORDER | SWP_NOSIZE | SWP_NOREDRAW);
+            SET_WINDOW_POS_FLAGS.SWP_NOZORDER | SET_WINDOW_POS_FLAGS.SWP_NOSIZE | SET_WINDOW_POS_FLAGS.SWP_NOREDRAW);
       },
       onTap: () {
         if (_player.playback.isPlaying) {
@@ -1585,7 +1585,7 @@ class VolumeControlState extends State<VolumeControl> {
               onExit: (_) {
                 setState(() => _showVolume = false);
               },
-              child: Container(
+              child: SizedBox(
                 width: 60,
                 height: 250,
                 child: Card(

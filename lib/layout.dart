@@ -6,7 +6,6 @@ import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/user/user.dart';
 import 'package:ikaros/utils/message_utils.dart';
 
-import 'api/dio_client.dart';
 
 /// 主页面 移动端
 class MobileLayout extends StatefulWidget {

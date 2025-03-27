@@ -28,7 +28,6 @@ import 'package:ikaros/player/player_video_mobile.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/number_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
-import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/time_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 import 'package:intl/intl.dart';
@@ -178,7 +177,6 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
       }
       subtitleUrls.add(subUrl);
     }
-    ;
 
     // 视频收藏
     EpisodeCollection? episodeCollection =
@@ -325,8 +323,9 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   }
 
   Widget _buildOther() {
-    if (_subject == null || _apiBaseUrl == "")
+    if (_subject == null || _apiBaseUrl == "") {
       return const LinearProgressIndicator();
+    }
 
     bool hasResources = _currentEpisodeRecord.value != null &&
         _currentEpisodeRecord.value!.resources.isNotEmpty;
@@ -466,7 +465,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
         child: ListTile(
           leading: episode == null
               ? const Icon(Icons.play_circle_outline)
-              : DynamicBarIcon(),
+              : const DynamicBarIcon(),
           title: Text(
             title,
             maxLines: 2,
@@ -652,7 +651,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                               icon: _currentEpisodeRecord.value?.resources
                                           .indexOf(epRes) ==
                                       _currentEpisodeResourceIndex
-                                  ? DynamicBarIcon()
+                                  ? const DynamicBarIcon()
                                   : const Icon(Icons.play_circle_outline),
                             ),
                           ))
@@ -793,7 +792,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
                     _currentEpisodeRecord.value?.episode.name &&
                 epRecord.episode.sequence ==
                     _currentEpisodeRecord.value?.episode.sequence)
-            ? DynamicBarIcon()
+            ? const DynamicBarIcon()
             : (_episodeIsFinish(epRecord.episode.id)
                 ? const Icon(Icons.check_circle_outline)
                 : const Icon(Icons.play_circle_outline)),

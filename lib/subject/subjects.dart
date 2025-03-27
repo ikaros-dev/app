@@ -13,7 +13,6 @@ import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/subject/search.dart';
 import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/user/login.dart';
-import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
@@ -43,7 +42,7 @@ class SubjectListState extends State<SubjectsPage> {
 
   bool _isSubjectLoading = false;
   bool _hasMore = true;
-  late EasyRefreshController _easyRefreshController = EasyRefreshController();
+  late final EasyRefreshController _easyRefreshController = EasyRefreshController();
   late final ScrollController _easyRefreshScrollController = ScrollController();
   bool _isExpansionTileVisible = true;
   bool _isExpansionTileVisible2 = true;
@@ -75,7 +74,7 @@ class SubjectListState extends State<SubjectsPage> {
   final List<String> _selectedNsfws = const ['全部条目', '正常', 'NSFW'];
   String _selectedSeason = '全部季度';
   final List<String> _selectedSeasons = const ['全部季度', '一月', '四月', '七月', '十月'];
-  String _selectedStatus = '完结状态';
+  final String _selectedStatus = '完结状态';
   final List<String> _allStatus = const ['完结状态', '完结', '连载'];
   String _selectedSort = '综合排序';
   final List<String> _selectedSorts = const ['综合排序', '最近放送', '最近更新'];

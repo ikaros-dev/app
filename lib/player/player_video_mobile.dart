@@ -13,7 +13,6 @@ import 'package:ikaros/api/dandanplay/model/CommentEpisodeIdResponse.dart';
 import 'package:ikaros/api/dandanplay/model/IkarosDanmukuEpisodesResponse.dart';
 import 'package:ikaros/api/dandanplay/model/SearchEpisodeDetails.dart';
 import 'package:ikaros/api/dandanplay/model/SearchEpisodesAnime.dart';
-import 'package:ikaros/api/dandanplay/model/SearchEpisodesResponse.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/SubjectSyncApi.dart';
@@ -73,8 +72,8 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   late Subject? _subject;
   late List<SubjectSync> _syncs = [];
   late DanmakuController _danmuku;
-  List<CommentEpisode> _commentEpisodes = [];
-  List<CommentEpisode> _commentRomovedEpisodes = [];
+  final List<CommentEpisode> _commentEpisodes = [];
+  final List<CommentEpisode> _commentRomovedEpisodes = [];
   late Lock lock = Lock();
   final ThrottleController _throttleController = ThrottleController();
   late DanmuConfig _danmuConfig = DanmuConfig();
@@ -227,8 +226,9 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   }
 
   void _addDanmuku(CommentEpisode commentEp) {
-    if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4)
+    if (!commentEp.p.contains(',') || commentEp.p.split(',').length != 4) {
       return;
+    }
     String danmuMode = commentEp.p.split(',')[1];
     int danmuColor = int.parse(commentEp.p.split(',')[2]);
     int r = (danmuColor >> 16) & 0xFF; // 提取红色分量
@@ -254,10 +254,10 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     _isPlaying = true;
 
     // load new subtitles
-    if (_subtitleUrls != null && _subtitleUrls!.isNotEmpty) {
-      for (int i = 0; i < _subtitleUrls!.length; i++) {
-        print("add subtitle url to video, url: ${_subtitleUrls![i]}");
-        await _player.addSubtitleFromNetwork(_subtitleUrls![i],
+    if (_subtitleUrls.isNotEmpty) {
+      for (int i = 0; i < _subtitleUrls.length; i++) {
+        print("add subtitle url to video, url: ${_subtitleUrls[i]}");
+        await _player.addSubtitleFromNetwork(_subtitleUrls[i],
             isSelected: i == 0);
       }
     }
@@ -276,10 +276,10 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     _isPlaying = true;
 
     // load new subtitles
-    if (_subtitleUrls != null && _subtitleUrls!.isNotEmpty) {
-      for (int i = 0; i < _subtitleUrls!.length; i++) {
-        print("add subtitle url to video, url: ${_subtitleUrls![i]}");
-        await _player.addSubtitleFromNetwork(_subtitleUrls![i],
+    if (_subtitleUrls.isNotEmpty) {
+      for (int i = 0; i < _subtitleUrls.length; i++) {
+        print("add subtitle url to video, url: ${_subtitleUrls[i]}");
+        await _player.addSubtitleFromNetwork(_subtitleUrls[i],
             isSelected: i == 0);
       }
     }
@@ -289,8 +289,9 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   void _initDanmukuPool() async {
     _episode = await EpisodeApi().findById(_episodeId);
-    if (_episode.id == -1 || _episode.group != "MAIN")
+    if (_episode.id == -1 || _episode.group != "MAIN") {
       return; // 根据条目名和序号只支持查询正片弹幕
+    }
     _subject = await SubjectApi().findById(_episode.subjectId);
     _syncs = await SubjectSyncApi().getSyncsBySubjectId(_episode.subjectId);
     if (_subject == null) {

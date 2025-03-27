@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ikaros/layout.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 
-import 'api/dio_client.dart';
 
 void main() {
   runApp(const MyApp());

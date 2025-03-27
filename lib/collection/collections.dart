@@ -6,8 +6,6 @@ import 'package:ikaros/api/collection/SubjectCollectionApi.dart';
 import 'package:ikaros/api/collection/enums/CollectionType.dart';
 import 'package:ikaros/api/collection/model/SubjectCollection.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
-import 'package:ikaros/api/subject/SubjectApi.dart';
-import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/component/full_screen_Image.dart';
 import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/collection-const.dart';

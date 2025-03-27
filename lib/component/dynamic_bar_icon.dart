@@ -1,7 +1,8 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 
 class DynamicBarIcon extends StatefulWidget {
+  const DynamicBarIcon({super.key});
+
   @override
   _DynamicBarIconState createState() => _DynamicBarIconState();
 }

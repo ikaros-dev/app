@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart' as FlToast;
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/main.dart';
 import 'package:ikaros/utils/message_utils.dart';
@@ -76,6 +75,7 @@ class LoginState extends State<LoginView> {
         if (v == null || v.isEmpty) {
           return '请输入服务器URL, 格式: http://domain:port';
         }
+        return null;
       },
       onSaved: (v) => _baseUrl = v!,
     );
@@ -88,6 +88,7 @@ class LoginState extends State<LoginView> {
         if (v == null || v.isEmpty) {
           return '请输入用户名';
         }
+        return null;
       },
       onSaved: (v) => _username = v!,
     );
@@ -102,6 +103,7 @@ class LoginState extends State<LoginView> {
           if (v!.isEmpty) {
             return '请输入密码';
           }
+          return null;
         },
         onFieldSubmitted: (value) {
           _password = value;
@@ -172,7 +174,7 @@ class LoginState extends State<LoginView> {
       Toast.show(context, "登录成功");
       Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (context) => const MyApp()));
-    } catch (e, stackTrace) {
+    } catch (e) {
       Toast.show(context, "登录失败 by username: $_username, password: $_password, error: $e");
     } finally {}
   }

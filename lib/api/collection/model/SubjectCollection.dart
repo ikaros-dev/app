@@ -14,15 +14,11 @@ class SubjectCollection {
   final int subjectId;
   final CollectionType type;
 
-  /**
-   * User main group episode watching progress.
-   */
+  /// User main group episode watching progress.
   @JsonKey(name: "main_ep_progress")
   final int? mainEpisodeProgress;
 
-  /**
-   * Whether it can be accessed without login.
-   */
+  /// Whether it can be accessed without login.
   @JsonKey(name: "is_private")
   final bool isPrivate;
 
@@ -33,9 +29,7 @@ class SubjectCollection {
   final String? nameCn;
   final String? infobox;
   final String? summary;
-  /**
-   * Not Safe/Suitable For Work.
-   */
+  /// Not Safe/Suitable For Work.
   final bool nsfw;
   final String cover;
 

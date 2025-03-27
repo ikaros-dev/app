@@ -33,7 +33,7 @@ class MobileAudioPlayerState extends State<MobileAudioPlayer> {
     });
   }
 
-  Future<void> open(String audioUrl, {bool autoStart: false}) async {
+  Future<void> open(String audioUrl, {bool autoStart = false}) async {
     setState(() {
       _audioUrl = audioUrl;
     });

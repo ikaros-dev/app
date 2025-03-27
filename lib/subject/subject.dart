@@ -18,7 +18,6 @@ import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/utils/message_utils.dart';
-import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -102,20 +101,22 @@ class _SubjectState extends State<SubjectPage> {
       body: _subject == null
           ? const LinearProgressIndicator()
           : SingleChildScrollView(
-              child: Padding(
-                  padding: const EdgeInsets.all(_globalPadding),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSubjectDisplayRow(),
-                      const SizedBox(height: 10),
-                      _buildEpisodeAndCollectionButtonsRow(),
-                      const SizedBox(height: 10),
-                      _buildMultiTabs(),
-                    ],
-                  )),
-            ),
+        child: Padding(
+            padding: const EdgeInsets.all(_globalPadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSubjectDisplayRow(),
+                const SizedBox(height: 10),
+                _buildEpisodeAndCollectionButtonsRow(),
+                const SizedBox(height: 10),
+                _buildMultiTabs(),
+                const SizedBox(height: 10),
+                _buildRelationRow(),
+              ],
+            )),
+      ),
     );
   }
 
@@ -147,7 +148,7 @@ class _SubjectState extends State<SubjectPage> {
       name ?? "",
       overflow: TextOverflow.ellipsis,
       style:
-          const TextStyle(color: Colors.black, backgroundColor: Colors.white),
+      const TextStyle(color: Colors.black, backgroundColor: Colors.white),
     );
   }
 
@@ -171,28 +172,30 @@ class _SubjectState extends State<SubjectPage> {
         // 右边标题
         Expanded(
             child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _getSubjectTitle(),
-              softWrap: true,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 3,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.black),
-            ),
-            const SizedBox(height: 10),
-            Chip(
-              label: Text(_getAirTimeStr()),
-            ),
-            const SizedBox(height: 10),
-            Text("${SubjectConst.typeCnMap[_subject?.type.name]} "
-                "- 全${_episodeRecords.isNotEmpty ? _episodeRecords.length : _episodes.length}话")
-          ],
-        ))
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _getSubjectTitle(),
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 3,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.black),
+                ),
+                const SizedBox(height: 10),
+                Chip(
+                  label: Text(_getAirTimeStr()),
+                ),
+                const SizedBox(height: 10),
+                Text("${SubjectConst.typeCnMap[_subject?.type.name]} "
+                    "- 全${_episodeRecords.isNotEmpty
+                    ? _episodeRecords.length
+                    : _episodes.length}话")
+              ],
+            ))
       ],
     );
   }
@@ -279,11 +282,12 @@ class _SubjectState extends State<SubjectPage> {
               onPressed: !toEpisodeBtnEnable
                   ? null
                   : () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => SubjectEpisodesPage(
-                                subjectId: _subject?.id ?? -1,
-                              )));
-                    },
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) =>
+                        SubjectEpisodesPage(
+                          subjectId: _subject?.id ?? -1,
+                        )));
+              },
               style: OutlinedButton.styleFrom(
                   disabledMouseCursor: SystemMouseCursors.forbidden),
               label: Text(
@@ -306,7 +310,10 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   MenuAnchor _buildCollectionMenuAnchor() {
-    final double btnWidth = MediaQuery.of(context).size.width * 0.3;
+    final double btnWidth = MediaQuery
+        .of(context)
+        .size
+        .width * 0.3;
     return MenuAnchor(
       childFocusNode: FocusNode(),
       menuChildren: <Widget>[
@@ -322,7 +329,8 @@ class _SubjectState extends State<SubjectPage> {
                     color: _selectedCollectBtnLabelVal == "已想看"
                         ? Colors.blue
                         : Colors.black)),
-            onPressed: () async => {
+            onPressed: () async =>
+            {
               debugPrint("想看"),
               _selectedCollectBtnLabelVal = "已想看",
               _selectedCollectBtnIconData = Icons.calendar_month,
@@ -349,7 +357,8 @@ class _SubjectState extends State<SubjectPage> {
                     color: _selectedCollectBtnLabelVal == "已在看"
                         ? Colors.blue
                         : Colors.black)),
-            onPressed: () async => {
+            onPressed: () async =>
+            {
               debugPrint("在看"),
               _selectedCollectBtnLabelVal = "已在看",
               _selectedCollectBtnIconData = Icons.play_circle_outline,
@@ -369,15 +378,16 @@ class _SubjectState extends State<SubjectPage> {
           child: TextButton.icon(
             icon: Icon(Icons.check_circle_outlined,
                 color:
-                    _selectedCollectBtnIconData == Icons.check_circle_outlined
-                        ? Colors.blue
-                        : Colors.black),
+                _selectedCollectBtnIconData == Icons.check_circle_outlined
+                    ? Colors.blue
+                    : Colors.black),
             label: Text("看过",
                 style: TextStyle(
                     color: _selectedCollectBtnLabelVal == "已看过"
                         ? Colors.blue
                         : Colors.black)),
-            onPressed: () async => {
+            onPressed: () async =>
+            {
               debugPrint("看过"),
               _selectedCollectBtnLabelVal = "已看过",
               _selectedCollectBtnIconData = Icons.check_circle_outlined,
@@ -404,7 +414,8 @@ class _SubjectState extends State<SubjectPage> {
                     color: _selectedCollectBtnLabelVal == "已搁置"
                         ? Colors.blue
                         : Colors.black)),
-            onPressed: () async => {
+            onPressed: () async =>
+            {
               debugPrint("搁置"),
               _selectedCollectBtnLabelVal = "已搁置",
               _selectedCollectBtnIconData = Icons.access_time,
@@ -431,7 +442,8 @@ class _SubjectState extends State<SubjectPage> {
                     color: _selectedCollectBtnLabelVal == "已抛弃"
                         ? Colors.blue
                         : Colors.black)),
-            onPressed: () async => {
+            onPressed: () async =>
+            {
               debugPrint("抛弃"),
               _selectedCollectBtnLabelVal = "已抛弃",
               _selectedCollectBtnIconData = Icons.not_interested_sharp,
@@ -457,7 +469,8 @@ class _SubjectState extends State<SubjectPage> {
               "取消",
               style: TextStyle(color: Colors.red),
             ),
-            onPressed: () async => {
+            onPressed: () async =>
+            {
               debugPrint("取消"),
               _selectedCollectBtnLabelVal = "收藏",
               _selectedCollectBtnIconData = Icons.star_border_outlined,
@@ -484,7 +497,7 @@ class _SubjectState extends State<SubjectPage> {
               color: Colors.black,
             ),
             label: Text(_selectedCollectBtnLabelVal,
-                style: TextStyle(color: Colors.black)),
+                style: const TextStyle(color: Colors.black)),
             onPressed: () {
               if (controller.isOpen) {
                 controller.close();
@@ -516,31 +529,41 @@ class _SubjectState extends State<SubjectPage> {
               ),
               Expanded(
                   child: TabBarView(
-                children: [
-                  Text(
-                    _subject?.summary ?? "",
-                    style: const TextStyle(overflow: TextOverflow.ellipsis),
-                    maxLines: 40,
-                    softWrap: true,
-                  ),
-                  SingleChildScrollView(
-                    child: Text(
-                      _subject?.infobox ?? "",
-                      style: const TextStyle(overflow: TextOverflow.ellipsis),
-                      maxLines: 100,
-                      softWrap: true,
-                    ),
-                  ),
-                ],
-              )),
+                    children: [
+                      Text(
+                        _subject?.summary ?? "",
+                        style: const TextStyle(overflow: TextOverflow.ellipsis),
+                        maxLines: 40,
+                        softWrap: true,
+                      ),
+                      SingleChildScrollView(
+                        child: Text(
+                          _subject?.infobox ?? "",
+                          style: const TextStyle(
+                              overflow: TextOverflow.ellipsis),
+                          maxLines: 100,
+                          softWrap: true,
+                        ),
+                      ),
+                    ],
+                  )),
             ],
           )),
     );
   }
 
+  Widget _buildRelationRow() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 100, maxHeight: 550),
+      child: Container(
+        child: Text("Relations"),
+      ),
+    );
+  }
+
   Future<void> _fetchSubjectEpisodes() async {
     _episodes =
-        await EpisodeApi().findBySubjectId(int.parse(widget.id.toString()));
+    await EpisodeApi().findBySubjectId(int.parse(widget.id.toString()));
     if (_episodes.isEmpty) {
       debugPrint("获取条目剧集失败");
     }
@@ -596,8 +619,9 @@ class _SubjectState extends State<SubjectPage> {
   }
 
   String? _getSubjectName() {
-    if (_subject?.nameCn != null && _subject?.nameCn != "")
+    if (_subject?.nameCn != null && _subject?.nameCn != "") {
       return _subject?.nameCn;
+    }
     return _subject?.name;
   }
 
@@ -630,8 +654,9 @@ class _SubjectState extends State<SubjectPage> {
 
   String _getAirTimeStr() {
     if (_subject == null) return "";
-    if (_subject!.airTime == null || "" == _subject!.airTime)
+    if (_subject!.airTime == null || "" == _subject!.airTime) {
       return "1970 年 1 月";
+    }
     DateTime dateTime = DateTime.parse(_subject!.airTime!);
     return DateFormat('yyyy 年 MM 月').format(dateTime);
   }

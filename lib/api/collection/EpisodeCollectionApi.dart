@@ -2,8 +2,6 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/dio_client.dart';
 
 import 'model/EpisodeCollection.dart';

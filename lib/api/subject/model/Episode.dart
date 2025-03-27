@@ -1,6 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
 
-import 'EpisodeResource.dart';
 
 part 'Episode.g.dart';
 

@@ -26,13 +26,13 @@ class DesktopAudioPlayerState extends State<DesktopAudioPlayer> {
     _title = title;
   }
 
-  void open(String audioUrl, {autoStart: false}) {
+  void open(String audioUrl, {autoStart = false}) {
     _audioUrl = audioUrl;
     _loadAlbumArt();
     _player.open(Media.network(audioUrl), autoStart: autoStart);
   }
 
-  void reload(String audioUrl, {autoStart: false}) {
+  void reload(String audioUrl, {autoStart = false}) {
     _audioUrl = audioUrl;
     _loadAlbumArt();
     _player.stop();

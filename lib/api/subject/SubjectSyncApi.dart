@@ -1,14 +1,8 @@
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:ikaros/api/auth/AuthApi.dart';
-import 'package:ikaros/api/auth/AuthParams.dart';
-import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/dio_client.dart';
-import 'package:ikaros/api/subject/enums/SubjectType.dart';
 import 'package:ikaros/api/subject/model/SubjectSync.dart';
 
-import 'model/Subject.dart';
 
 class SubjectSyncApi {
   Future<List<SubjectSync>> getSyncsBySubjectId(int subjectId) async {

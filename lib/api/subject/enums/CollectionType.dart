@@ -1,34 +1,22 @@
 import 'package:json_annotation/json_annotation.dart';
 
 enum CollectionType {
-  /**
-   * Not collection.
-   */
+  /// Not collection.
   @JsonValue("NOT")
   NOT,
-  /**
-   * Wist watch.
-   */
+  /// Wist watch.
   @JsonValue("WISH")
   WISH,
-  /**
-   * Watching.
-   */
+  /// Watching.
   @JsonValue("DOING")
   DOING,
-  /**
-   * Watch done.
-   */
+  /// Watch done.
   @JsonValue("DONE")
   DONE,
-  /**
-   * No time to watch it.
-   */
+  /// No time to watch it.
   @JsonValue("SHELVE")
   SHELVE,
-  /**
-   * Discard it.
-   */
+  /// Discard it.
   @JsonValue("DISCARD")
   DISCARD;
 }

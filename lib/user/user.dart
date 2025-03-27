@@ -122,7 +122,6 @@ class _UserPageState extends State<UserPage> {
         ),
       ],
     );
-    ;
   }
 
   @override
@@ -513,9 +512,9 @@ class _UserPageState extends State<UserPage> {
         '\n'
         'echo Deleting the update zip file'
         '\n'
-        'del /F /Q \"'
+        'del /F /Q "'
         '$zipPath'
-        '\"'
+        '"'
         '\n'
         '\n'
         '\n'

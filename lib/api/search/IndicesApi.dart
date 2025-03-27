@@ -12,7 +12,7 @@ class IndicesApi {
         'limit': limit,
         'keyword': keyword,
         'highlightPreTag': "<B>",
-        'highlightPostTag': "<\/B>",
+        'highlightPostTag': "</B>",
         // 在这里添加更多查询参数
       };
 

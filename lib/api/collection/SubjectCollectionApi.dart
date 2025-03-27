@@ -16,7 +16,7 @@ class SubjectCollectionApi {
     String apiUrl = "/api/v1alpha1/collection/subjects"
         "?page=$page&size=$size";
     if (type != null) {
-      apiUrl = "${apiUrl}&type=${type.name}";
+      apiUrl = "$apiUrl&type=${type.name}";
     }
 
     try {
