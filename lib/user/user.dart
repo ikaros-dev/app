@@ -12,6 +12,7 @@ import 'package:ikaros/api/user/model/User.dart';
 import 'package:ikaros/main.dart';
 import 'package:ikaros/component/setting.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/screen_utils.dart';
 import 'package:ikaros/utils/shared_prefs_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
 import 'package:open_file/open_file.dart';
@@ -38,6 +39,9 @@ class _UserPageState extends State<UserPage> {
   final TextEditingController _proxyUrlController = TextEditingController();
   String _filePath = "";
   final ValueNotifier<double> _updateDownloadProgress = ValueNotifier(0);
+  final List<Map<String, dynamic>> gridItems = [
+    {'icon': Icons.history, 'text': '历史记录'},
+  ];
 
   Future<void> _fetchAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -94,7 +98,7 @@ class _UserPageState extends State<UserPage> {
         CircleAvatar(
           radius: 28, // 半径控制头像的大小
           backgroundImage:
-              NetworkImage(UrlUtils.getCoverUrl(_baseUrl, _me?.avatar ?? "")),
+          NetworkImage(UrlUtils.getCoverUrl(_baseUrl, _me?.avatar ?? "")),
         ),
         const SizedBox(
           width: 10,
@@ -104,7 +108,7 @@ class _UserPageState extends State<UserPage> {
           children: [
             Text(
               getAvatarTitle(_me),
-              style: const TextStyle(fontSize: 28),
+              style: const TextStyle(fontSize: 28, overflow: TextOverflow.ellipsis),
             ),
             if (_me?.introduce != null)
               Align(
@@ -115,6 +119,7 @@ class _UserPageState extends State<UserPage> {
                     fontSize: 15, // 字体大小
                     fontWeight: FontWeight.w500, // 字体粗细
                     color: Colors.grey, // 字体颜色
+                    overflow: TextOverflow.ellipsis
                   ),
                 ),
               ),
@@ -136,7 +141,8 @@ class _UserPageState extends State<UserPage> {
         ),
         actions: <Widget>[
           PopupMenuButton<String>(
-            itemBuilder: (BuildContext context) => <PopupMenuItem<String>>[
+            itemBuilder: (BuildContext context) =>
+            <PopupMenuItem<String>>[
               _selectView(Icons.update, "更新", "app_update"),
               _selectView(Icons.exit_to_app_rounded, '退出', 'user_logout'),
             ],
@@ -189,7 +195,8 @@ class _UserPageState extends State<UserPage> {
                         strokeWidth: 12.0,
                         // 设置圆圈的宽度
                         semanticsLabel: '安装包下载中',
-                        semanticsValue: '已完成 ${_updateDownloadProgress.value}%',
+                        semanticsValue: '已完成 ${_updateDownloadProgress
+                            .value}%',
                         valueColor: const AlwaysStoppedAnimation<Color>(
                             Colors.blueAccent), // 设置颜色
                       ),
@@ -203,9 +210,9 @@ class _UserPageState extends State<UserPage> {
                   }
                   return _appVersion != null
                       ? Text(
-                          "v$_appVersion",
-                          style: const TextStyle(fontSize: 20),
-                        )
+                    "v$_appVersion",
+                    style: const TextStyle(fontSize: 20),
+                  )
                       : const CircularProgressIndicator();
                 }),
           ),
@@ -253,6 +260,28 @@ class _UserPageState extends State<UserPage> {
             //     value: config.hideNsfwWhenSubjectsOpen,
             //     onChanged: onHideNsfwWhenSubjectsOpenSwitchChange),
           ),
+          // 动态网格布局
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // 根据容器宽度计算每行列数
+              final width = constraints.maxWidth;
+              final crossAxisCount =  ScreenUtils.isDesktop(context) ? 6 : 4;
+
+              return GridView.count(
+                shrinkWrap: true,
+                // 重要：让 GridView 适应 ListView
+                physics: const NeverScrollableScrollPhysics(),
+                // 禁止 GridView 自身滚动
+                crossAxisCount: crossAxisCount,
+                padding: const EdgeInsets.all(8.0),
+                crossAxisSpacing: 8.0,
+                mainAxisSpacing: 8.0,
+                children: gridItems.map((item) {
+                  return GridItem(icon: item['icon'], text: item['text']);
+                }).toList(),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -279,7 +308,10 @@ class _UserPageState extends State<UserPage> {
             return AlertDialog(
               title: const Text("登出确认"),
               content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.8,
+                width: MediaQuery
+                    .of(context)
+                    .size
+                    .width * 0.8,
                 child: const Text("您确定要登出嘛？"),
               ),
               actions: [
@@ -362,7 +394,10 @@ class _UserPageState extends State<UserPage> {
             return AlertDialog(
               title: const Text("更新确认"),
               content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.8,
+                width: MediaQuery
+                    .of(context)
+                    .size
+                    .width * 0.8,
                 child: Text("发现新版本$latestVersion，您确定要更新嘛？"),
               ),
               actions: [
@@ -385,7 +420,8 @@ class _UserPageState extends State<UserPage> {
       Toast.show(context, "将要执行更新逻辑, 请耐心等待！");
       _downloadUpdate(downloadUrl);
     } else {
-      Toast.show(context, "获取GitHub的Release信息失败，请检查网络是否可以直连api.github.com.");
+      Toast.show(context,
+          "获取GitHub的Release信息失败，请检查网络是否可以直连api.github.com.");
     }
   }
 
@@ -402,8 +438,8 @@ class _UserPageState extends State<UserPage> {
     if (!tmpUpdateFile.existsSync()) {
       _configProxy(Dio()).download(downloadUrl, _filePath,
           onReceiveProgress: (received, total) {
-        _updateDownloadProgress.value = (received / total) * 100;
-      });
+            _updateDownloadProgress.value = (received / total) * 100;
+          });
     } else {
       setState(() {
         _updateDownloadProgress.value = 100;
@@ -415,7 +451,9 @@ class _UserPageState extends State<UserPage> {
     if (_filePath == "") return;
     // 安卓直接打开apk文件即可跳转安装逻辑
     if (Platform.isAndroid) {
-      if (await Permission.requestInstallPackages.request().isGranted) {
+      if (await Permission.requestInstallPackages
+          .request()
+          .isGranted) {
         await OpenFile.open(_filePath,
             type: 'application/vnd.android.package-archive');
       } else {
@@ -531,7 +569,7 @@ class _UserPageState extends State<UserPage> {
 
     // 在当前应用退出前启动 CMD 文件
     Process.start('cmd.exe', ['/c', cmdFilePath],
-            mode: ProcessStartMode.detached)
+        mode: ProcessStartMode.detached)
         .timeout(const Duration(milliseconds: 500), onTimeout: () {
       exit(0);
     });
@@ -540,5 +578,35 @@ class _UserPageState extends State<UserPage> {
   void _saveProxyUrl() async {
     await SharedPrefsUtils.saveSettingConfig(config);
     await _loadSettingConfig();
+  }
+}
+
+class GridItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const GridItem({super.key, required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        // 点击事件处理
+        print('点击了: $text');
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 30.0, color: Theme
+                .of(context)
+                .primaryColor),
+            const SizedBox(height: 8.0),
+            Text(text, style: const TextStyle(fontSize: 12.0)),
+          ],
+        ),
+      ),
+    );
   }
 }
