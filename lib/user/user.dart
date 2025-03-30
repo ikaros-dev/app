@@ -10,6 +10,7 @@ import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/user/UserApi.dart';
 import 'package:ikaros/api/user/model/User.dart';
+import 'package:ikaros/collection/episode_collections.dart';
 import 'package:ikaros/main.dart';
 import 'package:ikaros/component/setting.dart';
 import 'package:ikaros/utils/message_utils.dart';
@@ -612,6 +613,8 @@ class GridItem extends StatelessWidget {
       onTap: () {
         // 点击事件处理
         print('点击了: $text');
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => EpisodeCollectionsPage()));
       },
       child: Padding(
         padding: const EdgeInsets.all(8.0),
