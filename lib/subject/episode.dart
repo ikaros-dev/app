@@ -613,7 +613,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
           ),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8,
-            child: _buildEpisodeSelectTabs(),
+            child: _buildEpisodeSelectTabs(context),
           ),
         );
       },
@@ -680,7 +680,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     return epGroups;
   }
 
-  Widget _buildEpisodeSelectTabs() {
+  Widget _buildEpisodeSelectTabs(BuildContext context) {
     var groups = _getEpisodeGroupEnums();
     var len = 0;
     if (groups.isNotEmpty) len = groups.length;
@@ -692,7 +692,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
             Material(
               child: _buildEpisodeSelectTabBar(),
             ),
-            Expanded(flex: 1, child: _buildEpisodeSelectTabView()),
+            Expanded(flex: 1, child: _buildEpisodeSelectTabView(context)),
           ],
         ));
   }
@@ -716,10 +716,10 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
         tabs: tabs, isScrollable: groups.isNotEmpty && groups.length != 1);
   }
 
-  TabBarView _buildEpisodeSelectTabView() {
+  TabBarView _buildEpisodeSelectTabView(BuildContext context) {
     var groups = _getEpisodeGroupEnums();
     var tabViews =
-        groups.map((g) => _getEpisodesTabViewByGroup(g.name)).toList();
+        groups.map((g) => _getEpisodesTabViewByGroup(g.name, context)).toList();
     return TabBarView(
       children: tabViews.isEmpty ? [] : tabViews,
     );
@@ -734,9 +734,9 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     return episodeRecords;
   }
 
-  Widget _getEpisodesTabViewByGroup(String group) {
+  Widget _getEpisodesTabViewByGroup(String group, BuildContext context) {
     List<Widget>? buttons = _getEpisodeRecordsByGroup(group)
-        ?.map((epRecord) => _buildEpisodeRecordWidget(epRecord))
+        ?.map((epRecord) => _buildEpisodeRecordWidget(epRecord, context))
         .toList();
 
     if (buttons == null) return Container();
@@ -754,7 +754,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     return episodeName;
   }
 
-  Widget _buildEpisodeRecordWidget(EpisodeRecord epRecord) {
+  Widget _buildEpisodeRecordWidget(EpisodeRecord epRecord, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(5),
       width: MediaQuery.of(context).size.width,
