@@ -8,8 +8,14 @@ import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
+import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
+import 'package:ikaros/consts/subject_const.dart';
+import 'package:ikaros/subject/episode.dart';
+import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/string_utils.dart';
+import 'package:ikaros/utils/time_utils.dart';
 
 class EpisodeCollectionsPage extends StatefulWidget {
   @override
@@ -24,7 +30,7 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
   late final ScrollController _easyRefreshScrollController = ScrollController();
   List<HistoryItem> _historyItems = [];
   int _currentPage = 1;
-  int _currentSize = 10;
+  final int _currentSize = 10;
   bool _hasMore = true;
   String _apiBaseUrl = "";
 
@@ -51,7 +57,6 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
     });
   }
 
-
   Future<void> _loadData() async {
     await _loadApiBaseUrl();
 
@@ -65,7 +70,8 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
         EpisodeCollection epCol = EpisodeCollection.fromJson(epColMap);
         Subject? subject = await SubjectApi().findById(epCol.subjectId ?? 0);
         Episode? episode = await EpisodeApi().findById(epCol.episodeId);
-        var item = HistoryItem(episodeCollection: epCol, subject: subject, episode: episode);
+        var item = HistoryItem(
+            episodeCollection: epCol, subject: subject, episode: episode);
         newItems.add(item);
       }
     }
@@ -77,6 +83,8 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
         if (mounted) {
           _hasMore = false;
         }
+      } else {
+        _hasMore = true;
       }
     });
   }
@@ -115,34 +123,42 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
           _easyRefreshController.finishLoad(success: true, noMore: !_hasMore);
           _easyRefreshController.resetLoadState();
         },
-        child: ListView.builder(
-          itemCount: _historyItems.length,
-          itemBuilder: (context, index) {
-            return _buildHistoryItem(_historyItems[index]);
-          },
-        ),
+        child: _buildListView(),
       ),
     );
   }
 
-  Future<HistoryItem> _loadHistoryItemWithCollection(
-      EpisodeCollection collection) async {
-    Subject? subject = await SubjectApi().findById(collection.subjectId ?? 0);
-    Episode? episode = await EpisodeApi().findById(collection.episodeId);
-    return HistoryItem(
-        episodeCollection: collection, subject: subject, episode: episode);
+  Widget _buildListView() {
+    if (_currentPage == 1 && _historyItems.isEmpty) {
+      return const LinearProgressIndicator();
+    }
+    return ListView.builder(
+      itemCount: _historyItems.length,
+      itemBuilder: (context, index) {
+        return _buildHistoryItem(_historyItems[index]);
+      },
+    );
+  }
+
+  void _handleItemClick(HistoryItem item) async {
+    final Subject? subject = item.subject;
+    final Episode? episode = item.episode;
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => SubjectEpisodesPage(
+              subjectId: subject!.id,
+              selectEpisodeGroup: episode?.group,
+              selectEpisodeSequence: episode?.sequence,
+            )));
   }
 
   Widget _buildHistoryItem(HistoryItem item) {
-    Subject? subject = item.subject;
-    Episode? episode = item.episode;
+    final Subject? subject = item.subject;
+    final Episode? episode = item.episode;
     return Card(
+      key: ValueKey(item),
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       child: InkWell(
-        onTap: () {
-          // 处理点击事件
-          //print('点击了 ${item.title}');
-        },
+        onTap: () => _handleItemClick(item),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -179,7 +195,7 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
                         Row(
                           children: [
                             Text(
-                              (episode?.sequence ?? "").toString(),
+                              (episode?.sequence.toInt() ?? "").toString(),
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -189,7 +205,8 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                episode?.name ?? "剧集无名称",
+                                StringUtils.emptyHint(
+                                    episode?.nameCn ?? episode?.name, "剧集无名称"),
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -200,33 +217,43 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         // 第一行描述
                         Text(
-                          episode?.description ?? "剧集无描述",
+                          StringUtils.emptyHint(episode?.description, "剧集无描述"),
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey[600],
                           ),
-                          maxLines: 2,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         // 观看信息
                         Text(
-                          "当前为${episode?.group ?? "正片"}第${episode?.sequence ?? -1}话",
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[700],
+                          "条目《${subject.nameCn ?? subject.name}》的[${SubjectConst.episodeGroupCnMap[episode?.group ?? "MAIN"]}] 第[${episode?.sequence.toInt() ?? -1}]话",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.blueAccent,
                           ),
                         ),
                         const SizedBox(height: 2),
+                        Text(
+                          "观看进度: ${TimeUtils.formatDuration(item.episodeCollection.progress ?? 0)} 总时长: ${TimeUtils.formatDuration(item.episodeCollection.duration ?? 0)}",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        // const Spacer(),
                         // 更新时间
                         Text(
-                          '更新于 ${item.episodeCollection.updateTime}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey[500],
+                          '更新于 ${TimeUtils.formatDateStringWithPattern(item.episodeCollection.updateTime.toString(), 'yyyy年MM月dd日 HH时mm分ss秒')}',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
@@ -240,8 +267,7 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
                 value: ((item.episodeCollection.progress ?? 0) /
                     (item.episodeCollection.duration ?? 1)),
                 backgroundColor: Colors.grey[200],
-                valueColor:
-                const AlwaysStoppedAnimation<Color>(Colors.blue),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
                 minHeight: 2,
               ),
             ],

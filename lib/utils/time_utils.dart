@@ -9,10 +9,25 @@ class TimeUtils {
     return '$minutes 分 $seconds 秒';
   }
 
-  String formatDateString(String isoDate) {
+  static String formatDateString(String isoDate) {
     // 解析 ISO 8601 格式的日期字符串
     DateTime dateTime = DateTime.parse(isoDate);
     // 格式化为“年-月-日”格式
     return DateFormat('yyyy-MM-dd').format(dateTime);
+  }
+
+  static String formatDateStringWithPattern(String isoDate, String pattern) {
+    // 解析 ISO 8601 格式的日期字符串
+    DateTime dateTime = DateTime.parse(isoDate);
+    // 格式化为“年-月-日”格式
+    return DateFormat(pattern).format(dateTime);
+  }
+
+  static String formatDuration(int milliseconds) {
+    final duration = Duration(milliseconds: milliseconds);
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds.remainder(60);
+
+    return '${minutes}分${seconds}秒';
   }
 }

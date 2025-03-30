@@ -34,8 +34,10 @@ import 'package:intl/intl.dart';
 
 class SubjectEpisodesPage extends StatefulWidget {
   final int subjectId;
+  final double? selectEpisodeSequence;
+  final String? selectEpisodeGroup;
 
-  const SubjectEpisodesPage({super.key, required this.subjectId});
+  const SubjectEpisodesPage({super.key, required this.subjectId, this.selectEpisodeGroup, this.selectEpisodeSequence});
 
   @override
   State<StatefulWidget> createState() {
@@ -85,6 +87,16 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
         .where((epRecord) => epRecord.resources.isNotEmpty)
         .where((epRecord) => epRecord.episode.group == EpisodeGroup.MAIN.name)
         .firstOrNull;
+    // 如果指定了剧集参数，则使用剧集参数覆盖当前剧集
+    if (widget.selectEpisodeSequence != null && widget.selectEpisodeGroup != null) {
+      var newSelectEpisodeRecord = _episodeRecords
+          .where((epRecord) => widget.selectEpisodeGroup == epRecord.episode.group
+       && widget.selectEpisodeSequence == epRecord.episode.sequence
+      && epRecord.resources.isNotEmpty).firstOrNull;
+      if (newSelectEpisodeRecord != null) {
+        _currentEpisodeRecord.value = newSelectEpisodeRecord;
+      }
+    }
     setState(() {});
   }
 
