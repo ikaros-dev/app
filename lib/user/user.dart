@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ikaros/api/actuator/ActuatorInfoApi.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
 import 'package:ikaros/api/user/UserApi.dart';
@@ -31,6 +32,7 @@ class UserPage extends StatefulWidget {
 }
 
 class _UserPageState extends State<UserPage> {
+  String? _serverVersion;
   String? _appVersion;
   SettingConfig config = SettingConfig();
   User? _me;
@@ -42,6 +44,12 @@ class _UserPageState extends State<UserPage> {
   final List<Map<String, dynamic>> gridItems = [
     {'icon': Icons.history, 'text': '历史记录'},
   ];
+
+  Future<void> _fetchServerVersion() async {
+    String? v = await ActuatorInfo().getVersion();
+    _serverVersion = v;
+    setState(() {});
+  }
 
   Future<void> _fetchAppVersion() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -68,6 +76,7 @@ class _UserPageState extends State<UserPage> {
     _fetchAppVersion();
     _loadSettingConfig();
     _fetchMe();
+    _fetchServerVersion();
     _fetchAppVersion();
   }
 
@@ -163,7 +172,17 @@ class _UserPageState extends State<UserPage> {
       body: ListView(
         children: [
           Setting(
-            title: "版本号",
+            title: "服务端版本号",
+            subtitle: "这是服务端当前的版本号",
+            rightWidget: _serverVersion != null
+                ? Text(
+              "v$_serverVersion",
+              style: const TextStyle(fontSize: 20),
+            )
+                : const CircularProgressIndicator(),
+          ),
+          Setting(
+            title: "APP版本号",
             subtitle: "这是APP当前的版本号",
             rightWidget: ValueListenableBuilder<double>(
                 valueListenable: _updateDownloadProgress,
