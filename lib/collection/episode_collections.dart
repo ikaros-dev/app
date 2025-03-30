@@ -249,7 +249,7 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
                         // const Spacer(),
                         // 更新时间
                         Text(
-                          '更新于 ${TimeUtils.formatDateStringWithPattern(item.episodeCollection.updateTime.toString(), 'yyyy年MM月dd日 HH时mm分ss秒')}',
+                          '${TimeUtils.formatDateStringWithPattern(item.episodeCollection.updateTime.toString(), 'yyyy年MM月dd日 HH时mm分ss秒')}',
                           style: const TextStyle(
                             fontSize: 15,
                             color: Colors.black87,
