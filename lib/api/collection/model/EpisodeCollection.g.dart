@@ -15,10 +15,10 @@ EpisodeCollection _$EpisodeCollectionFromJson(Map<String, dynamic> json) =>
       finish: json['finish'] as bool?,
       duration: (json['duration'] as num?)?.toInt(),
       subjectId: (json['subject_id'] as num?)?.toInt(),
-      name: json['name'] as String,
+      name: json['name'] as String?,
       nameCn: json['name_cn'] as String?,
       description: json['description'] as String?,
-      group: $enumDecode(_$EpisodeGroupEnumMap, json['ep_group']),
+      group: $enumDecodeNullable(_$EpisodeGroupEnumMap, json['ep_group']),
       updateTime: json['update_time'] as String?,
     );
 
@@ -34,7 +34,7 @@ Map<String, dynamic> _$EpisodeCollectionToJson(EpisodeCollection instance) =>
       'name': instance.name,
       'name_cn': instance.nameCn,
       'description': instance.description,
-      'ep_group': _$EpisodeGroupEnumMap[instance.group]!,
+      'ep_group': _$EpisodeGroupEnumMap[instance.group],
       'update_time': instance.updateTime,
     };
 

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/dio_client.dart';
 
 import 'model/EpisodeCollection.dart';
@@ -20,6 +21,30 @@ class EpisodeCollectionApi {
     } catch (e) {
       print(e);
       return null;
+    }
+  }
+
+  Future<PagingWrap> listCollectionsByCondition(int page, int size) async {
+    String apiUrl = "/api/v1alpha1/collections/condition";
+    try {
+      final Map<String, Object?> queryParams = {
+        'page': page.toString(),
+        'size': size.toString(),
+        'updateTimeDesc': true,
+      };
+      debugPrint("queryParams: $queryParams");
+
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl, queryParameters: queryParams);
+      // print("response status code: ${response.statusCode}");
+      if (response.statusCode != 200) {
+        return PagingWrap(
+            page: page, size: size, total: 0, items: List.empty());
+      }
+      return PagingWrap.fromJson(response.data);
+    } catch (e) {
+      print(e);
+      return PagingWrap(page: page, size: size, total: 0, items: List.empty());
     }
   }
 
