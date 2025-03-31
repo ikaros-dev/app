@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/dio_client.dart';
+import 'package:ikaros/utils/time_utils.dart';
 
 import 'model/EpisodeCollection.dart';
 
@@ -24,7 +26,7 @@ class EpisodeCollectionApi {
     }
   }
 
-  Future<PagingWrap> listCollectionsByCondition(int page, int size) async {
+  Future<PagingWrap> listCollectionsByCondition(int page, int size, DateTimeRange? dateRange) async {
     String apiUrl = "/api/v1alpha1/collections/condition";
     try {
       final Map<String, Object?> queryParams = {
@@ -32,6 +34,9 @@ class EpisodeCollectionApi {
         'size': size.toString(),
         'updateTimeDesc': true,
       };
+      if (dateRange != null && dateRange != "null") {
+        queryParams.putIfAbsent('time', () {return '${dateRange.start.millisecondsSinceEpoch}-${dateRange.end.millisecondsSinceEpoch}';});
+      }
       debugPrint("queryParams: $queryParams");
 
       Dio dio = await DioClient.getDio();

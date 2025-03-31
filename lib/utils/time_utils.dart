@@ -16,11 +16,25 @@ class TimeUtils {
     return DateFormat('yyyy-MM-dd').format(dateTime);
   }
 
-  static String formatDateStringWithPattern(String isoDate, String pattern) {
-    // 解析 ISO 8601 格式的日期字符串
+  static String toIso8601Str(DateTime dateTime) {
+    return DateFormat('yyyy-MM-ddTHH:mm:ss').format(dateTime);
+  }
+
+  static String formatDateStringWithPattern(String? isoDate, String pattern) {
+    if  (isoDate == null) return "";
     DateTime dateTime = DateTime.parse(isoDate);
     // 格式化为“年-月-日”格式
     return DateFormat(pattern).format(dateTime);
+  }
+
+  static String formatDateTimeWithPattern(DateTime dateTime, String pattern) {
+    // 格式化为“年-月-日”格式
+    return DateFormat(pattern).format(dateTime);
+  }
+
+  static String formatDateTime(DateTime dateTime) {
+    // 格式化为“年-月-日”格式
+    return DateFormat('yyyy-MM-dd').format(dateTime);
   }
 
   static String formatDuration(int milliseconds) {

@@ -15,6 +15,7 @@ import 'package:ikaros/subject/episode.dart';
 import 'package:ikaros/utils/string_utils.dart';
 import 'package:ikaros/utils/time_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
+import 'package:intl/intl.dart';
 
 class EpisodeCollectionsPage extends StatefulWidget {
   @override
@@ -32,6 +33,7 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
   final int _currentSize = 10;
   bool _hasMore = true;
   String _apiBaseUrl = "";
+  DateTimeRange? _selectedDateRange;
 
   @override
   void initState() {
@@ -60,7 +62,7 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
     await _loadApiBaseUrl();
 
     PagingWrap pagingWrap = await EpisodeCollectionApi()
-        .listCollectionsByCondition(_currentPage, _currentSize);
+        .listCollectionsByCondition(_currentPage, _currentSize, _selectedDateRange);
 
     List<HistoryItem> newItems = [];
 
@@ -90,6 +92,31 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
     });
   }
 
+  Future<void> _selectDateRange(BuildContext context) async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      initialDateRange: _selectedDateRange ??
+          DateTimeRange(
+            start: DateTime.now().subtract(const Duration(days: 7)),
+            end: DateTime.now(),
+          ),
+      builder: (context, child) {
+        return child!;
+      },
+    );
+
+    if (picked != null && picked != _selectedDateRange) {
+      setState(() {
+        _selectedDateRange = picked;
+      });
+      _currentPage = 1;
+      _historyItems.clear();
+      _loadData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,6 +129,17 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
           },
         ),
         title: const Text("历史纪录"),
+        actions: [
+          IconButton(
+            onPressed: () => _selectDateRange(context),
+            icon: _selectedDateRange != null
+                ? Text(
+                    '${TimeUtils.formatDateTime(_selectedDateRange!.start)} '
+                        '至 ${TimeUtils.formatDateTime(_selectedDateRange!.end)}')
+                : const Icon(Icons.timer_outlined),
+            tooltip: "选择时间范围",
+          )
+        ],
       ),
       body: EasyRefresh(
         controller: _easyRefreshController,
@@ -171,7 +209,8 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
                   // 左边图片
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
-                    child: Image.network(UrlUtils.getCoverUrl(_apiBaseUrl, subject?.cover ?? ""),
+                    child: Image.network(
+                      UrlUtils.getCoverUrl(_apiBaseUrl, subject?.cover ?? ""),
                       width: 80,
                       height: 120,
                       fit: BoxFit.cover,
@@ -250,7 +289,7 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
                         // 更新时间
                         Text(
                           TimeUtils.formatDateStringWithPattern(
-                              item.episodeCollection.updateTime.toString(),
+                              item.episodeCollection.updateTime,
                               'yyyy年MM月dd日 HH时mm分ss秒'),
                           style: const TextStyle(
                             fontSize: 14,
