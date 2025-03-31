@@ -8,14 +8,13 @@ import 'package:ikaros/api/collection/model/EpisodeCollection.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
-import 'package:ikaros/api/subject/enums/EpisodeGroup.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/subject/episode.dart';
-import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/string_utils.dart';
 import 'package:ikaros/utils/time_utils.dart';
+import 'package:ikaros/utils/url_utils.dart';
 
 class EpisodeCollectionsPage extends StatefulWidget {
   @override
@@ -68,10 +67,12 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
     if (pagingWrap.items.isNotEmpty) {
       for (var epColMap in pagingWrap.items) {
         EpisodeCollection epCol = EpisodeCollection.fromJson(epColMap);
+        if (epCol.subjectId == null) break;
         Subject? subject = await SubjectApi().findById(epCol.subjectId ?? 0);
         Episode? episode = await EpisodeApi().findById(epCol.episodeId);
         var item = HistoryItem(
             episodeCollection: epCol, subject: subject, episode: episode);
+        if (subject == null) break;
         newItems.add(item);
       }
     }
@@ -170,8 +171,7 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
                   // 左边图片
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
-                    child: Image.network(
-                      _apiBaseUrl + subject!.cover,
+                    child: Image.network(UrlUtils.getCoverUrl(_apiBaseUrl, subject?.cover ?? ""),
                       width: 80,
                       height: 120,
                       fit: BoxFit.cover,
@@ -231,7 +231,7 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
                         const SizedBox(height: 4),
                         // 观看信息
                         Text(
-                          "条目《${subject.nameCn ?? subject.name}》的[${SubjectConst.episodeGroupCnMap[episode?.group ?? "MAIN"]}] 第[${episode?.sequence.toInt() ?? -1}]话",
+                          "条目《${StringUtils.emptyHint(subject?.nameCn ?? subject?.name, "条目无标题")}》的[${SubjectConst.episodeGroupCnMap[episode?.group ?? "MAIN"]}] 第[${episode?.sequence.toInt() ?? -1}]话",
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.blueAccent,
@@ -249,7 +249,9 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
                         // const Spacer(),
                         // 更新时间
                         Text(
-                          TimeUtils.formatDateStringWithPattern(item.episodeCollection.updateTime.toString(), 'yyyy年MM月dd日 HH时mm分ss秒'),
+                          TimeUtils.formatDateStringWithPattern(
+                              item.episodeCollection.updateTime.toString(),
+                              'yyyy年MM月dd日 HH时mm分ss秒'),
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.black87,
