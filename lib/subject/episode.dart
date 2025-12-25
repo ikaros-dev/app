@@ -191,11 +191,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
         subUrl = _apiBaseUrl + element.url;
       } else {
         // 诸如网盘文件提取码这种情况
-        var downloadUrl = await AttachmentApi().findDownUrlByAttachmentId(element.attachmentId);
-        final localAssPath = await SubtitleDownloader.downloadAssToTempDirectory(downloadUrl);
-
-        // 2. 生成可读取的file:// URL
-        subUrl = SubtitleDownloader.generateFileUrl(localAssPath);
+        subUrl = _apiBaseUrl + element.url;
       }
       subtitleUrls.add(subUrl);
     }
