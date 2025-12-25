@@ -186,8 +186,11 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
       var subUrl = '';
       if (element.url.startsWith("http")) {
         subUrl = element.url;
-      } else {
+      } else if(element.url.startsWith("/")) {
         subUrl = _apiBaseUrl + element.url;
+      } else {
+        // 诸如网盘文件提取码这种情况
+        subUrl = await AttachmentApi().findDownUrlByAttachmentId(element.attachmentId);
       }
       subtitleUrls.add(subUrl);
     }
