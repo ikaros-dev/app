@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dart_vlc/dart_vlc.dart' as DartVlc;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:ikaros/api/attachment/AttachmentApi.dart';
 import 'package:ikaros/api/attachment/AttachmentRelationApi.dart';
 import 'package:ikaros/api/attachment/model/VideoSubtitle.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
@@ -156,7 +157,8 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     }
 
     String coverUrl = UrlUtils.getCoverUrl(_apiBaseUrl, _subject?.cover ?? "");
-    String videUrl = UrlUtils.getCoverUrl(_apiBaseUrl, episodeResource.url);
+    // String videUrl = UrlUtils.getCoverUrl(_apiBaseUrl, episodeResource.url);
+    String videUrl = await AttachmentApi().findReadUrlByAttachmentId(episodeResource.attachmentId);
     String videoTitle = _getEpisodeName(episodeRecord.episode);
     String videoSubTitle = episodeResource.name;
 

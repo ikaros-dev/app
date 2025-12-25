@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:ikaros/api/dio_client.dart';
 
 class AttachmentApi {
 
@@ -38,5 +41,24 @@ class AttachmentApi {
       }
     }
     return List.empty();
+  }
+
+
+  Future<String> findReadUrlByAttachmentId(int attachmentId) async {
+    String apiUrl =
+        "/api/v1alpha1/attachment/url/read/id/$attachmentId";
+    try {
+      // print("queryParams: $queryParams");
+      Dio dio = await DioClient.getDio();
+      var response = await dio.get(apiUrl);
+      // print("response status code: ${response.statusCode}");
+      if (response.statusCode != 200) {
+        return "";
+      }
+      return response.data;
+    } catch (e) {
+      print(e);
+      return "";
+    }
   }
 }
