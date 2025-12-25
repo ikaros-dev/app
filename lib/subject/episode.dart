@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/attachment/AttachmentApi.dart';
 import 'package:ikaros/api/attachment/AttachmentRelationApi.dart';
+import 'package:ikaros/api/attachment/SubtitleDownloader.dart';
 import 'package:ikaros/api/attachment/model/VideoSubtitle.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
@@ -190,7 +191,11 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
         subUrl = _apiBaseUrl + element.url;
       } else {
         // 诸如网盘文件提取码这种情况
-        subUrl = await AttachmentApi().findDownUrlByAttachmentId(element.attachmentId);
+        var downloadUrl = await AttachmentApi().findDownUrlByAttachmentId(element.attachmentId);
+        final localAssPath = await SubtitleDownloader.downloadAssToTempDirectory(downloadUrl);
+
+        // 2. 生成可读取的file:// URL
+        subUrl = SubtitleDownloader.generateFileUrl(localAssPath);
       }
       subtitleUrls.add(subUrl);
     }
