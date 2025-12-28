@@ -1,6 +1,6 @@
 name: ikaros
 description: ikaros app by flutter
-version: 1.4.7
+version: 1.4.8
 
 environment:
   sdk: '>=2.18.4 <=3.10.5'

@@ -160,7 +160,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     String coverUrl = UrlUtils.getCoverUrl(_apiBaseUrl, _subject?.cover ?? "");
     // String videUrl = UrlUtils.getCoverUrl(_apiBaseUrl, episodeResource.url);
     String videUrl = await AttachmentApi().findReadUrlByAttachmentId(episodeResource.attachmentId);
-    if (videUrl.startsWith("/")) videUrl = UrlUtils.getCoverUrl(_apiBaseUrl, episodeResource.url);
+    if (videUrl.startsWith("/")) videUrl = UrlUtils.getCoverUrl(_apiBaseUrl, videUrl);
     String videoTitle = _getEpisodeName(episodeRecord.episode);
     String videoSubTitle = episodeResource.name;
 
