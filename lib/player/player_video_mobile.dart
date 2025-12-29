@@ -6,16 +6,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_vlc_player/flutter_vlc_player.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
+import 'package:ikaros/api/dandanplay/DandanplayBangumiApi.dart';
 import 'package:ikaros/api/dandanplay/DandanplayCommentApi.dart';
 import 'package:ikaros/api/dandanplay/DandanplaySearchApi.dart';
 import 'package:ikaros/api/dandanplay/model/CommentEpisode.dart';
 import 'package:ikaros/api/dandanplay/model/CommentEpisodeIdResponse.dart';
+import 'package:ikaros/api/dandanplay/model/IkarosDanmukuBangumiResponse.dart';
 import 'package:ikaros/api/dandanplay/model/IkarosDanmukuEpisodesResponse.dart';
 import 'package:ikaros/api/dandanplay/model/SearchEpisodeDetails.dart';
 import 'package:ikaros/api/dandanplay/model/SearchEpisodesAnime.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
 import 'package:ikaros/api/subject/SubjectSyncApi.dart';
+import 'package:ikaros/api/subject/enums/SubjectSyncPlatform.dart';
 import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/api/subject/model/SubjectSync.dart';
@@ -297,16 +300,32 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     if (_subject == null) {
       return; // 自己新建的无三方同步平台ID关联的条目是不会请求弹幕的
     }
-    IkarosDanmukuEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
-        .searchEpisodes(_subject!.name, _episode.sequence.toInt().toString());
-    if (searchEpsResp == null ||
-        searchEpsResp.animes.isEmpty) return;
-    SearchEpisodesAnime searchEpisodesAnime = searchEpsResp.animes.first;
-    if (searchEpisodesAnime.episodes.isEmpty) return;
-    SearchEpisodeDetails searchEpisodeDetails =
-        searchEpisodesAnime.episodes.first;
+    var targetEpisodeId = -1;
+    if (_syncs.isNotEmpty && _syncs.first.platform == SubjectSyncPlatform.BGM_TV) {
+      var bgmtvSubjectId = _syncs.first.platformId;
+
+      IkarosDanmukuBangumiResponse? bangumiRsp = await DandanplayBangumiApi()
+          .getBangumiDetailsByBgmtvSubjectId(bgmtvSubjectId);
+      if (bangumiRsp != null) {
+        targetEpisodeId =
+            bangumiRsp.data.episodes.where((ep)=> ep.episodeNumber == _episode.sequence.toString())
+                .first.episodeId;
+      }
+    }
+    if (targetEpisodeId == -1) {
+      IkarosDanmukuEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
+          .searchEpisodes(_subject!.name, _episode.sequence.toInt().toString());
+      if (searchEpsResp == null ||
+          searchEpsResp.animes.isEmpty) return;
+      SearchEpisodesAnime searchEpisodesAnime = searchEpsResp.animes.first;
+      if (searchEpisodesAnime.episodes.isEmpty) return;
+      SearchEpisodeDetails searchEpisodeDetails =
+          searchEpisodesAnime.episodes.first;
+      targetEpisodeId = searchEpisodeDetails.episodeId;
+    }
+
     CommentEpisodeIdResponse? commentEpIdResp = await DandanplayCommentApi()
-        .commentEpisodeId(searchEpisodeDetails.episodeId, 1);
+        .commentEpisodeId(targetEpisodeId, 1);
     if (commentEpIdResp == null || commentEpIdResp.count == 0) return;
     _commentEpisodes.addAll(commentEpIdResp.comments);
     widget.onDanmukuPoolInitialed?.call(_commentEpisodes.length);
