@@ -767,7 +767,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
 
   String _getEpisodeName(Episode? episode) {
     if (episode == null) return "剧集未设置标题";
-    String? episodeName = episode.nameCn != "" ? episode.nameCn : episode.name;
+    String? episodeName = (episode.nameCn != null && episode.nameCn != "") ? episode.nameCn : episode.name;
     episodeName ??= "";
     episodeName = episodeName != "" ? episodeName : "剧集未设置标题";
     return episodeName;
