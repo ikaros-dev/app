@@ -650,7 +650,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
           ),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8,
-            child: Column(
+            child: ListView(
               children: _currentEpisodeRecord.value?.resources
                       .map((epRes) => Container(
                             width: double.infinity,
