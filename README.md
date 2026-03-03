@@ -115,6 +115,11 @@ flutter doctor -v
 
 </details>
 
+# 视频
+
+- BiliBili: <https://www.bilibili.com/video/BV1CaAZztE1c/>
+- YouTube: <https://www.youtube.com/watch?v=mGeUD-CUpq4>
+
 # 截图
 
 ### 条目收藏页和条目列表页
