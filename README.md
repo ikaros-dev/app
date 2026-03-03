@@ -50,6 +50,9 @@ flutter pub get
 flutter doctor -v
 ```
 
+<details>
+  <summary>环境详细信息</summary>
+
 ```text
 [✓] Flutter (Channel stable, 3.24.5, on Microsoft Windows [版本 10.0.22631.4460], locale zh-CN)
     • Flutter version 3.24.5 on channel stable at C:\Applications\flutter\3.24.5
@@ -108,6 +111,10 @@ flutter doctor -v
 
 • No issues found!
 ```
+
+
+</details>
+<br />
 
 # 截图
 
