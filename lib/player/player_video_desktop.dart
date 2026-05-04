@@ -228,16 +228,6 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
         targetEpisodeId = targetEpisode?.episodeId ?? -1;
       }
     }
-    if (targetEpisodeId == -1) {
-      IkarosDanmukuEpisodesResponse? searchEpsResp = await DandanplaySearchApi()
-          .searchEpisodes(_subject!.name, _episode.sequence.toInt().toString());
-      if (searchEpsResp == null || searchEpsResp.animes.isEmpty) return;
-      SearchEpisodesAnime searchEpisodesAnime = searchEpsResp.animes.first;
-      if (searchEpisodesAnime.episodes.isEmpty) return;
-      SearchEpisodeDetails searchEpisodeDetails =
-          searchEpisodesAnime.episodes.first;
-      targetEpisodeId = searchEpisodeDetails.episodeId;
-    }
 
     CommentEpisodeIdResponse? commentEpIdResp =
         await DandanplayCommentApi().commentEpisodeId(targetEpisodeId, 1);
