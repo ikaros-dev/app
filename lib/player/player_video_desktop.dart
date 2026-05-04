@@ -229,10 +229,12 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       }
     }
 
-    CommentEpisodeIdResponse? commentEpIdResp =
-        await DandanplayCommentApi().commentEpisodeId(targetEpisodeId, 1);
-    if (commentEpIdResp == null || commentEpIdResp.count == 0) return;
-    _commentEpisodes.addAll(commentEpIdResp.comments);
+    if (targetEpisodeId != -1) {
+      CommentEpisodeIdResponse? commentEpIdResp =
+      await DandanplayCommentApi().commentEpisodeId(targetEpisodeId, 1);
+      if (commentEpIdResp == null || commentEpIdResp.count == 0) return;
+      _commentEpisodes.addAll(commentEpIdResp.comments);
+    }
 
     widget.onDanmukuPoolInitialed?.call(_commentEpisodes.length);
   }
