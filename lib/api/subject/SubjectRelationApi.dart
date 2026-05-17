@@ -4,7 +4,7 @@ import 'package:ikaros/api/subject/model/SubjectRelation.dart';
 
 class SubjectRelationApi {
   Future<List<SubjectRelation>> findById(int id) async {
-    String apiUrl = "/api/v1alpha1/subject/relations/$id";
+    String apiUrl = "/api/v1/subject/relations/$id";
     try {
       // print("queryParams: $queryParams");
       Dio dio = await DioClient.getDio();

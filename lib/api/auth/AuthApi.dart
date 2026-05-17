@@ -34,7 +34,7 @@ class AuthApi {
   }
 
   Future login(String baseUrl, String username, String password) async {
-    String url = "$baseUrl/api/v1alpha1/security/auth/token/jwt/apply";
+    String url = "$baseUrl/api/v1/security/auth/token/jwt/apply";
     Response response = await Dio().post(url, data: {
       "authType": "USERNAME_PASSWORD",
       "username": username,
@@ -60,7 +60,7 @@ class AuthApi {
   }
 
   Future<String> refreshToken(String refreshToken) async {
-    String url = "/api/v1alpha1/security/auth/token/jwt/refresh";
+    String url = "/api/v1/security/auth/token/jwt/refresh";
     Dio dio = await DioClient.getDio();
     var response = await dio.put(url, data: refreshToken);
     final prefs = await SharedPreferences.getInstance();

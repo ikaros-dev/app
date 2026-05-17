@@ -11,7 +11,7 @@ class SubjectApi {
   Future<PagingWrap> listSubjectsByCondition(
       int page, int size, String name, String nameCn, bool? nsfw, String? type,
       {String? time, bool? airTimeDesc, bool? updateTimeDesc}) async {
-    String apiUrl = "/api/v1alpha1/subjects/condition";
+    String apiUrl = "/api/v1/subjects/condition";
     try {
       final Map<String, Object?> queryParams = {
         'page': page.toString(),
@@ -50,7 +50,7 @@ class SubjectApi {
   }
 
   Future<Subject?> findById(int id) async {
-    String apiUrl = "/api/v1alpha1/subject/$id";
+    String apiUrl = "/api/v1/subject/$id";
     try {
       // print("queryParams: $queryParams");
       Dio dio = await DioClient.getDio();

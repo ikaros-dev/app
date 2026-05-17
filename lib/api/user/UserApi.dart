@@ -6,7 +6,7 @@ import 'model/User.dart';
 
 class UserApi {
   Future<User?> getMe() async {
-    String apiUrl = "/api/v1alpha1/user/me";
+    String apiUrl = "/api/v1/user/me";
     try {
       Dio dio = await DioClient.getDio();
       Response response = await dio.get(apiUrl);

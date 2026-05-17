@@ -6,7 +6,7 @@ import 'package:ikaros/api/subject/model/SubjectSync.dart';
 
 class SubjectSyncApi {
   Future<List<SubjectSync>> getSyncsBySubjectId(int subjectId) async {
-    String apiUrl = "/api/v1alpha1/subject/syncs/subjectId/$subjectId";
+    String apiUrl = "/api/v1/subject/syncs/subjectId/$subjectId";
     try {
 
       // print("queryParams: $queryParams");

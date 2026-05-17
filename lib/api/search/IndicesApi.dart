@@ -6,7 +6,7 @@ import 'package:ikaros/api/search/model/SubjectSearchResult.dart';
 class IndicesApi {
   Future<SubjectSearchResult?> searchSubject(String keyword, int limit) async {
     if (limit <= 0) limit = 20;
-    String apiUrl = "/api/v1alpha1/indices/subject";
+    String apiUrl = "/api/v1/indices/subject";
     try {
       final queryParams = {
         'limit': limit,

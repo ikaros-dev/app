@@ -7,7 +7,7 @@ import 'package:ikaros/api/dio_client.dart';
 class AttachmentRelationApi {
   Future<List<VideoSubtitle>> findByAttachmentId(int attachmentId) async {
     String apiUrl =
-        "/api/v1alpha1/attachment/relation/videoSubtitle/subtitles/$attachmentId";
+        "/api/v1/attachment/relation/videoSubtitle/subtitles/$attachmentId";
     try {
       // print("queryParams: $queryParams");
       Dio dio = await DioClient.getDio();

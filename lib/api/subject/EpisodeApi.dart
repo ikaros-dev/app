@@ -9,7 +9,7 @@ class EpisodeApi {
   Episode error = Episode(id: -1, subjectId: -1, name: "", sequence: -1);
 
   Future<Episode> findById(int id) async {
-    String apiUrl = "/api/v1alpha1/episode/$id";
+    String apiUrl = "/api/v1/episode/$id";
     try {
       // print("queryParams: $queryParams");
       Dio dio = await DioClient.getDio();
@@ -26,7 +26,7 @@ class EpisodeApi {
   }
 
   Future<List<Episode>> findBySubjectId(int subjectId) async {
-    String apiUrl = "/api/v1alpha1/episodes/subjectId/$subjectId";
+    String apiUrl = "/api/v1/episodes/subjectId/$subjectId";
     try {
       // print("queryParams: $queryParams");
       Dio dio = await DioClient.getDio();
@@ -48,7 +48,7 @@ class EpisodeApi {
   }
 
   Future<List<EpisodeRecord>> findRecordsBySubjectId(int subjectId) async {
-    String apiUrl = "/api/v1alpha1/episode/records/subjectId/$subjectId";
+    String apiUrl = "/api/v1/episode/records/subjectId/$subjectId";
     try {
       // print("queryParams: $queryParams");
       Dio dio = await DioClient.getDio();
@@ -70,7 +70,7 @@ class EpisodeApi {
   }
 
   Future<List<EpisodeResource>> getEpisodeResourcesRefs(int id) async {
-    String apiUrl = "/api/v1alpha1/episode/attachment/refs/$id";
+    String apiUrl = "/api/v1/episode/attachment/refs/$id";
     try {
       // print("queryParams: $queryParams");
       Dio dio = await DioClient.getDio();

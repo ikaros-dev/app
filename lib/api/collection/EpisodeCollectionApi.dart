@@ -11,7 +11,7 @@ import 'model/EpisodeCollection.dart';
 
 class EpisodeCollectionApi {
   Future<EpisodeCollection?> findCollection(int episodeId) async {
-    String apiUrl = "/api/v1alpha1/collection/episode/$episodeId";
+    String apiUrl = "/api/v1/collection/episode/$episodeId";
     try {
       Dio dio = await DioClient.getDio();
       var response = await dio.get(apiUrl);
@@ -27,7 +27,7 @@ class EpisodeCollectionApi {
   }
 
   Future<PagingWrap> listCollectionsByCondition(int page, int size, DateTimeRange? dateRange) async {
-    String apiUrl = "/api/v1alpha1/collections/condition";
+    String apiUrl = "/api/v1/collections/condition";
     try {
       final Map<String, Object?> queryParams = {
         'page': page.toString(),
@@ -56,7 +56,7 @@ class EpisodeCollectionApi {
   Future<List<EpisodeCollection>> findListBySubjectId(int subjectId) async {
     List<EpisodeCollection> result = [];
 
-    String apiUrl = "/api/v1alpha1/collection/episodes/subjectId/$subjectId";
+    String apiUrl = "/api/v1/collection/episodes/subjectId/$subjectId";
     try {
       Dio dio = await DioClient.getDio();
       var response = await dio.get(apiUrl);
@@ -81,7 +81,7 @@ class EpisodeCollectionApi {
 
   Future updateCollection(
       int episodeId, Duration seek, Duration duration) async {
-    String apiUrl = "/api/v1alpha1/collection/episode/$episodeId";
+    String apiUrl = "/api/v1/collection/episode/$episodeId";
 
     final queryParams = {
       'progress': seek.inMilliseconds,
@@ -108,7 +108,7 @@ class EpisodeCollectionApi {
 
   Future updateCollectionFinish(int episodeId, bool isFinish) async {
     String apiUrl =
-        "/api/v1alpha1/collection/episode/finish/$episodeId/$isFinish";
+        "/api/v1/collection/episode/finish/$episodeId/$isFinish";
     Dio dio = await DioClient.getDio();
     var response = await dio.put(apiUrl);
     if (response.statusCode != 200) {

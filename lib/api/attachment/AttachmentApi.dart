@@ -46,7 +46,7 @@ class AttachmentApi {
 
   Future<String> findReadUrlByAttachmentId(int attachmentId) async {
     String apiUrl =
-        "/api/v1alpha1/attachment/url/read/id/$attachmentId";
+        "/api/v1/attachment/url/read/id/$attachmentId";
     try {
       // print("queryParams: $queryParams");
       Dio dio = await DioClient.getDio();
@@ -65,7 +65,7 @@ class AttachmentApi {
 
   Future<String> findDownUrlByAttachmentId(int attachmentId) async {
     String apiUrl =
-        "/api/v1alpha1/attachment/url/download/id/$attachmentId";
+        "/api/v1/attachment/url/download/id/$attachmentId";
     try {
       // print("queryParams: $queryParams");
       Dio dio = await DioClient.getDio();
