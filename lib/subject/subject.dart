@@ -59,15 +59,15 @@ class _SubjectState extends State<SubjectPage> {
   late MenuController _collectMenuController;
 
   Future<void> _loadSubjectWithId() async {
-    _subject = await SubjectApi().findById(int.parse(widget.id.toString()));
+    _subject = await SubjectApi().findById(widget.id.toString());
     _episodeCollections = await EpisodeCollectionApi()
-        .findListBySubjectId(int.parse(widget.id.toString()));
+        .findListBySubjectId(widget.id.toString());
     setState(() {});
   }
 
   Future<void> _loadSubjectRelationsWithId() async {
     _subjectRelations =
-        await SubjectRelationApi().findById(int.parse(widget.id.toString()));
+        await SubjectRelationApi().findById(widget.id.toString());
   }
 
   bool _episodeIsFinish(int episodeId) {
@@ -307,7 +307,7 @@ class _SubjectState extends State<SubjectPage> {
                   : () {
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) => SubjectEpisodesPage(
-                                subjectId: _subject?.id ?? -1,
+                                subjectId: _subject?.id ?? "",
                               )));
                     },
               style: OutlinedButton.styleFrom(
@@ -669,7 +669,7 @@ class _SubjectState extends State<SubjectPage> {
 
   Future<void> _fetchSubjectEpisodes() async {
     _episodes =
-        await EpisodeApi().findBySubjectId(int.parse(widget.id.toString()));
+        await EpisodeApi().findBySubjectId(widget.id.toString());
     if (_episodes.isEmpty) {
       debugPrint("获取条目剧集失败");
     }
@@ -679,7 +679,7 @@ class _SubjectState extends State<SubjectPage> {
 
   Future<void> _fetchSubjectEpisodeRecords() async {
     _episodeRecords = await EpisodeApi()
-        .findRecordsBySubjectId(int.parse(widget.id.toString()));
+        .findRecordsBySubjectId(widget.id.toString());
     if (_episodeRecords.isEmpty) {
       debugPrint("获取条目剧集Record失败");
     }
@@ -688,7 +688,7 @@ class _SubjectState extends State<SubjectPage> {
 
   Future<void> _fetchSubjectCollection() async {
     _subjectCollection = await SubjectCollectionApi()
-        .findCollectionBySubjectId(int.parse(widget.id.toString()));
+        .findCollectionBySubjectId(widget.id.toString());
 
     if (_subjectCollection == null) {
       _selectedCollectBtnLabelVal = "收藏";

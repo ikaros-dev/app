@@ -33,7 +33,7 @@ class SubjectCollectionApi {
     }
   }
 
-  Future<SubjectCollection?> findCollectionBySubjectId(int subjectId) async {
+  Future<SubjectCollection?> findCollectionBySubjectId(String subjectId) async {
     String apiUrl = "/api/v1/collection/subject/$subjectId";
     try {
       Dio dio = await DioClient.getDio();
@@ -50,7 +50,7 @@ class SubjectCollectionApi {
   }
 
   Future<void> updateCollection(
-      int subjectId, CollectionType? type, bool? isPrivate) async {
+      String subjectId, CollectionType? type, bool? isPrivate) async {
     String apiUrl = "/api/v1/collection/subject/collect"
         "?subjectId=$subjectId";
     if (type != null) {
@@ -75,7 +75,7 @@ class SubjectCollectionApi {
     }
   }
 
-  Future<void> removeCollection(int subjectId) async {
+  Future<void> removeCollection(String subjectId) async {
     String apiUrl = "/api/v1/collection/subject/collect"
         "?subjectId=$subjectId";
     try {

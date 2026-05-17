@@ -76,7 +76,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   final List<double> _speedOptions = [0.5, 1.0, 1.5, 2.0, 3.0];
   late String _title = "主标题剧集信息";
   late String _subTitle = "副标题加载的附件名称";
-  late int _episodeId = -1;
+  late String _episodeId = "";
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   Duration _lastPosition = Duration.zero;
@@ -151,7 +151,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   @override
   void dispose() {
     WakelockPlus.disable();
-    if (_episodeId > 0) {
+    if (_episodeId != "") {
       EpisodeCollectionApi()
           .updateCollection(_episodeId, _position, _duration)
           .then((_) {
@@ -189,7 +189,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     setState(() {});
   }
 
-  void setEpisodeId(int episodeId) {
+  void setEpisodeId(String episodeId) {
     _episodeId = episodeId;
     _initDanmukuPool();
     setState(() {});

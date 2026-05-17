@@ -5,11 +5,11 @@ part 'EpisodeCollection.g.dart';
 
 @JsonSerializable()
 class EpisodeCollection {
-  final int id;
+  final String id;
   @JsonKey(name: "user_id")
-  final int userId;
+  final String userId;
   @JsonKey(name: "episode_id")
-  final int episodeId;
+  final String episodeId;
 
   /// 是否已经看过.
   final bool? finish;
@@ -21,7 +21,7 @@ class EpisodeCollection {
   final int? duration;
 
   @JsonKey(name: "subject_id")
-  final int? subjectId;
+  final String? subjectId;
   final String? name;
   @JsonKey(name: "name_cn")
   final String? nameCn;

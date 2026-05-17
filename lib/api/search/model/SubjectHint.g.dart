@@ -7,7 +7,7 @@ part of 'SubjectHint.dart';
 // **************************************************************************
 
 SubjectHint _$SubjectHintFromJson(Map<String, dynamic> json) => SubjectHint(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       name: json['name'] as String,
       nameCn: json['nameCn'] as String?,
       infobox: json['infobox'] as String?,

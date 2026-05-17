@@ -6,9 +6,9 @@ part 'Video.g.dart';
 @JsonSerializable()
 class Video {
   @JsonKey(name: "episode_id")
-  final int episodeId;
+  final String episodeId;
   @JsonKey(name: "subject_id")
-  final int subjectId;
+  final String subjectId;
   final String url;
   final String? title;
   final String? subhead;

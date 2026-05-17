@@ -4,9 +4,9 @@ part 'EpisodeResource.g.dart';
 
 @JsonSerializable()
 class EpisodeResource {
-  final int attachmentId;
-  final int parentAttachmentId;
-  final int episodeId;
+  final String attachmentId;
+  final String parentAttachmentId;
+  final String episodeId;
   final String url;
   final bool? canRead;
   final String name;

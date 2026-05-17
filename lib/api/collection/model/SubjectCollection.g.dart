@@ -8,9 +8,9 @@ part of 'SubjectCollection.dart';
 
 SubjectCollection _$SubjectCollectionFromJson(Map<String, dynamic> json) =>
     SubjectCollection(
-      id: (json['id'] as num).toInt(),
-      userId: (json['user_id'] as num).toInt(),
-      subjectId: (json['subject_id'] as num).toInt(),
+      id: json['id'] as String,
+      userId: json['user_id'] as String,
+      subjectId: json['subject_id'] as String,
       type: $enumDecode(_$CollectionTypeEnumMap, json['type']),
       mainEpisodeProgress: (json['main_ep_progress'] as num?)?.toInt(),
       isPrivate: json['is_private'] as bool,

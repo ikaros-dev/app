@@ -8,7 +8,7 @@ part 'Subject.g.dart';
 
 @JsonSerializable()
 class Subject {
-  final int id;
+  final String id;
   final SubjectType type;
   final String name;
   @JsonKey(name: "name_cn")

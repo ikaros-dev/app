@@ -35,7 +35,7 @@ import 'package:ikaros/utils/url_utils.dart';
 import 'package:intl/intl.dart';
 
 class SubjectEpisodesPage extends StatefulWidget {
-  final int subjectId;
+  final String subjectId;
   final double? selectEpisodeSequence;
   final String? selectEpisodeGroup;
 
@@ -135,7 +135,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     });
   }
 
-  bool _episodeIsFinish(int episodeId) {
+  bool _episodeIsFinish(String episodeId) {
     if (_episodeCollections.isEmpty) {
       return false;
     }

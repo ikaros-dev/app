@@ -5,7 +5,7 @@ part 'SubjectHint.g.dart';
 
 @JsonSerializable()
 class SubjectHint {
-  final int id;
+  final String id;
   final String name;
   final String? nameCn;
   final String? infobox;

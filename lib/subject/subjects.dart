@@ -439,8 +439,8 @@ class SubjectListState extends State<SubjectsPage> {
     //         builder: (context) => SubjectDetailsPage(
     //           subject: value,
     //         ))));
-    int subjectId = subjectMeta.id;
-    if (subjectId <= 0) {
+    String subjectId = subjectMeta.id;
+    if (subjectId == "") {
       return;
     }
 

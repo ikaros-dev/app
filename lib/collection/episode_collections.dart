@@ -70,7 +70,7 @@ class EpisodeCollectionsPageState extends State<EpisodeCollectionsPage> {
       for (var epColMap in pagingWrap.items) {
         EpisodeCollection epCol = EpisodeCollection.fromJson(epColMap);
         if (epCol.subjectId == null) break;
-        Subject? subject = await SubjectApi().findById(epCol.subjectId ?? 0);
+        Subject? subject = await SubjectApi().findById(epCol.subjectId ?? "");
         Episode? episode = await EpisodeApi().findById(epCol.episodeId);
         var item = HistoryItem(
             episodeCollection: epCol, subject: subject, episode: episode);

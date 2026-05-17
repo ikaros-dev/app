@@ -6,7 +6,7 @@ part 'VideoSubtitle.g.dart';
 @JsonSerializable()
 class VideoSubtitle {
   @JsonKey(name: "attachment_id")
-  final int attachmentId;
+  final String attachmentId;
   final String name;
   final String url;
 

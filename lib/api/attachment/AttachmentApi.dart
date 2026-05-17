@@ -44,7 +44,7 @@ class AttachmentApi {
   }
 
 
-  Future<String> findReadUrlByAttachmentId(int attachmentId) async {
+  Future<String> findReadUrlByAttachmentId(String attachmentId) async {
     String apiUrl =
         "/api/v1/attachment/url/read/id/$attachmentId";
     try {

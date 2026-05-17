@@ -5,7 +5,7 @@ import 'package:ikaros/api/attachment/model/VideoSubtitle.dart';
 import 'package:ikaros/api/dio_client.dart';
 
 class AttachmentRelationApi {
-  Future<List<VideoSubtitle>> findByAttachmentId(int attachmentId) async {
+  Future<List<VideoSubtitle>> findByAttachmentId(String attachmentId) async {
     String apiUrl =
         "/api/v1/attachment/relation/videoSubtitle/subtitles/$attachmentId";
     try {

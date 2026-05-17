@@ -7,7 +7,7 @@ part of 'Subject.dart';
 // **************************************************************************
 
 Subject _$SubjectFromJson(Map<String, dynamic> json) => Subject(
-      id: (json['id'] as num).toInt(),
+      id: json['id'] as String,
       type: $enumDecode(_$SubjectTypeEnumMap, json['type']),
       name: json['name'] as String,
       nameCn: json['name_cn'] as String?,

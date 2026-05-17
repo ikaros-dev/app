@@ -6,9 +6,9 @@ import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'model/Episode.dart';
 
 class EpisodeApi {
-  Episode error = Episode(id: -1, subjectId: -1, name: "", sequence: -1);
+  Episode error = Episode(id: "", subjectId: "", name: "", sequence: -1);
 
-  Future<Episode> findById(int id) async {
+  Future<Episode> findById(String id) async {
     String apiUrl = "/api/v1/episode/$id";
     try {
       // print("queryParams: $queryParams");
@@ -25,7 +25,7 @@ class EpisodeApi {
     }
   }
 
-  Future<List<Episode>> findBySubjectId(int subjectId) async {
+  Future<List<Episode>> findBySubjectId(String subjectId) async {
     String apiUrl = "/api/v1/episodes/subjectId/$subjectId";
     try {
       // print("queryParams: $queryParams");
@@ -47,7 +47,7 @@ class EpisodeApi {
     }
   }
 
-  Future<List<EpisodeRecord>> findRecordsBySubjectId(int subjectId) async {
+  Future<List<EpisodeRecord>> findRecordsBySubjectId(String subjectId) async {
     String apiUrl = "/api/v1/episode/records/subjectId/$subjectId";
     try {
       // print("queryParams: $queryParams");
@@ -69,7 +69,7 @@ class EpisodeApi {
     }
   }
 
-  Future<List<EpisodeResource>> getEpisodeResourcesRefs(int id) async {
+  Future<List<EpisodeResource>> getEpisodeResourcesRefs(String id) async {
     String apiUrl = "/api/v1/episode/attachment/refs/$id";
     try {
       // print("queryParams: $queryParams");

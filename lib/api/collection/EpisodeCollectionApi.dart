@@ -5,12 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/common/PagingWrap.dart';
 import 'package:ikaros/api/dio_client.dart';
-import 'package:ikaros/utils/time_utils.dart';
 
 import 'model/EpisodeCollection.dart';
 
 class EpisodeCollectionApi {
-  Future<EpisodeCollection?> findCollection(int episodeId) async {
+  Future<EpisodeCollection?> findCollection(String episodeId) async {
     String apiUrl = "/api/v1/collection/episode/$episodeId";
     try {
       Dio dio = await DioClient.getDio();
@@ -26,7 +25,8 @@ class EpisodeCollectionApi {
     }
   }
 
-  Future<PagingWrap> listCollectionsByCondition(int page, int size, DateTimeRange? dateRange) async {
+  Future<PagingWrap> listCollectionsByCondition(
+      int page, int size, DateTimeRange? dateRange) async {
     String apiUrl = "/api/v1/collections/condition";
     try {
       final Map<String, Object?> queryParams = {
@@ -35,7 +35,9 @@ class EpisodeCollectionApi {
         'updateTimeDesc': true,
       };
       if (dateRange != null && dateRange != "null") {
-        queryParams.putIfAbsent('time', () {return '${dateRange.start.millisecondsSinceEpoch}-${dateRange.end.millisecondsSinceEpoch}';});
+        queryParams.putIfAbsent('time', () {
+          return '${dateRange.start.millisecondsSinceEpoch}-${dateRange.end.millisecondsSinceEpoch}';
+        });
       }
       debugPrint("queryParams: $queryParams");
 
@@ -53,7 +55,7 @@ class EpisodeCollectionApi {
     }
   }
 
-  Future<List<EpisodeCollection>> findListBySubjectId(int subjectId) async {
+  Future<List<EpisodeCollection>> findListBySubjectId(String subjectId) async {
     List<EpisodeCollection> result = [];
 
     String apiUrl = "/api/v1/collection/episodes/subjectId/$subjectId";
@@ -80,7 +82,7 @@ class EpisodeCollectionApi {
   }
 
   Future updateCollection(
-      int episodeId, Duration seek, Duration duration) async {
+      String episodeId, Duration seek, Duration duration) async {
     String apiUrl = "/api/v1/collection/episode/$episodeId";
 
     final queryParams = {
@@ -106,9 +108,8 @@ class EpisodeCollectionApi {
     return;
   }
 
-  Future updateCollectionFinish(int episodeId, bool isFinish) async {
-    String apiUrl =
-        "/api/v1/collection/episode/finish/$episodeId/$isFinish";
+  Future updateCollectionFinish(String episodeId, bool isFinish) async {
+    String apiUrl = "/api/v1/collection/episode/finish/$episodeId/$isFinish";
     Dio dio = await DioClient.getDio();
     var response = await dio.put(apiUrl);
     if (response.statusCode != 200) {

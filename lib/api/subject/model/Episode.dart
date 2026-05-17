@@ -5,9 +5,9 @@ part 'Episode.g.dart';
 
 @JsonSerializable()
 class Episode {
-  final int id;
+  final String id;
   @JsonKey(name: "subject_id")
-  final int subjectId;
+  final String subjectId;
   final String name;
   @JsonKey(name: "name_cn")
   final String? nameCn;

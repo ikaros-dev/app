@@ -9,12 +9,12 @@ part of 'EpisodeCollection.dart';
 EpisodeCollection _$EpisodeCollectionFromJson(Map<String, dynamic> json) =>
     EpisodeCollection(
       progress: (json['progress'] as num?)?.toInt(),
-      id: (json['id'] as num).toInt(),
-      userId: (json['user_id'] as num).toInt(),
-      episodeId: (json['episode_id'] as num).toInt(),
+      id: json['id'] as String,
+      userId: json['user_id'] as String,
+      episodeId: json['episode_id'] as String,
       finish: json['finish'] as bool?,
       duration: (json['duration'] as num?)?.toInt(),
-      subjectId: (json['subject_id'] as num?)?.toInt(),
+      subjectId: json['subject_id'] as String?,
       name: json['name'] as String?,
       nameCn: json['name_cn'] as String?,
       description: json['description'] as String?,

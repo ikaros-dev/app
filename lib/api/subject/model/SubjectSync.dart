@@ -5,7 +5,7 @@ part 'SubjectSync.g.dart';
 
 @JsonSerializable()
 class SubjectSync {
-  final int subjectId;
+  final String subjectId;
   final SubjectSyncPlatform platform;
   final String platformId;
 

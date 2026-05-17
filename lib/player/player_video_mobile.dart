@@ -65,7 +65,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   Duration _lastPosition = Duration.zero;
   late String _title = "主标题剧集信息";
   late String _subTitle = "副标题加载的附件名称";
-  late int _episodeId = -1;
+  late String _episodeId = "";
   late AnimationController playPauseController;
   double _playbackSpeed = 1.0;
   final List<double> _speedOptions = [0.5, 1.0, 1.5, 2.0, 3.0];
@@ -164,7 +164,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   @override
   void dispose() {
     WakelockPlus.disable();
-    if (_episodeId > 0) {
+    if (_episodeId != "") {
       EpisodeCollectionApi()
           .updateCollection(_episodeId, _position, _duration)
           .then((_) {
@@ -187,7 +187,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     setState(() {});
   }
 
-  void setEpisodeId(int episodeId) {
+  void setEpisodeId(String episodeId) {
     _episodeId = episodeId;
     _initDanmukuPool();
     setState(() {});

@@ -198,8 +198,8 @@ class CollectionsState extends State<CollectionPage> {
     );
   }
 
-  Future<void> _onSubjectCardTap(int subjectId) async {
-    if (subjectId <= 0) {
+  Future<void> _onSubjectCardTap(String? subjectId) async {
+    if (subjectId == null || subjectId == "") {
       return;
     }
 

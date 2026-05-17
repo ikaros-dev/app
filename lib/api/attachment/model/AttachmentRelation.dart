@@ -7,12 +7,12 @@ part 'AttachmentRelation.g.dart';
 
 @JsonSerializable()
 class AttachmentRelation {
-  final int id;
+  final String id;
   @JsonKey(name: "attachment_id")
-  final int attachmentId;
+  final String attachmentId;
   final AttachmentRelationType type;
   @JsonKey(name: "relation_attachment_id")
-  final int relationAttachmentId;
+  final String relationAttachmentId;
 
   AttachmentRelation({
     required this.id, required this.attachmentId,

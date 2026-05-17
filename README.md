@@ -13,7 +13,7 @@ flutter packages pub run build_runner build
 请根据ikaros server版本(core版本)，选择合适的插件版本下载，
 
 核心版本适配情况如下：
-- 插件版本1.x.x 到 现在：需要core版本大于1.0.4
+- 插件版本1.6.x 到 现在：需要core版本大于1.1.0
 
 # Build
 

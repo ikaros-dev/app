@@ -49,7 +49,7 @@ class SubjectApi {
     }
   }
 
-  Future<Subject?> findById(int id) async {
+  Future<Subject?> findById(String id) async {
     String apiUrl = "/api/v1/subject/$id";
     try {
       // print("queryParams: $queryParams");

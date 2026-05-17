@@ -7,11 +7,11 @@ part 'SubjectRelation.g.dart';
 
 @JsonSerializable()
 class SubjectRelation {
-  final int subject;
+  final String subject;
   @JsonKey(name: "relation_type")
   final SubjectRelationType relationType;
   @JsonKey(name: "relation_subjects")
-  final List<int> relationSubjects;
+  final List<String> relationSubjects;
 
   SubjectRelation({required this.subject, required this.relationType, required this.relationSubjects});
 

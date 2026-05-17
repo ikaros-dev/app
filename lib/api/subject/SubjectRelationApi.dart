@@ -3,7 +3,7 @@ import 'package:ikaros/api/dio_client.dart';
 import 'package:ikaros/api/subject/model/SubjectRelation.dart';
 
 class SubjectRelationApi {
-  Future<List<SubjectRelation>> findById(int id) async {
+  Future<List<SubjectRelation>> findById(String id) async {
     String apiUrl = "/api/v1/subject/relations/$id";
     try {
       // print("queryParams: $queryParams");

@@ -8,11 +8,11 @@ part of 'SubjectRelation.dart';
 
 SubjectRelation _$SubjectRelationFromJson(Map<String, dynamic> json) =>
     SubjectRelation(
-      subject: (json['subject'] as num).toInt(),
+      subject: json['subject'] as String,
       relationType:
           $enumDecode(_$SubjectRelationTypeEnumMap, json['relation_type']),
       relationSubjects: (json['relation_subjects'] as List<dynamic>)
-          .map((e) => (e as num).toInt())
+          .map((e) => e as String)
           .toList(),
     );
 

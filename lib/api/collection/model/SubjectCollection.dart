@@ -7,11 +7,11 @@ part 'SubjectCollection.g.dart';
 
 @JsonSerializable()
 class SubjectCollection {
-  final int id;
+  final String id;
   @JsonKey(name: "user_id")
-  final int userId;
+  final String userId;
   @JsonKey(name: "subject_id")
-  final int subjectId;
+  final String subjectId;
   final CollectionType type;
 
   /// User main group episode watching progress.
