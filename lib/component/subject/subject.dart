@@ -42,7 +42,7 @@ class SubjectCoverState extends State<SubjectCover> {
                 child: FadeInImage.assetNetwork(
                   width: double.infinity,
                   height: double.infinity,
-                  placeholder: 'assets/loading_placeholder.jpg',
+                  placeholder: 'assets/loading.gif',
                   image: widget.url,
                   imageErrorBuilder: (context, error, stackTrace) {
                     // 如果图片加载失败，显示错误占位图

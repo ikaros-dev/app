@@ -272,7 +272,7 @@ class CollectionsState extends State<CollectionPage> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(5.0), // 设置圆角半径
                         child: FadeInImage.assetNetwork(
-                          placeholder: 'assets/loading_placeholder.jpg',
+                          placeholder: 'assets/loading.gif',
                           // 占位图片
                           image: UrlUtils.getCoverUrl(
                               _baseUrl, subjectCollections[index].cover),
