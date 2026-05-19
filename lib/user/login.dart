@@ -176,7 +176,7 @@ class LoginState extends State<LoginView> {
       }
       _username = _username.trim();
       _password = _password.trim();
-      await AuthApi().login(_baseUrl, _username, _password);
+      await AuthApi().login(_baseUrl, _username, "");
       Toast.show(context, "登录成功");
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => const MyApp()));
