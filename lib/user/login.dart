@@ -176,13 +176,13 @@ class LoginState extends State<LoginView> {
       }
       _username = _username.trim();
       _password = _password.trim();
-      await AuthApi().login(_baseUrl, _username, "");
+      await AuthApi().login(_baseUrl, _username, _password);
       Toast.show(context, "登录成功");
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => const MyApp()));
     } catch (e) {
       Toast.show(context,
-          "登录失败 by username: $_username, password: $_password, error: $e");
+          "登录失败 by username: $_username, password: , error: $e");
     } finally {}
   }
 }
