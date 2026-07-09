@@ -274,7 +274,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     setState(() {});
   }
 
-  void reload(String url, {autoPlay = false}) async {
+  Future<void> reload(String url, {autoPlay = false}) async {
     print("open for autPlay=$autoPlay and url=$url");
     print("player.isReadyToInitialize=${_player.isReadyToInitialize}");
     setState(() {
