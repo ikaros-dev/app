@@ -88,6 +88,9 @@ class AttachmentApi {
     try {
       Dio dio = await DioClient.getDio();
       var response = await dio.get(apiUrl);
+      if (kDebugMode) {
+        print("getUrlConditions: status=${response.statusCode}, data=${response.data}");
+      }
       if (response.statusCode != 200 || response.data == null) {
         return [];
       }

@@ -87,7 +87,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   late bool _isFullScreenPortraitUp = false;
   late String _attachmentId = "";
   final List<AccessUrlCondition> _conditions = [];
-  String _selectedQuality = "";
+  String _selectedQuality = "original";
 
   void listener() {
     if (!mounted) return;
@@ -509,9 +509,11 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     _attachmentId = attachmentId;
     _conditions.clear();
     _conditions.addAll(conditions);
+    // 使用服务器返回的默认值
     for (var c in conditions) {
-      if (c.defaultValue.isNotEmpty && _selectedQuality.isEmpty) {
+      if (c.defaultValue.isNotEmpty) {
         _selectedQuality = c.defaultValue;
+        break;
       }
     }
     setState(() {});
@@ -1057,10 +1059,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       // 清晰度选择按钮
-                      if (_isFullScreen &&
-                          !_isFullScreenPortraitUp &&
-                          _conditions.isNotEmpty &&
-                          _getQualityOptions().isNotEmpty)
+                      if (_isFullScreen && !_isFullScreenPortraitUp)
                         PopupMenuButton<String>(
                           iconSize: 24,
                           tooltip: "清晰度",
@@ -1078,9 +1077,24 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                               ),
                             ],
                           ),
-                          onSelected: _switchQuality,
+                          onSelected: (_conditions.isNotEmpty)
+                              ? _switchQuality
+                              : (value) {},
                           itemBuilder: (context) {
                             final options = _getQualityOptions();
+                            if (options.isEmpty) {
+                              return [
+                                PopupMenuItem<String>(
+                                  enabled: false,
+                                  child: const Text(
+                                    "当前附件的清晰度选项不可用",
+                                    style: TextStyle(
+                                        fontSize: 14.0,
+                                        color: Colors.grey),
+                                  ),
+                                )
+                              ];
+                            }
                             return options
                                 .map((quality) => PopupMenuItem(
                                       value: quality,

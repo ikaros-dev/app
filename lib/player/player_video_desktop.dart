@@ -93,7 +93,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late bool _danmuConfigChange = false;
   late String _attachmentId = "";
   final List<AccessUrlCondition> _conditions = [];
-  String _selectedQuality = "";
+  String _selectedQuality = "original";
 
   // 视频小窗的宽和高
   static const defaultSmallWindowsDevicePixelWidth = 800;
@@ -534,10 +534,11 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     _attachmentId = attachmentId;
     _conditions.clear();
     _conditions.addAll(conditions);
-    // 查找默认值
+    // 使用服务器返回的默认值
     for (var c in conditions) {
-      if (c.defaultValue.isNotEmpty && _selectedQuality.isEmpty) {
+      if (c.defaultValue.isNotEmpty) {
         _selectedQuality = c.defaultValue;
+        break;
       }
     }
     setState(() {});
@@ -1148,9 +1149,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               // 清晰度选择按钮
-                              if (!_isSmallScreen &&
-                                  _conditions.isNotEmpty &&
-                                  _getQualityOptions().isNotEmpty)
+                              if (!_isSmallScreen)
                                 PopupMenuButton<String>(
                                   iconSize: 24,
                                   tooltip: "清晰度",
@@ -1169,9 +1168,24 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                                       ),
                                     ],
                                   ),
-                                  onSelected: _switchQuality,
+                                  onSelected: (_conditions.isNotEmpty)
+                                      ? _switchQuality
+                                      : (value) {},
                                   itemBuilder: (context) {
                                     final options = _getQualityOptions();
+                                    if (options.isEmpty) {
+                                      return [
+                                        PopupMenuItem<String>(
+                                          enabled: false,
+                                          child: Text(
+                                            "当前附件的清晰度选项不可用",
+                                            style: const TextStyle(
+                                                fontSize: 14.0,
+                                                color: Colors.grey),
+                                          ),
+                                        )
+                                      ];
+                                    }
                                     return options
                                         .map((quality) => PopupMenuItem(
                                               value: quality,
