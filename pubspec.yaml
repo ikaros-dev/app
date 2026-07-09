@@ -25,7 +25,7 @@ dependencies:
   url_launcher: ^6.3.2
   package_info_plus: ^8.3.0
   open_file: ^3.5.10
-  permission_handler: ^11.4.0
+  permission_handler: 12.0.3
   win32: ^5.10.1
   desktop_window: ^0.4.4
   ffi: ^2.2.0
