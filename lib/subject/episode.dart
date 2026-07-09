@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:ikaros/api/attachment/AttachmentApi.dart';
 import 'package:ikaros/api/attachment/AttachmentRelationApi.dart';
 import 'package:ikaros/api/attachment/SubtitleDownloader.dart';
+import 'package:ikaros/api/attachment/model/AccessUrlCondition.dart';
 import 'package:ikaros/api/attachment/model/VideoSubtitle.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/AuthParams.dart';
@@ -165,6 +166,9 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     String videoTitle = _getEpisodeName(episodeRecord.episode);
     String videoSubTitle = episodeResource.name;
 
+    // 异步获取清晰度选项，不阻塞视频加载
+    _loadQualityConditions(episodeResource.attachmentId);
+
     // 音频
     if (_subject?.type == SubjectType.MUSIC) {
       if (Platform.isAndroid || Platform.isIOS) {
@@ -239,6 +243,25 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
         print("seek video to : $progress");
       }
       Toast.show(context, "已请求跳转到上次的进度:${TimeUtils.convertMinSec(progress)}");
+    }
+  }
+
+  /// 异步加载清晰度选项并传递给播放器
+  Future<void> _loadQualityConditions(String attachmentId) async {
+    try {
+      List<AccessUrlCondition> conditions =
+          await AttachmentApi().getUrlConditions(attachmentId);
+      if (conditions.isEmpty) return;
+      if (Platform.isAndroid || Platform.isIOS) {
+        _mobilePlayer.currentState?.setQualityOptions(attachmentId, conditions);
+      } else {
+        _desktopPlayer.currentState
+            ?.setQualityOptions(attachmentId, conditions);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("load quality conditions error: $e");
+      }
     }
   }
 

@@ -9,6 +9,8 @@ import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ikaros/api/attachment/AttachmentApi.dart';
+import 'package:ikaros/api/attachment/model/AccessUrlCondition.dart';
 import 'package:ikaros/api/collection/EpisodeCollectionApi.dart';
 import 'package:ikaros/api/dandanplay/DandanplayBangumiApi.dart';
 import 'package:ikaros/api/dandanplay/DandanplayCommentApi.dart';
@@ -89,6 +91,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   late Lock lock = Lock();
   late DanmuConfig _danmuConfig = DanmuConfig();
   late bool _danmuConfigChange = false;
+  late String _attachmentId = "";
+  final List<AccessUrlCondition> _conditions = [];
+  String _selectedQuality = "";
 
   // 视频小窗的宽和高
   static const defaultSmallWindowsDevicePixelWidth = 800;
@@ -521,6 +526,85 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       _playbackSpeed = _speedOptions[currentIndex];
     });
     _player.setRate(_playbackSpeed);
+  }
+
+  /// 设置附件ID和清晰度条件选项，供外部调用
+  void setQualityOptions(
+      String attachmentId, List<AccessUrlCondition> conditions) {
+    _attachmentId = attachmentId;
+    _conditions.clear();
+    _conditions.addAll(conditions);
+    // 查找默认值
+    for (var c in conditions) {
+      if (c.defaultValue.isNotEmpty && _selectedQuality.isEmpty) {
+        _selectedQuality = c.defaultValue;
+      }
+    }
+    setState(() {});
+  }
+
+  /// 切换清晰度
+  Future<void> _switchQuality(String quality) async {
+    if (_attachmentId.isEmpty) return;
+    String url = await AttachmentApi()
+        .getUrlWithConditions(_attachmentId, {"quality": quality});
+    if (url.isEmpty) {
+      Toast.show(context, "获取 $quality 视频流失败");
+      return;
+    }
+    setState(() {
+      _selectedQuality = quality;
+    });
+    // 记住当前播放位置
+    Duration savedPosition = _position;
+    // 重新加载视频
+    reload(url, autoStart: true);
+    // 跳转到之前的位置
+    if (savedPosition > Duration.zero) {
+      seek(savedPosition);
+    }
+    Toast.show(context, "已切换至${getQualityLabel(quality)}");
+  }
+
+  /// 获取当前清晰度选项列表（供UI使用）
+  List<String> _getQualityOptions() {
+    if (_conditions.isEmpty) return [];
+    // 查找名为 "quality" 的条件
+    var qualityCondition = _conditions
+        .where((c) => c.name.toLowerCase() == "quality")
+        .firstOrNull;
+    if (qualityCondition != null && qualityCondition.options.isNotEmpty) {
+      // 将选项排序：原画优先，然后按分辨率从高到低
+      var sorted = List<String>.from(qualityCondition.options);
+      sorted.sort((a, b) {
+        int priority(String q) {
+          switch (q.toLowerCase()) {
+            case 'original':
+              return 0;
+            case '4k':
+              return 1;
+            case '1080p':
+              return 2;
+            case '720p':
+              return 3;
+            case '480p':
+              return 4;
+            case '360p':
+              return 5;
+            default:
+              return 9;
+          }
+        }
+        return priority(a).compareTo(priority(b));
+      });
+      return sorted;
+    }
+    // 如果没有名称叫quality的条件，把所有条件的选项合并
+    List<String> allOptions = [];
+    for (var c in _conditions) {
+      allOptions.addAll(c.options);
+    }
+    return allOptions.toSet().toList();
   }
 
   void _handleKeyEvent(KeyEvent event) {
@@ -1063,6 +1147,49 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
+                              // 清晰度选择按钮
+                              if (!_isSmallScreen &&
+                                  _conditions.isNotEmpty &&
+                                  _getQualityOptions().isNotEmpty)
+                                PopupMenuButton<String>(
+                                  iconSize: 24,
+                                  tooltip: "清晰度",
+                                  icon: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.hd,
+                                          color: Colors.white),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        getQualityLabel(_selectedQuality),
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                  onSelected: _switchQuality,
+                                  itemBuilder: (context) {
+                                    final options = _getQualityOptions();
+                                    return options
+                                        .map((quality) => PopupMenuItem(
+                                              value: quality,
+                                              child: Text(
+                                                getQualityLabel(quality),
+                                                style: TextStyle(
+                                                    fontSize: 14.0,
+                                                    color: quality ==
+                                                            _selectedQuality
+                                                        ? Colors
+                                                            .lightBlueAccent
+                                                        : Colors.black),
+                                              ),
+                                            ))
+                                        .toList();
+                                  },
+                                ),
+
                               // 倍速按钮
                               if (!_isSmallScreen)
                                 IconButton(

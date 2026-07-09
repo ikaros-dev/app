@@ -45,3 +45,4 @@ app.*.map.json
 **Generated**
 **generated**
 /devtools_options.yaml
+/.reasonix/
