@@ -526,6 +526,9 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   /// 切换清晰度
   Future<void> _switchQuality(String quality) async {
+    if (kDebugMode) {
+      print("[清晰度切换] 开始切换至: $quality, attachmentId: $_attachmentId, fileStreamUrl: $_fileStreamUrl");
+    }
     setState(() {
       _selectedQuality = quality;
     });
@@ -533,7 +536,11 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
     // 文件流：使用原始的文件流URL
     if (quality == qualityFileStream) {
-      if (_fileStreamUrl.isEmpty) return;
+      if (_fileStreamUrl.isEmpty) {
+        if (kDebugMode) print("[清晰度切换] 文件流URL为空，无法切换");
+        return;
+      }
+      if (kDebugMode) print("[清晰度切换] 使用文件流: $_fileStreamUrl");
       await reload(_fileStreamUrl, autoPlay: true);
       if (savedPosition > Duration.zero) {
         seek(savedPosition);
@@ -543,13 +550,19 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     }
 
     // 其他清晰度：通过API获取条件URL
-    if (_attachmentId.isEmpty) return;
+    if (_attachmentId.isEmpty) {
+      if (kDebugMode) print("[清晰度切换] attachmentId为空，无法切换");
+      return;
+    }
+    if (kDebugMode) print("[清晰度切换] 请求API获取条件URL, quality=$quality");
     String url = await AttachmentApi()
         .getUrlWithConditions(_attachmentId, {"quality": quality});
     if (url.isEmpty) {
+      if (kDebugMode) print("[清晰度切换] API返回空URL");
       Toast.show(context, "获取 $quality 视频流失败");
       return;
     }
+    if (kDebugMode) print("[清晰度切换] API返回URL: $url");
     await reload(url, autoPlay: true);
     if (savedPosition > Duration.zero) {
       seek(savedPosition);
