@@ -96,6 +96,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   String _selectedQuality = qualityFileStream;
   late String _fileStreamUrl = "";
   final List<String> _subtitleUrls = [];
+  int _subtitleDelayMs = 0; // 字幕延迟，单位毫秒，正数延后，负数提前
 
   // 视频小窗的宽和高
   static const defaultSmallWindowsDevicePixelWidth = 800;
@@ -572,6 +573,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       if (kDebugMode) print("[清晰度切换] 使用文件流: $_fileStreamUrl");
       reload(_fileStreamUrl, autoStart: true);
       _reloadSubtitles();
+      _applySubtitleDelay();
       if (savedPosition > Duration.zero) {
         seek(savedPosition);
       }
@@ -596,6 +598,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     // 重新加载视频
     reload(url, autoStart: true);
     _reloadSubtitles();
+    _applySubtitleDelay();
     // 跳转到之前的位置
     if (savedPosition > Duration.zero) {
       seek(savedPosition);
@@ -608,6 +611,21 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     for (final subUrl in _subtitleUrls) {
       _player.addSlave(MediaSlaveType.subtitle, subUrl, true);
     }
+  }
+
+  /// 设置字幕延迟（毫秒），正数延后，负数提前
+  void _applySubtitleDelay() {
+    // dart_vlc 暂无字幕延迟API，后续支持时在此处调用
+    if (kDebugMode) {
+      print("[字幕延迟] 当前值: $_subtitleDelayMs ms");
+    }
+  }
+
+  /// 格式化字幕延迟为可读文本，例如 "+1.0s"、"−0.5s"、"0s"
+  String _formatSubtitleDelay(int ms) {
+    if (ms == 0) return "0s";
+    final seconds = ms / 1000;
+    return "${seconds > 0 ? '+' : ''}${seconds.toStringAsFixed(1)}s";
   }
 
   /// 获取当前清晰度选项列表（文件流始终排在首位）
@@ -864,6 +882,59 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
                               Navigator.of(context).pop();
                             })),
                       ],
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text('字幕延迟'),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed: () {
+                        setState(() {
+                          _subtitleDelayMs = (_subtitleDelayMs - 500)
+                              .clamp(-5000, 5000);
+                        });
+                        _applySubtitleDelay();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 80,
+                      child: Text(
+                        _formatSubtitleDelay(_subtitleDelayMs),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: () {
+                        setState(() {
+                          _subtitleDelayMs = (_subtitleDelayMs + 500)
+                              .clamp(-60000, 60000);
+                        });
+                        _applySubtitleDelay();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    const SizedBox(width: 20),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _subtitleDelayMs = 0;
+                        });
+                        _applySubtitleDelay();
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('重置'),
                     ),
                   ],
                 ),

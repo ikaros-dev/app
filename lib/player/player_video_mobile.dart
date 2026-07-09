@@ -72,6 +72,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   double _playbackSpeed = 1.0;
   final List<double> _speedOptions = [0.5, 1.0, 1.5, 2.0, 3.0];
   List<String> _subtitleUrls = [];
+  int _subtitleDelayMs = 0; // 字幕延迟，单位毫秒，正数延后，负数提前
   bool _progressIsLoaded = false;
   int _progress = 0;
   late Episode _episode;
@@ -542,6 +543,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       }
       if (kDebugMode) print("[清晰度切换] 使用文件流: $_fileStreamUrl");
       await reload(_fileStreamUrl, autoPlay: true);
+      _applySubtitleDelay();
       if (savedPosition > Duration.zero) {
         seek(savedPosition);
       }
@@ -564,6 +566,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     }
     if (kDebugMode) print("[清晰度切换] API返回URL: $url");
     await reload(url, autoPlay: true);
+    _applySubtitleDelay();
     if (savedPosition > Duration.zero) {
       seek(savedPosition);
     }
@@ -610,6 +613,21 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     }
     result.addAll(allOptions.toSet().toList());
     return result;
+  }
+
+  /// 应用字幕延迟
+  void _applySubtitleDelay() {
+    if (kDebugMode) {
+      print("[字幕延迟] 设置值: $_subtitleDelayMs ms");
+    }
+    _player.setSpuDelay(_subtitleDelayMs);
+  }
+
+  /// 格式化字幕延迟为可读文本
+  String _formatSubtitleDelay(int ms) {
+    if (ms == 0) return "0s";
+    final seconds = ms / 1000;
+    return "${seconds > 0 ? '+' : ''}${seconds.toStringAsFixed(1)}s";
   }
 
   Future<void> _getAudioTracks() async {
@@ -864,6 +882,59 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                       ),
                     ],
                   ),
+                const SizedBox(
+                  height: 20,
+                ),
+                const Text('字幕延迟'),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed: () {
+                        setState(() {
+                          _subtitleDelayMs = (_subtitleDelayMs - 500)
+                              .clamp(-60000, 60000);
+                        });
+                        _applySubtitleDelay();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 80,
+                      child: Text(
+                        _formatSubtitleDelay(_subtitleDelayMs),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: () {
+                        setState(() {
+                          _subtitleDelayMs = (_subtitleDelayMs + 500)
+                              .clamp(-5000, 5000);
+                        });
+                        _applySubtitleDelay();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    const SizedBox(width: 20),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _subtitleDelayMs = 0;
+                        });
+                        _applySubtitleDelay();
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('重置'),
+                    ),
+                  ],
+                ),
                 ],
               ),
             ));
