@@ -4,7 +4,12 @@
 
 # 1.7.0
 
-
+- 播放器添加清晰度选择功能，支持文件流/原画/1080P等选项切换
+- 文件流作为内建清晰度选项始终保留，切换清晰度时保留字幕轨道
+- 字幕延迟设置改为滑块（-60s ~ +60s）
+- 升级依赖适配 Flutter 3.44.2 (Dart 3.12.2)
+- 修复 Dart 3 编译错误（Struct 子类加 base 修饰符等）
+- 添加 MSVC 编译宏 _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
 
 # 1.6.1
 
