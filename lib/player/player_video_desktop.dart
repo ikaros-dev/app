@@ -95,6 +95,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
   final List<AccessUrlCondition> _conditions = [];
   String _selectedQuality = qualityFileStream;
   late String _fileStreamUrl = "";
+  final List<String> _subtitleUrls = [];
 
   // 视频小窗的宽和高
   static const defaultSmallWindowsDevicePixelWidth = 800;
@@ -311,6 +312,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   void addSlave(MediaSlaveType type, String url, bool select) {
     _player.addSlave(type, url, select);
+    if (type == MediaSlaveType.subtitle && !_subtitleUrls.contains(url)) {
+      _subtitleUrls.add(url);
+    }
   }
 
   void seek(Duration dest) {
@@ -567,6 +571,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       }
       if (kDebugMode) print("[清晰度切换] 使用文件流: $_fileStreamUrl");
       reload(_fileStreamUrl, autoStart: true);
+      _reloadSubtitles();
       if (savedPosition > Duration.zero) {
         seek(savedPosition);
       }
@@ -590,11 +595,19 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     if (kDebugMode) print("[清晰度切换] API返回URL: $url");
     // 重新加载视频
     reload(url, autoStart: true);
+    _reloadSubtitles();
     // 跳转到之前的位置
     if (savedPosition > Duration.zero) {
       seek(savedPosition);
     }
     Toast.show(context, "已切换至${getQualityLabel(quality)}");
+  }
+
+  /// 重新加载字幕轨道
+  void _reloadSubtitles() {
+    for (final subUrl in _subtitleUrls) {
+      _player.addSlave(MediaSlaveType.subtitle, subUrl, true);
+    }
   }
 
   /// 获取当前清晰度选项列表（文件流始终排在首位）
