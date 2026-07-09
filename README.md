@@ -54,60 +54,39 @@ flutter doctor -v
   <summary>环境详细信息</summary>
 
 ```text
-[✓] Flutter (Channel stable, 3.24.5, on Microsoft Windows [版本 10.0.22631.4460], locale zh-CN)
-    • Flutter version 3.24.5 on channel stable at C:\Applications\flutter\3.24.5
+[√] Flutter (Channel stable, 3.44.2, on Microsoft Windows [版本 10.0.26200.8737], locale zh-CN) [341ms]
+    • Flutter version 3.44.2 on channel stable at C:\Applications\Flutter\flutter-3.44.2
     • Upstream repository https://github.com/flutter/flutter.git
-    • Framework revision dec2ee5c1f (15 hours ago), 2024-11-13 11:13:06 -0800
-    • Engine revision a18df97ca5
-    • Dart version 3.5.4
-    • DevTools version 2.37.3
+    • Framework revision c9a6c48423 (4 weeks ago), 2026-06-10 15:52:41 -0700
+    • Engine revision 77e2e94772
+    • Dart version 3.12.2
+    • DevTools version 2.57.0
+    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, enable-swift-package-manager, omit-legacy-version-file, enable-lldb-debugging, enable-uiscene-migration
 
-[✓] Windows Version (Installed version of Windows is version 10 or higher)
+[√] Windows Version (Windows 11 or higher, 25H2, 2009) [1,015ms]
 
-[✓] Android toolchain - develop for Android devices (Android SDK version 35.0.0)
-    • Android SDK at C:\Users\chivehao\AppData\Local\Android\Sdk
-    • Platform android-35, build-tools 35.0.0
-    • ANDROID_HOME = C:\Users\chivehao\AppData\Local\Android\Sdk
-    • Java binary at: C:\Applications\android\android-studio\jbr\bin\java
-    • Java version OpenJDK Runtime Environment (build 17.0.10+0--11572160)
+[√] Android toolchain - develop for Android devices (Android SDK version 36.1.0) [2.6s]
+    • Android SDK at C:\Users\chivehao\AppData\Local\Android\sdk
+    • Emulator version 36.6.11.0 (build_id 15507667) (CL:N/A)
+    • Platform android-36.1, build-tools 36.1.0
+    • Java binary at: C:\Program Files\Android\Android Studio\jbr\bin\java
+      This is the JDK bundled with the latest Android Studio installation on this machine.
+      To manually set the JDK path, use: `flutter config --jdk-dir="path/to/jdk"`.
+    • Java version OpenJDK Runtime Environment (build 21.0.10+-14961533-b1163.108)
     • All Android licenses accepted.
 
-[✓] Chrome - develop for the web
-    • Chrome at C:\Users\chivehao\AppData\Local\Google\Chrome\Application\chrome.exe
+[√] Chrome - develop for the web [93ms]
+    • Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
 
-[✓] Visual Studio - develop Windows apps (Visual Studio Community 2022 17.11.5)
-    • Visual Studio at C:\Program Files\Microsoft Visual Studio\2022\Community
-    • Visual Studio Community 2022 version 17.11.35327.3
-    • Windows 10 SDK version 10.0.22621.0
+[√] Visual Studio - develop Windows apps (Visual Studio Community 2026 18.7.1) [92ms]
+    • Visual Studio at C:\Program Files\Microsoft Visual Studio\18\Community
+    • Visual Studio Community 2026 version 18.7.11911.148
+    • Windows 10 SDK version 10.0.26100.0
 
-[✓] Android Studio (version 2023.3)
-    • Android Studio at C:\Applications\android\android-studio
-    • Flutter plugin can be installed from:
-      🔨 https://plugins.jetbrains.com/plugin/9212-flutter
-    • Dart plugin can be installed from:
-      🔨 https://plugins.jetbrains.com/plugin/6351-dart
-    • Java version OpenJDK Runtime Environment (build 17.0.10+0--11572160)
-
-[✓] IntelliJ IDEA Community Edition (version 2024.3)
-    • IntelliJ at C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2024.3
-    • Flutter plugin can be installed from:
-      🔨 https://plugins.jetbrains.com/plugin/9212-flutter
-    • Dart plugin can be installed from:
-      🔨 https://plugins.jetbrains.com/plugin/6351-dart
-
-[✓] VS Code (version 1.94.2)
-    • VS Code at C:\Users\chivehao\AppData\Local\Programs\Microsoft VS Code
-    • Flutter extension can be installed from:
-      🔨 https://marketplace.visualstudio.com/items?itemName=Dart-Code.flutter
-
-[✓] Connected device (4 available)
-    • sdk gphone64 x86 64 (mobile) • emulator-5554 • android-x64    • Android 15 (API 35) (emulator)
-    • Windows (desktop)            • windows       • windows-x64    • Microsoft Windows [版本 10.0.22631.4460]
-    • Chrome (web)                 • chrome        • web-javascript • Google Chrome 131.0.6778.69
-    • Edge (web)                   • edge          • web-javascript • Microsoft Edge 126.0.2592.61
-
-[✓] Network resources
-    • All expected network resources are available.
+[√] Connected device (3 available) [298ms]
+    • Windows (desktop) • windows • windows-x64    • Microsoft Windows [版本 10.0.26200.8737]
+    • Chrome (web)      • chrome  • web-javascript • Google Chrome 150.0.7871.46
+    • Edge (web)        • edge    • web-javascript • Microsoft Edge 146.0.3856.97
 
 • No issues found!
 ```
