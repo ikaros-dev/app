@@ -87,7 +87,8 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   late bool _isFullScreenPortraitUp = false;
   late String _attachmentId = "";
   final List<AccessUrlCondition> _conditions = [];
-  String _selectedQuality = "original";
+  String _selectedQuality = qualityFileStream;
+  late String _fileStreamUrl = "";
 
   void listener() {
     if (!mounted) return;
@@ -503,13 +504,17 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     _player.setPlaybackSpeed(_playbackSpeed);
   }
 
-  /// 设置附件ID和清晰度条件选项
+  /// 设置附件ID、文件流URL和清晰度条件选项
   void setQualityOptions(
-      String attachmentId, List<AccessUrlCondition> conditions) {
+      String attachmentId, List<AccessUrlCondition> conditions,
+      {String? fileStreamUrl}) {
+    if (fileStreamUrl != null && fileStreamUrl.isNotEmpty) {
+      _fileStreamUrl = fileStreamUrl;
+    }
     _attachmentId = attachmentId;
     _conditions.clear();
     _conditions.addAll(conditions);
-    // 使用服务器返回的默认值
+    // 使用服务器返回的默认值（如有）
     for (var c in conditions) {
       if (c.defaultValue.isNotEmpty) {
         _selectedQuality = c.defaultValue;
@@ -521,6 +526,23 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
 
   /// 切换清晰度
   Future<void> _switchQuality(String quality) async {
+    setState(() {
+      _selectedQuality = quality;
+    });
+    Duration savedPosition = _position;
+
+    // 文件流：使用原始的文件流URL
+    if (quality == qualityFileStream) {
+      if (_fileStreamUrl.isEmpty) return;
+      await reload(_fileStreamUrl, autoPlay: true);
+      if (savedPosition > Duration.zero) {
+        seek(savedPosition);
+      }
+      Toast.show(context, "已切换至${getQualityLabel(quality)}");
+      return;
+    }
+
+    // 其他清晰度：通过API获取条件URL
     if (_attachmentId.isEmpty) return;
     String url = await AttachmentApi()
         .getUrlWithConditions(_attachmentId, {"quality": quality});
@@ -528,10 +550,6 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       Toast.show(context, "获取 $quality 视频流失败");
       return;
     }
-    setState(() {
-      _selectedQuality = quality;
-    });
-    Duration savedPosition = _position;
     await reload(url, autoPlay: true);
     if (savedPosition > Duration.zero) {
       seek(savedPosition);
@@ -539,9 +557,11 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     Toast.show(context, "已切换至${getQualityLabel(quality)}");
   }
 
-  /// 获取当前清晰度选项列表
+  /// 获取当前清晰度选项列表（文件流始终排在首位）
   List<String> _getQualityOptions() {
-    if (_conditions.isEmpty) return [];
+    // 文件流作为内建选项始终存在
+    final List<String> result = [qualityFileStream];
+    if (_conditions.isEmpty) return result;
     var qualityCondition = _conditions
         .where((c) => c.name.toLowerCase() == "quality")
         .firstOrNull;
@@ -568,13 +588,15 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
         }
         return priority(a).compareTo(priority(b));
       });
-      return sorted;
+      result.addAll(sorted);
+      return result;
     }
     List<String> allOptions = [];
     for (var c in _conditions) {
       allOptions.addAll(c.options);
     }
-    return allOptions.toSet().toList();
+    result.addAll(allOptions.toSet().toList());
+    return result;
   }
 
   Future<void> _getAudioTracks() async {
@@ -1077,24 +1099,9 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
                               ),
                             ],
                           ),
-                          onSelected: (_conditions.isNotEmpty)
-                              ? _switchQuality
-                              : (value) {},
+                          onSelected: _switchQuality,
                           itemBuilder: (context) {
                             final options = _getQualityOptions();
-                            if (options.isEmpty) {
-                              return [
-                                PopupMenuItem<String>(
-                                  enabled: false,
-                                  child: const Text(
-                                    "当前附件的清晰度选项不可用",
-                                    style: TextStyle(
-                                        fontSize: 14.0,
-                                        color: Colors.grey),
-                                  ),
-                                )
-                              ];
-                            }
                             return options
                                 .map((quality) => PopupMenuItem(
                                       value: quality,

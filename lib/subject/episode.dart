@@ -167,7 +167,7 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     String videoSubTitle = episodeResource.name;
 
     // 异步获取清晰度选项，不阻塞视频加载
-    _loadQualityConditions(episodeResource.attachmentId);
+    _loadQualityConditions(episodeResource.attachmentId, videUrl);
 
     // 音频
     if (_subject?.type == SubjectType.MUSIC) {
@@ -247,16 +247,17 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   }
 
   /// 异步加载清晰度选项并传递给播放器
-  Future<void> _loadQualityConditions(String attachmentId) async {
+  Future<void> _loadQualityConditions(
+      String attachmentId, String fileStreamUrl) async {
     try {
       List<AccessUrlCondition> conditions =
           await AttachmentApi().getUrlConditions(attachmentId);
-      if (conditions.isEmpty) return;
       if (Platform.isAndroid || Platform.isIOS) {
-        _mobilePlayer.currentState?.setQualityOptions(attachmentId, conditions);
+        _mobilePlayer.currentState?.setQualityOptions(attachmentId, conditions,
+            fileStreamUrl: fileStreamUrl);
       } else {
-        _desktopPlayer.currentState
-            ?.setQualityOptions(attachmentId, conditions);
+        _desktopPlayer.currentState?.setQualityOptions(attachmentId, conditions,
+            fileStreamUrl: fileStreamUrl);
       }
     } catch (e) {
       if (kDebugMode) {

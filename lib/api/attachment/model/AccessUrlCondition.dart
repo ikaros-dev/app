@@ -46,6 +46,9 @@ class AccessUrlCondition {
   }
 }
 
+/// 文件流（原始流）标识常量
+const String qualityFileStream = "ikaros_filestream";
+
 /// 根据清晰度条件选项获取可读的显示标签
 String getQualityLabel(String quality) {
   switch (quality.toLowerCase()) {
@@ -61,6 +64,8 @@ String getQualityLabel(String quality) {
       return '480P';
     case '360p':
       return '360P';
+    case qualityFileStream:
+      return '文件流';
     default:
       return quality;
   }
