@@ -46,3 +46,4 @@ app.*.map.json
 **generated**
 /devtools_options.yaml
 /.reasonix/
+/android/build/
