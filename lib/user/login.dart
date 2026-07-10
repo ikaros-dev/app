@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
+import 'package:ikaros/api/auth/LoginResult.dart';
 import 'package:ikaros/main.dart';
 import 'package:ikaros/utils/message_utils.dart';
 
@@ -16,6 +17,7 @@ class LoginState extends State<LoginView> {
   final GlobalKey _formKey = GlobalKey<FormState>();
   late String _baseUrl, _username, _password;
   String _twoFactorCode = "";
+  String _tempToken = "";
   bool _isObscure = true;
   bool _twoFactorRequired = false;
   Color _eyeColor = Colors.grey;
@@ -154,6 +156,7 @@ class LoginState extends State<LoginView> {
     return TextFormField(
       decoration: const InputDecoration(labelText: '两步验证码'),
       keyboardType: TextInputType.number,
+      maxLength: 6,
       validator: (v) {
         if (v == null || v.isEmpty) {
           return '请输入两步验证码';
@@ -194,23 +197,31 @@ class LoginState extends State<LoginView> {
       }
       _username = _username.trim();
       _password = _password.trim();
-      var loginResult = await AuthApi().login(
-        _baseUrl,
-        _username,
-        _password,
-        code: _twoFactorRequired ? _twoFactorCode : "",
-      );
-      if (loginResult.twoFactorRequired) {
+
+      LoginResult loginResult;
+
+      if (_tempToken.isNotEmpty && _twoFactorCode.isNotEmpty) {
+        loginResult = await AuthApi().validateTotp(
+            _baseUrl, _tempToken, _twoFactorCode);
+      } else {
+        loginResult = await AuthApi().login(
+            _baseUrl, _username, _password);
+      }
+
+      if (loginResult.totpRequired) {
         setState(() {
           _twoFactorRequired = true;
+          _tempToken = loginResult.tempToken ?? "";
         });
-        Toast.show(context, loginResult.message ?? "需要两步验证");
+        Toast.show(context, loginResult.message ?? "需要二步验证");
         return;
       }
+
       if (!loginResult.success) {
         Toast.show(context, loginResult.message ?? "登录失败");
         return;
       }
+
       Toast.show(context, "登录成功");
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => const MyApp()));

@@ -8,8 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AuthApi {
   static const String SharedPreferencesKeyAuthBaseUrl = "AUTH_BASE_URL";
   static const String SharedPreferencesKeyAuthUsername = "AUTH_USERNAME";
-  static const String SharedPreferencesKeyAuthToken = "AUTH_Token";
-  static const String SharedPreferencesKeyAuthRefreshToken = "AUTH_Refresh_Token";
+  static const String SharedPreferencesKeyAuthToken = "AUTH_TOKEN";
+  static const String SharedPreferencesKeyAuthRefreshToken = "AUTH_REFRESH_TOKEN";
 
   Future<AuthParams?> getAuthParams() async {
     final prefs = await SharedPreferences.getInstance();
@@ -35,8 +35,8 @@ class AuthApi {
     return Future(() => authParams);
   }
 
-  Future<LoginResult> login(String baseUrl, String username, String password,
-      {String code = ""}) async {
+  /// 第一步：用户名密码登录，返回结果可能包含 totpRequired
+  Future<LoginResult> login(String baseUrl, String username, String password) async {
     String url = "$baseUrl/api/v1/security/auth/token/jwt/apply";
     try {
       Response response = await Dio().post(url, data: {
@@ -45,42 +45,97 @@ class AuthApi {
         "password": password,
         "phoneNum": "",
         "email": "",
-        "code": code
+        "code": ""
       });
-      // 检测是否需要2FA
-      if (response.data is Map &&
-          response.data['twoFactorRequired'] == true) {
+      var data = response.data is Map ? response.data as Map : {};
+      if (data['totpRequired'] == true) {
         return LoginResult(
-            success: false,
-            twoFactorRequired: true,
-            message: "需要两步验证，请输入验证码");
+          success: false,
+          totpRequired: true,
+          tempToken: data['tempToken']?.toString(),
+          message: "需要二步验证，请输入验证码",
+        );
       }
-      // 登录成功，保存凭据
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(SharedPreferencesKeyAuthBaseUrl, baseUrl);
-      await prefs.setString(SharedPreferencesKeyAuthUsername, username);
-      await prefs.setString(
-          SharedPreferencesKeyAuthToken, response.data['accessToken']);
-      await prefs.setString(
-          SharedPreferencesKeyAuthRefreshToken, response.data['refreshToken']);
-      await DioClient.rebuild(baseUrl: baseUrl);
+      var accessToken = data['accessToken']?.toString();
+      if (accessToken == null || accessToken.isEmpty) {
+        return LoginResult(
+          success: false,
+          message: data['message']?.toString() ?? "登录失败",
+        );
+      }
+      await _saveCredentials(baseUrl, username,
+          accessToken, data['refreshToken']?.toString() ?? "");
       return LoginResult(success: true);
     } on DioException catch (e) {
+      if (kDebugMode) {
+        print("[AuthApi] login error: type=${e.type}, status=${e.response?.statusCode}, body=${e.response?.data}");
+      }
       var msg = "登录失败";
       if (e.response?.data is Map) {
         var data = e.response!.data as Map;
-        if (data['twoFactorRequired'] == true) {
+        if (data['totpRequired'] == true) {
           return LoginResult(
-              success: false,
-              twoFactorRequired: true,
-              message: "需要两步验证，请输入验证码");
+            success: false,
+            totpRequired: true,
+            tempToken: data['tempToken']?.toString(),
+            message: "需要二步验证，请输入验证码",
+          );
         }
-        if (data['message'] != null) {
-          msg = data['message'].toString();
-        }
+        msg = data['message']?.toString() ?? data['error']?.toString() ?? msg;
+      } else if (e.response?.data is String) {
+        msg = e.response!.data as String;
       }
       return LoginResult(success: false, message: msg);
+    } catch (e) {
+      if (kDebugMode) print("[AuthApi] login unexpected error: $e");
+      return LoginResult(success: false, message: e.toString());
     }
+  }
+
+  /// 第二步：验证TOTP验证码，获取正式JWT令牌
+  Future<LoginResult> validateTotp(
+      String baseUrl, String tempToken, String code) async {
+    String url = "$baseUrl/api/v1/security/auth/totp/validate";
+    try {
+      Response response = await Dio().post(url, data: {
+        "tempToken": tempToken,
+        "code": code,
+      });
+      var data = response.data is Map ? response.data as Map : {};
+      var accessToken = data['accessToken']?.toString();
+      if (accessToken == null || accessToken.isEmpty) {
+        return LoginResult(
+          success: false,
+          message: data['message']?.toString() ?? "验证失败",
+        );
+      }
+      await _saveCredentials(baseUrl, "",
+          accessToken, data['refreshToken']?.toString() ?? "");
+      return LoginResult(success: true);
+    } on DioException catch (e) {
+      if (kDebugMode) {
+        print("[AuthApi] validateTotp error: status=${e.response?.statusCode}, body=${e.response?.data}");
+      }
+      var msg = "验证失败";
+      if (e.response?.data is Map) {
+        var data = e.response!.data as Map;
+        msg = data['message']?.toString() ?? data['error']?.toString() ?? msg;
+      }
+      return LoginResult(success: false, message: msg);
+    } catch (e) {
+      if (kDebugMode) print("[AuthApi] validateTotp unexpected error: $e");
+      return LoginResult(success: false, message: e.toString());
+    }
+  }
+
+  Future<void> _saveCredentials(String baseUrl, String username,
+      String accessToken, String refreshToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(SharedPreferencesKeyAuthBaseUrl, baseUrl);
+    await prefs.setString(SharedPreferencesKeyAuthUsername, username);
+    await prefs.setString(SharedPreferencesKeyAuthToken, accessToken);
+    await prefs.setString(SharedPreferencesKeyAuthRefreshToken, refreshToken);
+    await DioClient.rebuild(baseUrl: baseUrl);
   }
 
   Future logout() async {
