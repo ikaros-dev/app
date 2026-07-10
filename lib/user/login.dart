@@ -14,8 +14,9 @@ class LoginView extends StatefulWidget {
 
 class LoginState extends State<LoginView> {
   final GlobalKey _formKey = GlobalKey<FormState>();
-  late String _baseUrl, _username, _password;
+  late String _baseUrl, _username, _password, _twoFactorCode;
   bool _isObscure = true;
+  bool _twoFactorRequired = false;
   Color _eyeColor = Colors.grey;
 
   @override
@@ -27,17 +28,19 @@ class LoginState extends State<LoginView> {
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           children: [
-            const SizedBox(height: kToolbarHeight), // 距离顶部一个工具栏的高度
-            buildTitle(), // Login
-            buildTitleLine(), // 标题下面的下滑线
+            const SizedBox(height: kToolbarHeight),
+            buildTitle(),
+            buildTitleLine(),
             const SizedBox(height: 50),
-            buildBaseUrlTextField(), // 输入基础服务器URL
+            buildBaseUrlTextField(),
             const SizedBox(height: 20),
-            buildUsernameTextField(), // 输入用户名
+            buildUsernameTextField(),
             const SizedBox(height: 20),
-            buildPasswordTextField(context), // 输入密码
+            buildPasswordTextField(context),
+            const SizedBox(height: 20),
+            if (_twoFactorRequired) buildTwoFactorCodeTextField(),
             const SizedBox(height: 50),
-            buildLoginButton(context), // 登录按钮
+            buildLoginButton(context),
             const SizedBox(height: 30),
           ],
         ),
@@ -47,7 +50,6 @@ class LoginState extends State<LoginView> {
 
   Widget buildTitle() {
     return const Padding(
-        // 设置边距
         padding: EdgeInsets.all(8),
         child: Text(
           'Login',
@@ -97,7 +99,6 @@ class LoginState extends State<LoginView> {
   Widget buildPasswordTextField(BuildContext context) {
     return TextFormField(
         obscureText: _isObscure,
-        // 是否显示文字
         onSaved: (v) => _password = v!,
         validator: (v) {
           if (v!.isEmpty) {
@@ -117,7 +118,6 @@ class LoginState extends State<LoginView> {
                 color: _eyeColor,
               ),
               onPressed: () {
-                // 修改 state 内部变量, 且需要界面内容更新, 需要使用 setState()
                 setState(() {
                   _isObscure = !_isObscure;
                   _eyeColor = (_isObscure
@@ -128,20 +128,17 @@ class LoginState extends State<LoginView> {
             )));
   }
 
-  Widget buildForgetPasswordText(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: TextButton(
-          onPressed: () {
-            // Navigator.pop(context);
-            print("忘记密码");
-          },
-          child: const Text("忘记密码？",
-              style: TextStyle(fontSize: 14, color: Colors.grey)),
-        ),
-      ),
+  Widget buildTwoFactorCodeTextField() {
+    return TextFormField(
+      decoration: const InputDecoration(labelText: '两步验证码'),
+      keyboardType: TextInputType.number,
+      validator: (v) {
+        if (_twoFactorRequired && (v == null || v.isEmpty)) {
+          return '请输入两步验证码';
+        }
+        return null;
+      },
+      onSaved: (v) => _twoFactorCode = v!,
     );
   }
 
@@ -170,19 +167,33 @@ class LoginState extends State<LoginView> {
     }
     state.save();
     try {
-      // 对字符串做简单的兼容性处理
       if (_baseUrl.endsWith("/")) {
         _baseUrl = _baseUrl.substring(0, _baseUrl.length - 1);
       }
       _username = _username.trim();
       _password = _password.trim();
-      await AuthApi().login(_baseUrl, _username, _password);
+      var loginResult = await AuthApi().login(
+        _baseUrl,
+        _username,
+        _password,
+        code: _twoFactorRequired ? _twoFactorCode : "",
+      );
+      if (loginResult.twoFactorRequired) {
+        setState(() {
+          _twoFactorRequired = true;
+        });
+        Toast.show(context, loginResult.message ?? "需要两步验证");
+        return;
+      }
+      if (!loginResult.success) {
+        Toast.show(context, loginResult.message ?? "登录失败");
+        return;
+      }
       Toast.show(context, "登录成功");
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => const MyApp()));
     } catch (e) {
-      Toast.show(context,
-          "登录失败 by username: $_username, password: , error: $e");
-    } finally {}
+      Toast.show(context, "登录失败: $e");
+    }
   }
 }
