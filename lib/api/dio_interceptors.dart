@@ -9,37 +9,40 @@ class AuthInterceptor extends Interceptor {
   @override
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
-    final token = await getToken(); // 从本地存储获取 Token
-    if (token != null) {
+    final token = await getToken();
+    if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
+    } else {
+      debugPrint('[AuthInterceptor] token empty, skip auth header for ${options.path}');
     }
     super.onRequest(options, handler);
   }
 
   Future<String?> getToken() async {
     AuthParams? authParams = await AuthApi().getAuthParams();
-    if (authParams == null) return "";
+    if (authParams == null) {
+      debugPrint('[AuthInterceptor] getAuthParams returned null');
+      return "";
+    }
     return authParams.token;
   }
 }
 
 class AuthExpireInterceptor extends Interceptor {
-
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    debugPrint('Error: ${err.response?.statusCode}');
+    debugPrint('[AuthExpireInterceptor] status=${err.response?.statusCode}, path=${err.requestOptions.path}');
     if (err.response?.statusCode == 401) {
       AuthParams? authParams = await AuthApi().getAuthParams();
       if (authParams == null) {
+        debugPrint('[AuthExpireInterceptor] no auth params, logout');
         await AuthApi().logout();
       } else {
         try {
+          debugPrint('[AuthExpireInterceptor] refreshing token');
           String newToken = await AuthApi().refreshToken(authParams.refreshToken);
-          // 2. 更新请求头
           final options = err.requestOptions;
           options.headers['Authorization'] = 'Bearer $newToken';
-
-          // 3. 重新发起请求
           final dio = await DioClient.getDio();
           final retryResponse = await dio.request(
             options.path,
@@ -50,18 +53,14 @@ class AuthExpireInterceptor extends Interceptor {
             data: options.data,
             queryParameters: options.queryParameters,
           );
-
-          // 成功则将结果返回
           return handler.resolve(retryResponse);
         } catch (e) {
-          // 刷新 Token 或重试失败，抛出错误
+          debugPrint('[AuthExpireInterceptor] refresh failed: $e');
           await AuthApi().logout();
           return handler.reject(err);
         }
       }
     }
-
-    // 对于其他错误，直接抛出
     handler.next(err);
   }
 }
