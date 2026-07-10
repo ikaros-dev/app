@@ -14,7 +14,8 @@ class LoginView extends StatefulWidget {
 
 class LoginState extends State<LoginView> {
   final GlobalKey _formKey = GlobalKey<FormState>();
-  late String _baseUrl, _username, _password, _twoFactorCode;
+  late String _baseUrl, _username, _password;
+  String _twoFactorCode = "";
   bool _isObscure = true;
   bool _twoFactorRequired = false;
   Color _eyeColor = Colors.grey;
@@ -37,9 +38,30 @@ class LoginState extends State<LoginView> {
             buildUsernameTextField(),
             const SizedBox(height: 20),
             buildPasswordTextField(context),
-            const SizedBox(height: 20),
-            if (_twoFactorRequired) buildTwoFactorCodeTextField(),
-            const SizedBox(height: 50),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                icon: Icon(
+                  _twoFactorRequired ? Icons.lock : Icons.lock_open,
+                  size: 16,
+                ),
+                label: Text(
+                  _twoFactorRequired ? '关闭两步验证' : '开启两步验证',
+                  style: const TextStyle(fontSize: 13),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _twoFactorRequired = !_twoFactorRequired;
+                  });
+                },
+              ),
+            ),
+            if (_twoFactorRequired) ...[
+              buildTwoFactorCodeTextField(),
+              const SizedBox(height: 10),
+            ],
+            const SizedBox(height: 30),
             buildLoginButton(context),
             const SizedBox(height: 30),
           ],
@@ -133,7 +155,7 @@ class LoginState extends State<LoginView> {
       decoration: const InputDecoration(labelText: '两步验证码'),
       keyboardType: TextInputType.number,
       validator: (v) {
-        if (_twoFactorRequired && (v == null || v.isEmpty)) {
+        if (v == null || v.isEmpty) {
           return '请输入两步验证码';
         }
         return null;
