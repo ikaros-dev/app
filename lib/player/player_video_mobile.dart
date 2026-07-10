@@ -508,18 +508,22 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   /// 设置附件ID、文件流URL和清晰度条件选项
   void setQualityOptions(
       String attachmentId, List<AccessUrlCondition> conditions,
-      {String? fileStreamUrl}) {
+      {String? fileStreamUrl, String? selectedQuality}) {
     if (fileStreamUrl != null && fileStreamUrl.isNotEmpty) {
       _fileStreamUrl = fileStreamUrl;
     }
     _attachmentId = attachmentId;
     _conditions.clear();
     _conditions.addAll(conditions);
-    // 使用服务器返回的默认值（如有）
-    for (var c in conditions) {
-      if (c.defaultValue.isNotEmpty) {
-        _selectedQuality = c.defaultValue;
-        break;
+    // 使用传入的选中值或服务器返回的默认值
+    if (selectedQuality != null && selectedQuality.isNotEmpty) {
+      _selectedQuality = selectedQuality;
+    } else {
+      for (var c in conditions) {
+        if (c.defaultValue.isNotEmpty) {
+          _selectedQuality = c.defaultValue;
+          break;
+        }
       }
     }
     setState(() {});

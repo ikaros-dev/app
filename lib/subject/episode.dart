@@ -166,8 +166,11 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     String videoTitle = _getEpisodeName(episodeRecord.episode);
     String videoSubTitle = episodeResource.name;
 
-    // 异步获取清晰度选项，不阻塞视频加载
-    _loadQualityConditions(episodeResource.attachmentId, videUrl);
+    // 获取清晰度选项，如果有更优清晰度则优先使用
+    String? bestUrl = await _loadQualityConditions(episodeResource.attachmentId, videUrl);
+    if (bestUrl != null && bestUrl.isNotEmpty) {
+      videUrl = bestUrl;
+    }
 
     // 音频
     if (_subject?.type == SubjectType.MUSIC) {
@@ -246,18 +249,30 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
     }
   }
 
-  /// 异步加载清晰度选项并传递给播放器
-  Future<void> _loadQualityConditions(
+  /// 异步加载清晰度选项并传递给播放器，返回最佳清晰度的URL（如果有）
+  Future<String?> _loadQualityConditions(
       String attachmentId, String fileStreamUrl) async {
     try {
       List<AccessUrlCondition> conditions =
           await AttachmentApi().getUrlConditions(attachmentId);
+      // 自动选择最佳清晰度
+      String? best = pickBestQuality(conditions);
       if (Platform.isAndroid || Platform.isIOS) {
         _mobilePlayer.currentState?.setQualityOptions(attachmentId, conditions,
-            fileStreamUrl: fileStreamUrl);
+            fileStreamUrl: fileStreamUrl, selectedQuality: best);
       } else {
         _desktopPlayer.currentState?.setQualityOptions(attachmentId, conditions,
-            fileStreamUrl: fileStreamUrl);
+            fileStreamUrl: fileStreamUrl, selectedQuality: best);
+      }
+      if (best != null) {
+        if (kDebugMode) {
+          print("[Quality] auto select best quality: $best");
+        }
+        String url = await AttachmentApi()
+            .getUrlWithConditions(attachmentId, {"quality": best});
+        if (url.isNotEmpty) {
+          return url;
+        }
       }
     } catch (e) {
       if (kDebugMode) {

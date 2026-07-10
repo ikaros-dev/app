@@ -49,6 +49,41 @@ class AccessUrlCondition {
 /// 文件流（原始流）标识常量
 const String qualityFileStream = "ikaros_filestream";
 
+/// 获取清晰度优先级（数字越小优先级越高）
+int getQualityPriority(String quality) {
+  switch (quality.toLowerCase()) {
+    case 'original':
+      return 0;
+    case '4k':
+      return 1;
+    case '1080p':
+      return 2;
+    case '720p':
+      return 3;
+    case '480p':
+      return 4;
+    case '360p':
+      return 5;
+    default:
+      return 9;
+  }
+}
+
+/// 从条件列表中选出最优清晰度（排除文件流和原画）
+/// 返回清晰度名称，如果没有可选的非原画选项则返回null
+String? pickBestQuality(List<AccessUrlCondition> conditions) {
+  var qualityCondition = conditions
+      .where((c) => c.name.toLowerCase() == "quality")
+      .firstOrNull;
+  if (qualityCondition == null || qualityCondition.options.isEmpty) return null;
+  var sorted = qualityCondition.options
+      .where((q) => q.isNotEmpty && q != "original")
+      .toList();
+  if (sorted.isEmpty) return null;
+  sorted.sort((a, b) => getQualityPriority(a).compareTo(getQualityPriority(b)));
+  return sorted.first;
+}
+
 /// 根据清晰度条件选项获取可读的显示标签
 String getQualityLabel(String quality) {
   switch (quality.toLowerCase()) {
