@@ -109,7 +109,7 @@ class AuthApi {
           message: data['message']?.toString() ?? "验证失败",
         );
       }
-      await _saveCredentials(baseUrl, "",
+      await _saveCredentials(baseUrl, data['username']?.toString() ?? "",
           accessToken, data['refreshToken']?.toString() ?? "");
       return LoginResult(success: true);
     } on DioException catch (e) {
@@ -130,11 +130,19 @@ class AuthApi {
 
   Future<void> _saveCredentials(String baseUrl, String username,
       String accessToken, String refreshToken) async {
+    if (kDebugMode) {
+      print("[AuthApi] _saveCredentials: baseUrl=$baseUrl, username=$username, token=${accessToken.substring(0, accessToken.length > 20 ? 20 : accessToken.length)}..., refreshToken=${refreshToken.isNotEmpty ? 'set' : 'empty'}");
+    }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(SharedPreferencesKeyAuthBaseUrl, baseUrl);
     await prefs.setString(SharedPreferencesKeyAuthUsername, username);
     await prefs.setString(SharedPreferencesKeyAuthToken, accessToken);
     await prefs.setString(SharedPreferencesKeyAuthRefreshToken, refreshToken);
+    if (kDebugMode) {
+      // 验证保存成功
+      var savedToken = prefs.getString(SharedPreferencesKeyAuthToken);
+      print("[AuthApi] verify saved token: ${savedToken != null ? 'ok (${savedToken.substring(0, savedToken.length > 20 ? 20 : savedToken.length)}...)' : 'null'}");
+    }
     await DioClient.rebuild(baseUrl: baseUrl);
   }
 

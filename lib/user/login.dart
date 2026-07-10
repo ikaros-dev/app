@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/auth/LoginResult.dart';
@@ -207,6 +208,9 @@ class LoginState extends State<LoginView> {
         loginResult = await AuthApi().login(
             _baseUrl, _username, _password);
       }
+      if (kDebugMode) {
+        print("[Login] result: success=${loginResult.success}, totpRequired=${loginResult.totpRequired}, message=${loginResult.message}");
+      }
 
       if (loginResult.totpRequired) {
         setState(() {
@@ -223,6 +227,11 @@ class LoginState extends State<LoginView> {
       }
 
       Toast.show(context, "登录成功");
+      if (kDebugMode) {
+        print("[Login] login success, checking auth params...");
+        var authParams = await AuthApi().getAuthParams();
+        print("[Login] post-login getAuthParams: ${authParams != null ? 'found (token len=${authParams.token.length})' : 'null'}");
+      }
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => const MyApp()));
     } catch (e) {
