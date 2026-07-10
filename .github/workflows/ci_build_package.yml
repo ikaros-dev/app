@@ -25,7 +25,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.1'
+          flutter-version: '3.44.2'
           channel: 'stable'
 
       - name: Restore packages
@@ -63,7 +63,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.1'
+          flutter-version: '3.44.2'
           channel: 'stable'
 
       - name: Restore packages
@@ -125,7 +125,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.1'
+          flutter-version: '3.44.2'
           channel: 'stable'
 
       - name: Restore packages
@@ -174,7 +174,7 @@ jobs:
 #      - name: Set up Flutter
 #        uses: subosito/flutter-action@v2
 #        with:
-#          flutter-version: '3.24.1'
+#          flutter-version: '3.44.2'
 #          channel: 'stable'
 #
 #      - name: Set up CocoaPods
@@ -234,7 +234,7 @@ jobs:
       - name: Install and set Flutter version
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.1'
+          flutter-version: '3.44.2'
           channel: 'stable'
 
       - name: Restore packages
