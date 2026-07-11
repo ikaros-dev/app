@@ -508,7 +508,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
   /// 设置附件ID、文件流URL和清晰度条件选项
   void setQualityOptions(
       String attachmentId, List<AccessUrlCondition> conditions,
-      {String? fileStreamUrl, String? selectedQuality}) {
+      {String? fileStreamUrl, String? selectedQuality, int defaultSubtitleDelayMs = 0}) {
     if (fileStreamUrl != null && fileStreamUrl.isNotEmpty) {
       _fileStreamUrl = fileStreamUrl;
     }
@@ -525,6 +525,11 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
           break;
         }
       }
+    }
+    // 非文件流（VIP/转码URL）时设置默认字幕延迟
+    if (defaultSubtitleDelayMs != 0 && selectedQuality != null && selectedQuality != qualityFileStream) {
+      _subtitleDelayMs = defaultSubtitleDelayMs;
+      _applySubtitleDelay();
     }
     setState(() {});
   }

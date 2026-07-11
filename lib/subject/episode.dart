@@ -257,12 +257,16 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
           await AttachmentApi().getUrlConditions(attachmentId);
       // 自动选择最佳清晰度
       String? best = pickBestQuality(conditions);
+      // VIP/转码流默认字幕延迟6秒
+      int subtitleDelay = (best != null) ? 6000 : 0;
       if (Platform.isAndroid || Platform.isIOS) {
         _mobilePlayer.currentState?.setQualityOptions(attachmentId, conditions,
-            fileStreamUrl: fileStreamUrl, selectedQuality: best);
+            fileStreamUrl: fileStreamUrl, selectedQuality: best,
+            defaultSubtitleDelayMs: subtitleDelay);
       } else {
         _desktopPlayer.currentState?.setQualityOptions(attachmentId, conditions,
-            fileStreamUrl: fileStreamUrl, selectedQuality: best);
+            fileStreamUrl: fileStreamUrl, selectedQuality: best,
+            defaultSubtitleDelayMs: subtitleDelay);
       }
       if (best != null) {
         if (kDebugMode) {
