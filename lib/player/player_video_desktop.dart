@@ -619,9 +619,9 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
 
   /// 设置字幕延迟（毫秒），正数延后，负数提前
   void _applySubtitleDelay() {
-    // dart_vlc 暂无字幕延迟API，后续支持时在此处调用
+    _player.setSpuDelay(_subtitleDelayMs);
     if (kDebugMode) {
-      print("[字幕延迟] 当前值: $_subtitleDelayMs ms");
+      print("[字幕延迟] 设置值: $_subtitleDelayMs ms");
     }
   }
 
