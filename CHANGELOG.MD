@@ -2,6 +2,14 @@
 
 更新日志文档，版本顺序从新到旧，最新版本在最前(上)面。
 
+# 1.7.2
+
+- VIP/转码流自动设置字幕延迟6秒，seek/reload 后重新应用
+- 桌面端字幕延迟滑块实际调用 libvlc API（dart_vlc 新增 setSpuDelay）
+- 修复 R8 混淆导致 Android release 构建失败（play-core 依赖 + dontwarn 规则）
+- 升级 flutter_vlc_player 插件适配 Flutter 3.44.2 v2 embedding
+- flutter_vlc_player Android compileSdk 更新至 35，Java 兼容至 VERSION_17
+
 # 1.7.1
 
 - 修复安卓编译问题
