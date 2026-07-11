@@ -309,6 +309,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
       Media.network(url),
       autoStart: autoStart,
     );
+    _applySubtitleDelay();
   }
 
   void addSlave(MediaSlaveType type, String url, bool select) {
@@ -322,6 +323,7 @@ class DesktopVideoPlayerState extends State<DesktopVideoPlayer>
     isLoading.value = true;
     _lastPosition = Duration.zero;
     _player.seek(dest);
+    _applySubtitleDelay();
     _danmuku.pause();
     _danmuku.clear();
     lock.synchronized(() {

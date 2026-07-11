@@ -295,6 +295,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
       }
     }
 
+    _applySubtitleDelay();
     setState(() {});
   }
 
@@ -445,6 +446,7 @@ class MobileVideoPlayerState extends State<MobileVideoPlayer>
     setState(() {});
     _lastPosition = Duration.zero;
     _player.seekTo(dest);
+    _applySubtitleDelay();
     _danmuku.pause();
     _danmuku.clear();
     lock.synchronized(() {
