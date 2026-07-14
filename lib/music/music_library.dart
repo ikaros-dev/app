@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/music/MusicApi.dart';
-import 'package:ikaros/api/subject/SubjectApi.dart';
-import 'package:ikaros/api/subject/model/Subject.dart';
-import 'package:ikaros/utils/screen_utils.dart';
+import 'package:ikaros/api/subject/EpisodeApi.dart';
+import 'package:ikaros/api/subject/model/Episode.dart';
+import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/subject/subject.dart';
+import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/screen_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// 音乐库页面.
-/// 展示专辑列表，点击进入专辑详情（歌曲列表 + 播放）.
+/// 展示专辑列表，支持搜索和上下滑动加载更多.
 class MusicLibraryPage extends StatefulWidget {
   const MusicLibraryPage({super.key});
 
@@ -22,18 +25,47 @@ class _MusicLibraryPageState extends State<MusicLibraryPage> {
   int _page = 1;
   final int _size = 20;
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
+
+  // 当前播放信息（通过 SubjectPage 播放时保存）
+  String? _currentSongId;
+  String? _currentSongName;
+  String? _currentAlbumName;
+  String? _currentAlbumId;
+  String? _currentAlbumCover;
 
   @override
   void initState() {
     super.initState();
     _loadAlbums();
     _scrollController.addListener(_onScroll);
+    _restoreNowPlaying();
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _restoreNowPlaying() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _currentSongName = prefs.getString("now_playing_song");
+      _currentAlbumName = prefs.getString("now_playing_album");
+      _currentAlbumId = prefs.getString("now_playing_album_id");
+      _currentAlbumCover = prefs.getString("now_playing_cover");
+    });
+  }
+
+  Future<void> _saveNowPlaying(Map<String, dynamic> song) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("now_playing_song", song["nameCn"] ?? song["name"] ?? "");
+    await prefs.setString("now_playing_album", "正在播放");
+    await prefs.setString("now_playing_album_id", song["subjectId"] ?? "");
+    await prefs.setString("now_playing_cover", song["cover"] ?? song["albumCover"] ?? "");
   }
 
   void _onScroll() {
@@ -45,10 +77,14 @@ class _MusicLibraryPageState extends State<MusicLibraryPage> {
     }
   }
 
-  Future<void> _loadAlbums() async {
+  Future<void> _loadAlbums({bool refresh = false}) async {
     if (_isLoading) return;
     setState(() => _isLoading = true);
     try {
+      if (refresh) {
+        _page = 1;
+        _albums.clear();
+      }
       var result = await _musicApi.listAlbums(page: _page, size: _size);
       List<dynamic> items = result["items"] ?? [];
       int total = result["total"] ?? 0;
@@ -60,36 +96,93 @@ class _MusicLibraryPageState extends State<MusicLibraryPage> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
+      if (mounted) Toast.show(context, "加载专辑失败: $e");
+    }
+  }
+
+  Future<void> _search(String keyword) async {
+    if (keyword.isEmpty) {
+      _loadAlbums(refresh: true);
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      var result = await _musicApi.searchAlbums(keyword, 1, 50);
+      List<dynamic> items = result["items"] ?? [];
+      setState(() {
+        _albums = items.cast<Map<String, dynamic>>();
+        _hasMore = false;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("音乐库")),
-      body: _albums.isEmpty && !_isLoading
-          ? const Center(child: Text("暂无专辑"))
-          : GridView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(8),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: ScreenUtils.screenWidth(context) > 800 ? 4 : 2,
-                childAspectRatio: 0.75,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemCount: _albums.length + (_hasMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index >= _albums.length) {
-                  return const Center(child: CircularProgressIndicator());
+      appBar: AppBar(
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: "搜索专辑...",
+                  border: InputBorder.none,
+                ),
+                onSubmitted: (v) => _search(v),
+              )
+            : const Text("音乐库"),
+        actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                _isSearching = !_isSearching;
+                if (!_isSearching) {
+                  _searchController.clear();
+                  _loadAlbums(refresh: true);
                 }
-                final album = _albums[index];
-                return _AlbumCard(
-                  album: album,
-                  onTap: () => _openAlbum(album),
-                );
-              },
+              });
+            },
+          ),
+          if (_albums.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () => _loadAlbums(refresh: true),
             ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () => _loadAlbums(refresh: true),
+        child: _albums.isEmpty && !_isLoading
+            ? const Center(child: Text("暂无专辑"))
+            : GridView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 80),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount:
+                      ScreenUtils.isDesktop(context) ? 5 : 2,
+                  childAspectRatio: 0.72,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                itemCount: _albums.length + (_isLoading ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index >= _albums.length) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final album = _albums[index];
+                  return _AlbumCard(
+                    album: album,
+                    onTap: () => _openAlbum(album),
+                  );
+                },
+              ),
+      ),
+      // 底部现在播放指示条
+      bottomSheet: _currentSongName != null ? _buildNowPlayingBar() : null,
     );
   }
 
@@ -108,6 +201,53 @@ class _MusicLibraryPageState extends State<MusicLibraryPage> {
       ),
     );
   }
+
+  Widget _buildNowPlayingBar() {
+    return Container(
+      height: 56,
+      color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.9),
+      child: ListTile(
+        leading: _currentAlbumCover != null && _currentAlbumCover!.isNotEmpty
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Image.network(_currentAlbumCover!,
+                    width: 40, height: 40, fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.music_note)),
+              )
+            : const Icon(Icons.music_note, size: 40),
+        title: Text(_currentSongName ?? "",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+        subtitle: Text(_currentAlbumName ?? "",
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12)),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.play_arrow),
+              onPressed: () {
+                if (_currentAlbumId != null && _currentAlbumId!.isNotEmpty) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => SubjectPage(id: _currentAlbumId!),
+                    ),
+                  );
+                }
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.close, size: 18),
+              onPressed: () => setState(() => _currentSongName = null),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _AlbumCard extends StatelessWidget {
@@ -118,11 +258,13 @@ class _AlbumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = album["nameCn"] as String? ?? album["name"] as String? ?? "";
+    final name =
+        album["nameCn"] as String? ?? album["name"] as String? ?? "";
     final cover = album["cover"] as String? ?? "";
     final artist = album["name"] as String? ?? "";
     return Card(
       clipBehavior: Clip.antiAlias,
+      elevation: 2,
       child: InkWell(
         onTap: onTap,
         child: Column(
@@ -130,18 +272,18 @@ class _AlbumCard extends StatelessWidget {
           children: [
             Expanded(
               child: cover.isNotEmpty
-                  ? Image.network(cover, fit: BoxFit.cover,
+                  ? Image.network(cover,
+                      fit: BoxFit.cover,
                       width: double.infinity,
                       errorBuilder: (_, __, ___) => Container(
-                        color: Colors.grey[900],
-                        child: const Icon(Icons.music_note,
-                            size: 48, color: Colors.white54),
-                      ))
+                          color: Colors.grey[900],
+                          child: const Icon(Icons.music_note,
+                              size: 48, color: Colors.white54)))
                   : Container(
                       color: Colors.grey[900],
                       child: const Center(
-                        child: Icon(Icons.album,
-                            size: 48, color: Colors.white54),
+                        child:
+                            Icon(Icons.album, size: 48, color: Colors.white54),
                       ),
                     ),
             ),
@@ -158,8 +300,8 @@ class _AlbumCard extends StatelessWidget {
                     Text(artist,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                            color: Colors.grey[500], fontSize: 12)),
+                        style:
+                            TextStyle(color: Colors.grey[500], fontSize: 12)),
                 ],
               ),
             ),
@@ -217,22 +359,22 @@ class _MusicAlbumDetailPageState extends State<MusicAlbumDetailPage> {
       appBar: AppBar(title: Text(widget.albumName)),
       body: Column(
         children: [
-          // 专辑头部
           _buildAlbumHeader(),
-          // 歌曲列表
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _songs.isEmpty
                     ? const Center(child: Text("暂无歌曲"))
                     : ListView.builder(
+                        padding: const EdgeInsets.only(bottom: 20),
                         itemCount: _songs.length,
                         itemBuilder: (context, index) {
                           final song = _songs[index];
                           return _SongTile(
                             song: song,
                             index: index,
-                            onPlay: () => _playSong(index),
+                            albumName: widget.albumName,
+                            albumCover: widget.albumCover,
                           );
                         }),
           ),
@@ -253,12 +395,12 @@ class _MusicAlbumDetailPageState extends State<MusicAlbumDetailPage> {
               width: 100,
               height: 100,
               child: widget.albumCover.isNotEmpty
-                  ? Image.network(widget.albumCover, fit: BoxFit.cover,
+                  ? Image.network(widget.albumCover,
+                      fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => Container(
-                        color: Colors.grey[800],
-                        child: const Icon(Icons.album,
-                            size: 40, color: Colors.white54))
-                  )
+                          color: Colors.grey[800],
+                          child: const Icon(
+                              Icons.album, size: 40, color: Colors.white54)))
                   : Container(
                       color: Colors.grey[800],
                       child: const Icon(Icons.album,
@@ -278,10 +420,22 @@ class _MusicAlbumDetailPageState extends State<MusicAlbumDetailPage> {
                 Text("${_songs.length} 首歌曲",
                     style: TextStyle(color: Colors.grey[500])),
                 const SizedBox(height: 8),
-                ElevatedButton.icon(
-                  onPressed: _songs.isNotEmpty ? () => _playAll() : null,
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text("播放全部"),
+                Row(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed:
+                          _songs.isNotEmpty ? () => _playAll() : null,
+                      icon: const Icon(Icons.play_arrow),
+                      label: const Text("播放全部"),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed:
+                          _songs.isNotEmpty ? () => _playAll() : null,
+                      icon: const Icon(Icons.shuffle),
+                      label: const Text("随机播放"),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -292,12 +446,21 @@ class _MusicAlbumDetailPageState extends State<MusicAlbumDetailPage> {
   }
 
   void _playSong(int index) {
+    if (index >= _songs.length) return;
     final song = _songs[index];
     final songId = song["id"] as String? ?? "";
     final name = song["nameCn"] as String? ?? song["name"] as String? ?? "";
-
-    // 跳转到条目详情页，使用已有播放器
     final subjectId = song["subjectId"] as String? ?? "";
+
+    // 保存播放信息
+    final prefsKey = "now_playing_song";
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString(prefsKey, name);
+      prefs.setString("now_playing_album", widget.albumName);
+      prefs.setString("now_playing_album_id", subjectId);
+      prefs.setString("now_playing_cover", widget.albumCover);
+    });
+
     if (subjectId.isNotEmpty) {
       Navigator.push(
         context,
@@ -305,6 +468,8 @@ class _MusicAlbumDetailPageState extends State<MusicAlbumDetailPage> {
           builder: (_) => SubjectPage(id: subjectId),
         ),
       );
+    } else {
+      Toast.show(context, "播放: $name");
     }
   }
 
@@ -317,19 +482,20 @@ class _MusicAlbumDetailPageState extends State<MusicAlbumDetailPage> {
 class _SongTile extends StatelessWidget {
   final Map<String, dynamic> song;
   final int index;
-  final VoidCallback onPlay;
+  final String albumName;
+  final String albumCover;
 
   const _SongTile({
     required this.song,
     required this.index,
-    required this.onPlay,
+    required this.albumName,
+    required this.albumCover,
   });
 
   @override
   Widget build(BuildContext context) {
     final name = song["nameCn"] as String? ?? song["name"] as String? ?? "";
     final duration = song["duration"] as int? ?? 0;
-    final sequence = song["sequence"] as int? ?? 0;
 
     String durationStr = "0:00";
     if (duration > 0) {
@@ -340,15 +506,27 @@ class _SongTile extends StatelessWidget {
 
     return ListTile(
       leading: CircleAvatar(
-        child: Text("${index + 1}", style: const TextStyle(fontSize: 14)),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        child: Text("${index + 1}",
+            style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onPrimaryContainer)),
       ),
       title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
       subtitle: durationStr != "0:00" ? Text(durationStr) : null,
       trailing: IconButton(
         icon: const Icon(Icons.play_circle_outline),
-        onPressed: onPlay,
+        color: Theme.of(context).colorScheme.primary,
+        onPressed: () {
+          // 直接调用父级方法
+          final parent = context.findAncestorStateOfType<_MusicAlbumDetailPageState>();
+          parent?._playSong(index);
+        },
       ),
-      onTap: onPlay,
+      onTap: () {
+        final parent = context.findAncestorStateOfType<_MusicAlbumDetailPageState>();
+        parent?._playSong(index);
+      },
     );
   }
 }
