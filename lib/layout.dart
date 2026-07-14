@@ -1,6 +1,7 @@
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:ikaros/collection/collections.dart';
+import 'package:ikaros/music/music_library.dart';
 import 'package:ikaros/subject/subject.dart';
 import 'package:ikaros/subject/subjects.dart';
 import 'package:ikaros/user/user.dart';
@@ -81,7 +82,12 @@ class _MobileLayoutState extends State<MobileLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: <Widget>[const CollectionPage(), const SubjectsPage(), const UserPage()][_pageIndex],
+      body: <Widget>[
+        const CollectionPage(),
+        const SubjectsPage(),
+        const MusicLibraryPage(),
+        const UserPage()
+      ][_pageIndex],
       bottomNavigationBar: NavigationBar(
         onDestinationSelected: (int index) {
           setState(() {
@@ -97,6 +103,10 @@ class _MobileLayoutState extends State<MobileLayout> {
           NavigationDestination(
             icon: Icon(Icons.tv),
             label: '条目',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.library_music),
+            label: '音乐',
           ),
           NavigationDestination(
             icon: Icon(Icons.account_circle),
@@ -124,6 +134,7 @@ class _DesktopLayoutState extends State<DesktopLayout> {
   final List<Widget> _pages = [
     const CollectionPage(),
     const SubjectsPage(),
+    const MusicLibraryPage(),
     const UserPage(),
   ];
 
@@ -157,6 +168,10 @@ class _DesktopLayoutState extends State<DesktopLayout> {
               NavigationRailDestination(
                 icon: Icon(Icons.tv),
                 label: Text('条目'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.library_music),
+                label: Text('音乐'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.account_circle),
