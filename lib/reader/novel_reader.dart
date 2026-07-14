@@ -8,6 +8,42 @@ import 'package:ikaros/api/subject/model/Episode.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// 阅读主题
+class _ReadingTheme {
+  final Color bgColor;
+  final Color textColor;
+  final String name;
+  final Color? statusBarColor;
+
+  const _ReadingTheme({
+    required this.bgColor,
+    required this.textColor,
+    required this.name,
+    this.statusBarColor,
+  });
+
+  static const _ReadingTheme light = _ReadingTheme(
+    bgColor: Color(0xFFF5F0E8),
+    textColor: Color(0xFF333333),
+    name: "羊皮纸",
+  );
+
+  static const _ReadingTheme sepia = _ReadingTheme(
+    bgColor: Color(0xFFC8B896),
+    textColor: Color(0xFF3A2E1C),
+    name: "护眼黄",
+  );
+
+  static const _ReadingTheme dark = _ReadingTheme(
+    bgColor: Color(0xFF1A1A2E),
+    textColor: Color(0xFFE0E0E0),
+    name: "夜间黑",
+  );
+
+  static const List<_ReadingTheme> values = [light, sepia, dark];
+}
 
 /// 小说阅读器主页
 class NovelReaderPage extends StatefulWidget {
@@ -69,8 +105,8 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
         final title = chapter.nameCn ?? chapter.name;
         final desc = chapter.description;
         return ListTile(
-          leading: Icon(Icons.menu_book,
-              color: Theme.of(context).colorScheme.primary),
+          leading:
+              Icon(Icons.menu_book, color: Theme.of(context).colorScheme.primary),
           title: Text(title),
           subtitle: desc != null && desc.isNotEmpty
               ? Text(desc.length > 50 ? "${desc.substring(0, 50)}…" : desc,
@@ -90,6 +126,7 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
         builder: (_) => NovelChapterPage(
           chapter: chapter,
           subjectName: _subject?.nameCn ?? _subject?.name ?? "",
+          subjectId: widget.subjectId,
           allChapters: _chapters,
         ),
       ),
@@ -101,12 +138,14 @@ class _NovelReaderPageState extends State<NovelReaderPage> {
 class NovelChapterPage extends StatefulWidget {
   final Episode chapter;
   final String subjectName;
+  final String subjectId;
   final List<Episode> allChapters;
 
   const NovelChapterPage({
     super.key,
     required this.chapter,
     required this.subjectName,
+    required this.subjectId,
     required this.allChapters,
   });
 
@@ -119,6 +158,11 @@ class _NovelChapterPageState extends State<NovelChapterPage> {
   bool _isLoading = true;
   double _fontSize = 18.0;
   bool _showControls = true;
+  _ReadingTheme _theme = _ReadingTheme.light;
+
+  // 阅读进度
+  double _scrollPosition = 0.0;
+  final ScrollController _scrollController = ScrollController();
 
   late int _currentIndex;
 
@@ -126,7 +170,41 @@ class _NovelChapterPageState extends State<NovelChapterPage> {
   void initState() {
     super.initState();
     _currentIndex = widget.allChapters.indexOf(widget.chapter);
+    _loadThemeAndFont();
     _loadContent();
+    _scrollController.addListener(_saveScrollPosition);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_saveScrollPosition);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadThemeAndFont() async {
+    final prefs = await SharedPreferences.getInstance();
+    final themeIndex = prefs.getInt("${widget.subjectId}_theme") ?? 0;
+    final fontSize = prefs.getDouble("${widget.subjectId}_fontsize") ?? 18.0;
+    if (mounted) {
+      setState(() {
+        _theme = _ReadingTheme.values[themeIndex.clamp(0, 2)];
+        _fontSize = fontSize;
+      });
+    }
+  }
+
+  void _saveScrollPosition() {
+    if (_scrollController.hasClients) {
+      _scrollPosition = _scrollController.position.pixels;
+    }
+  }
+
+  Future<void> _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt("${widget.subjectId}_theme",
+        _ReadingTheme.values.indexOf(_theme));
+    await prefs.setDouble("${widget.subjectId}_fontsize", _fontSize);
   }
 
   Future<void> _loadContent() async {
@@ -149,7 +227,6 @@ class _NovelChapterPageState extends State<NovelChapterPage> {
     }
   }
 
-  /// 从章节描述或附件文件中获取文字内容
   Future<String?> _fetchChapterContent(Episode chapter) async {
     // 优先使用 description 字段
     if (chapter.description != null && chapter.description!.isNotEmpty) {
@@ -191,6 +268,7 @@ class _NovelChapterPageState extends State<NovelChapterPage> {
           builder: (_) => NovelChapterPage(
             chapter: widget.allChapters[_currentIndex + 1],
             subjectName: widget.subjectName,
+            subjectId: widget.subjectId,
             allChapters: widget.allChapters,
           ),
         ),
@@ -206,6 +284,7 @@ class _NovelChapterPageState extends State<NovelChapterPage> {
           builder: (_) => NovelChapterPage(
             chapter: widget.allChapters[_currentIndex - 1],
             subjectName: widget.subjectName,
+            subjectId: widget.subjectId,
             allChapters: widget.allChapters,
           ),
         ),
@@ -216,62 +295,87 @@ class _NovelChapterPageState extends State<NovelChapterPage> {
   @override
   Widget build(BuildContext context) {
     final chapterTitle = widget.chapter.nameCn ?? widget.chapter.name;
-    return Scaffold(
-      appBar: _showControls
-          ? AppBar(
-              title: Text(chapterTitle),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.text_increase),
-                  tooltip: "字体大小",
-                  onPressed: _showFontSizeDialog,
+    return Theme(
+      data: ThemeData(
+        scaffoldBackgroundColor: _theme.bgColor,
+        appBarTheme: AppBarTheme(
+          backgroundColor: _theme.bgColor,
+          foregroundColor: _theme.textColor,
+          elevation: _showControls ? 1 : 0,
+        ),
+      ),
+      child: Scaffold(
+        appBar: _showControls
+            ? AppBar(
+                title: Text(chapterTitle),
+                actions: [
+                  // 主题切换
+                  IconButton(
+                    icon: const Icon(Icons.palette),
+                    tooltip: "阅读主题",
+                    onPressed: _showThemePicker,
+                  ),
+                  // 字体大小
+                  IconButton(
+                    icon: const Icon(Icons.text_fields),
+                    tooltip: "字体大小",
+                    onPressed: _showFontSizeDialog,
+                  ),
+                ],
+              )
+            : null,
+        body: Column(
+          children: [
+            if (!_showControls)
+              Container(
+                color: _theme.bgColor,
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: Text(
+                  "$chapterTitle — ${widget.subjectName}",
+                  style: TextStyle(color: _theme.textColor.withOpacity(0.5), fontSize: 12),
                 ),
-              ],
-            )
-          : null,
-      backgroundColor: const Color(0xFFF5F0E8),
-      body: Column(
-        children: [
-          if (!_showControls)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: Text(
-                "$chapterTitle — ${widget.subjectName}",
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
-            ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : GestureDetector(
-                    onTap: () =>
-                        setState(() => _showControls = !_showControls),
-                    onHorizontalDragEnd: (details) {
-                      if (details.primaryVelocity != null) {
-                        if (details.primaryVelocity! < -200) {
-                          _nextChapter();
-                        } else if (details.primaryVelocity! > 200) {
-                          _prevChapter();
+            Expanded(
+              child: _isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: _theme.textColor,
+                      ),
+                    )
+                  : GestureDetector(
+                      onTap: () =>
+                          setState(() => _showControls = !_showControls),
+                      onHorizontalDragEnd: (details) {
+                        if (details.primaryVelocity != null) {
+                          if (details.primaryVelocity! < -200) {
+                            _nextChapter();
+                          } else if (details.primaryVelocity! > 200) {
+                            _prevChapter();
+                          }
                         }
-                      }
-                    },
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                      child: SelectableText(
-                        _content,
-                        style: TextStyle(
-                          fontSize: _fontSize,
-                          height: 1.6,
-                          color: const Color(0xFF333333),
-                          letterSpacing: 0.5,
+                      },
+                      child: Container(
+                        color: _theme.bgColor,
+                        child: SingleChildScrollView(
+                          controller: _scrollController,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 16),
+                          child: SelectableText(
+                            _content,
+                            style: TextStyle(
+                              fontSize: _fontSize,
+                              height: 1.6,
+                              color: _theme.textColor,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-          ),
-          if (_showControls) _buildBottomBar(chapterTitle),
-        ],
+            ),
+            if (_showControls) _buildBottomBar(chapterTitle),
+          ],
+        ),
       ),
     );
   }
@@ -280,7 +384,7 @@ class _NovelChapterPageState extends State<NovelChapterPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _theme.bgColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -300,7 +404,7 @@ class _NovelChapterPageState extends State<NovelChapterPage> {
             ),
             Text(
               "${_currentIndex + 1} / ${widget.allChapters.length}",
-              style: const TextStyle(color: Colors.grey),
+              style: TextStyle(color: _theme.textColor.withOpacity(0.5)),
             ),
             TextButton.icon(
               onPressed: _currentIndex < widget.allChapters.length - 1
@@ -321,28 +425,81 @@ class _NovelChapterPageState extends State<NovelChapterPage> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text("字体大小"),
+          backgroundColor: _theme.bgColor,
+          title: Text("字体大小", style: TextStyle(color: _theme.textColor)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("当前: ${tempSize.round()}px"),
+              Text("当前: ${tempSize.round()}px",
+                  style: TextStyle(color: _theme.textColor)),
+              const SizedBox(height: 8),
               Slider(
                 value: tempSize,
                 min: 12,
                 max: 32,
                 divisions: 20,
                 label: "${tempSize.round()}",
+                activeColor: Colors.blue,
                 onChanged: (v) => setDialogState(() => tempSize = v),
               ),
             ],
           ),
           actions: [
             TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text("取消")),
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("取消"),
+            ),
             TextButton(
               onPressed: () {
                 setState(() => _fontSize = tempSize);
+                _saveSettings();
+                Navigator.pop(ctx);
+              },
+              child: const Text("确定"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showThemePicker() async {
+    int selectedIndex = _ReadingTheme.values.indexOf(_theme);
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: _ReadingTheme.values[selectedIndex].bgColor,
+          title: const Text("阅读主题"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(_ReadingTheme.values.length, (i) {
+              final t = _ReadingTheme.values[i];
+              final isSelected = i == selectedIndex;
+              return RadioListTile<int>(
+                value: i,
+                groupValue: selectedIndex,
+                title: Text(t.name,
+                    style: TextStyle(color: t.textColor)),
+                tileColor: t.bgColor,
+                activeColor: t.textColor,
+                onChanged: (v) {
+                  setDialogState(() => selectedIndex = v!);
+                },
+              );
+            }),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("取消"),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _theme = _ReadingTheme.values[selectedIndex];
+                });
+                _saveSettings();
                 Navigator.pop(ctx);
               },
               child: const Text("确定"),
