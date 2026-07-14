@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ikaros/api/attachment/AttachmentApi.dart';
@@ -144,15 +146,25 @@ class ComicChapterPage extends StatefulWidget {
   State<ComicChapterPage> createState() => _ComicChapterPageState();
 }
 
+/// 阅读模式
+enum _ReadingMode { page, webtoon, list }
+
 class _ComicChapterPageState extends State<ComicChapterPage> {
   List<String> _pageUrls = [];
   bool _isLoading = true;
-  bool _isListMode = false;
+  _ReadingMode _mode = _ReadingMode.page;
   bool _rightToLeft = false;
-  bool _fitToWidth = true; // 适应宽度还是高度
+  bool _fitToWidth = true;
   final PageController _pageController = PageController();
   int _currentPage = 0;
   int? _lastPageIndex;
+
+  // 条漫自动滚动
+  bool _autoScroll = false;
+  Timer? _autoScrollTimer;
+  double _autoScrollSpeed = 1.0;
+  double _webtoonProgress = 0.0; // 进度百分比
+  final ScrollController _webtoonScrollController = ScrollController();
 
   @override
   void initState() {
@@ -163,6 +175,8 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
   @override
   void dispose() {
     _pageController.dispose();
+    _webtoonScrollController.dispose();
+    _autoScrollTimer?.cancel();
     super.dispose();
   }
 
@@ -188,12 +202,12 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
       // 恢复上次阅读页
       final prefs = await SharedPreferences.getInstance();
       _lastPageIndex = prefs.getInt("${widget.subjectId}_${widget.chapter.id}_page");
-      if (_lastPageIndex != null && _lastPageIndex! < urls.length && !_isListMode) {
+      if (_lastPageIndex != null && _lastPageIndex! < urls.length && _mode == _ReadingMode.page) {
         _currentPage = _lastPageIndex!;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!_isListMode && _rightToLeft) {
+          if (_mode == _ReadingMode.page && _rightToLeft) {
             _pageController.jumpToPage(urls.length - 1 - _lastPageIndex!);
-          } else if (!_isListMode) {
+          } else if (_mode == _ReadingMode.page) {
             _pageController.jumpToPage(_lastPageIndex!);
           }
         });
@@ -212,6 +226,7 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
 
   void _goToChapter(int newIndex) {
     if (newIndex < 0 || newIndex >= widget.allChapters.length) return;
+    _autoScrollTimer?.cancel();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -226,10 +241,71 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
     );
   }
 
+  void _cycleMode() {
+    final modes = _ReadingMode.values;
+    final next = (_mode.index + 1) % modes.length;
+    setState(() {
+      _mode = modes[next];
+      _autoScroll = false;
+      _autoScrollTimer?.cancel();
+    });
+  }
+
+  void _toggleAutoScroll() {
+    if (_mode != _ReadingMode.webtoon) return;
+    if (_autoScroll) {
+      _autoScrollTimer?.cancel();
+    } else {
+      _autoScrollTimer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+        if (!_webtoonScrollController.hasClients) return;
+        final delta = 0.8 * _autoScrollSpeed;
+        final next = _webtoonScrollController.position.pixels + delta;
+        if (next >= _webtoonScrollController.position.maxScrollExtent) {
+          _autoScrollTimer?.cancel();
+          _goToChapter(widget.chapterIndex + 1);
+          return;
+        }
+        _webtoonScrollController.jumpTo(next);
+      });
+    }
+    setState(() => _autoScroll = !_autoScroll);
+  }
+
+  void _onWebtoonScroll() {
+    if (!_webtoonScrollController.hasClients) return;
+    final pos = _webtoonScrollController.position;
+    final fraction = pos.maxScrollExtent > 0
+        ? (pos.pixels / pos.maxScrollExtent * 100).clamp(0, 100)
+        : 0.0;
+    _webtoonProgress = fraction;
+  }
+
+  IconData _modeIcon() {
+    switch (_mode) {
+      case _ReadingMode.page:
+        return Icons.view_carousel;
+      case _ReadingMode.webtoon:
+        return Icons.view_stream;
+      case _ReadingMode.list:
+        return Icons.grid_view;
+    }
+  }
+
+  String _modeTooltip() {
+    switch (_mode) {
+      case _ReadingMode.page:
+        return "单页模式";
+      case _ReadingMode.webtoon:
+        return "条漫模式";
+      case _ReadingMode.list:
+        return "缩略列表";
+    }
+  }
+
   /// 处理键盘事件
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is! KeyDownEvent) return KeyEventResult.ignored;
-    if (_isListMode) return KeyEventResult.ignored;
+    if (_mode != _ReadingMode.page) return KeyEventResult.ignored;
 
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowRight:
@@ -267,22 +343,28 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
       onKeyEvent: _handleKeyEvent,
       child: Scaffold(
         appBar: AppBar(
-          title: Text("$chapterTitle — ${_currentPage + 1}/${_pageUrls.length}"),
+          title: Text(_mode == _ReadingMode.page
+              ? "$chapterTitle — ${_currentPage + 1}/${_pageUrls.length}"
+              : _mode == _ReadingMode.webtoon
+                  ? "$chapterTitle — ${_webtoonProgress.toStringAsFixed(0)}%"
+                  : chapterTitle),
           actions: [
+            if (_mode == _ReadingMode.page)
+              IconButton(
+                icon: Icon(_rightToLeft ? Icons.arrow_back : Icons.arrow_forward),
+                tooltip: _rightToLeft ? "右→左（日漫）" : "左→右（正常）",
+                onPressed: () => setState(() => _rightToLeft = !_rightToLeft),
+              ),
+            if (_mode == _ReadingMode.page)
+              IconButton(
+                icon: Icon(_fitToWidth ? Icons.fit_screen : Icons.fit_page),
+                tooltip: _fitToWidth ? "适应宽度" : "适应高度",
+                onPressed: () => setState(() => _fitToWidth = !_fitToWidth),
+              ),
             IconButton(
-              icon: Icon(_rightToLeft ? Icons.arrow_back : Icons.arrow_forward),
-              tooltip: _rightToLeft ? "右→左（日漫）" : "左→右（正常）",
-              onPressed: () => setState(() => _rightToLeft = !_rightToLeft),
-            ),
-            IconButton(
-              icon: Icon(_fitToWidth ? Icons.fit_screen : Icons.fit_page),
-              tooltip: _fitToWidth ? "适应宽度" : "适应高度",
-              onPressed: () => setState(() => _fitToWidth = !_fitToWidth),
-            ),
-            IconButton(
-              icon: Icon(_isListMode ? Icons.view_carousel : Icons.view_column),
-              tooltip: _isListMode ? "单页模式" : "列表模式",
-              onPressed: () => setState(() => _isListMode = !_isListMode),
+              icon: Icon(_modeIcon()),
+              tooltip: _modeTooltip(),
+              onPressed: _cycleMode,
             ),
           ],
         ),
@@ -293,9 +375,20 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
                 ? const Center(
                     child: Text("暂无页面",
                         style: TextStyle(color: Colors.white)))
-                : _isListMode ? _buildListMode() : _buildPageMode(),
+                : _buildBody(),
       ),
     );
+  }
+
+  Widget _buildBody() {
+    switch (_mode) {
+      case _ReadingMode.page:
+        return _buildPageMode();
+      case _ReadingMode.webtoon:
+        return _buildWebtoonMode();
+      case _ReadingMode.list:
+        return _buildListMode();
+    }
   }
 
   Widget _buildPageMode() {
@@ -338,13 +431,57 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
             ),
           ),
         ),
-        // 加载过渡：当前正在加载时显示页面跳转进度
+        _buildChapterProgress(),
+      ],
+    );
+  }
+
+  Widget _buildWebtoonMode() {
+    return Column(
+      children: [
+        Expanded(
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification is ScrollUpdateNotification ||
+                  notification is UserScrollNotification) {
+                _onWebtoonScroll();
+              }
+              return false;
+            },
+            child: SingleChildScrollView(
+              controller: _webtoonScrollController,
+              child: Column(
+                children: [
+                  for (int i = 0; i < _pageUrls.length; i++)
+                    _ComicPageWidget(url: _pageUrls[i], fitToWidth: true),
+                  // 到底提示
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    color: const Color(0xFF1A1A1A),
+                    width: double.infinity,
+                    child: Center(
+                      child: TextButton.icon(
+                        onPressed: () =>
+                            _goToChapter(widget.chapterIndex + 1),
+                        icon: const Icon(Icons.chevron_right,
+                            color: Colors.white54),
+                        label: const Text("下一章",
+                            style: TextStyle(color: Colors.white54)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
         _buildChapterProgress(),
       ],
     );
   }
 
   Widget _buildChapterProgress() {
+    final isWebtoon = _mode == _ReadingMode.webtoon;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       color: Colors.black54,
@@ -358,12 +495,25 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
                   style: TextStyle(color: Colors.white70, fontSize: 12)),
             ),
           const Spacer(),
-          // 页面进度指示（用小圆点）
+          // 条漫自动滚动按钮
+          if (isWebtoon)
+            IconButton(
+              icon: Icon(
+                _autoScroll ? Icons.speed : Icons.speed_outlined,
+                color: _autoScroll ? Colors.blue : Colors.white60,
+                size: 18,
+              ),
+              tooltip: _autoScroll ? "停止自动滚动" : "条漫自动滚动",
+              onPressed: _toggleAutoScroll,
+            ),
+          // 页面进度
           SizedBox(
-            width: 120,
+            width: 100,
             child: Center(
               child: Text(
-                "${_currentPage + 1} / ${_pageUrls.length} 页",
+                isWebtoon
+                    ? "${_webtoonProgress.toStringAsFixed(0)}%"
+                    : "${_currentPage + 1} / ${_pageUrls.length} 页",
                 style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
             ),
