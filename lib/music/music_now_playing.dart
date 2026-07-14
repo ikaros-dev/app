@@ -3,17 +3,21 @@ import 'dart:io';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:dart_vlc/dart_vlc.dart' as vlc;
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:ikaros/api/dio_client.dart';
 import 'package:ikaros/api/music/SubsonicApi.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/model/EpisodeResource.dart';
+import 'package:ikaros/component/lyrics_widget.dart';
+import 'package:ikaros/utils/lyrics_parser.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 播放模式
 enum _PlaybackMode { normal, repeatOne, repeatAll, shuffle }
 
-/// 单曲模型（播放队列用）
+/// 单曲模型
 class _QueueSong {
   final String id;
   final String subjectId;
@@ -50,18 +54,11 @@ class _QueueSong {
   String get displayName => nameCn ?? name;
 }
 
-/// 正在播放页面（全屏桌面播放器）
+/// 正在播放页面
 class NowPlayingPage extends StatefulWidget {
-  /// 播放队列
   final List<_QueueSong> queue;
-
-  /// 从第几首开始播放
   final int startIndex;
-
-  /// 专辑名称
   final String? albumName;
-
-  /// 专辑封面
   final String? albumCover;
 
   const NowPlayingPage({
@@ -84,9 +81,14 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
   _PlaybackMode _mode = _PlaybackMode.normal;
   Duration _position = Duration.zero;
   Duration _duration = Duration.zero;
-  String? _lastUrl; // 避免重复打开
+  String? _lastUrl;
 
-  // 打乱的索引
+  // 歌词
+  ParsedLyrics? _lyrics;
+  bool _loadLyricsDone = false;
+  bool _showLyrics = false;
+  LyricsOrientation _lyricsOrientation = LyricsOrientation.vertical;
+
   List<int> _shuffledIndices = [];
 
   @override
@@ -120,11 +122,8 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
   _QueueSong get _currentSong => widget.queue[_currentIndex];
   int get _queueSize => widget.queue.length;
 
-  String _formatDuration(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return "${d.inMinutes > 59 ? '${d.inHours}:${m}' : m}:$s";
-  }
+  double get _positionMs =>
+      _position.inMilliseconds.toDouble();
 
   void _onPositionChanged(vlc.PositionState state) {
     if (mounted) {
@@ -138,10 +137,9 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
   void _onPlaybackChanged(vlc.PlaybackState state) {
     if (mounted) {
       setState(() => _isPlaying = state.isPlaying);
-
-      // 播放完成自动切歌
-      if (!state.isPlaying && state.isCompleted && _position >= _duration -
-          const Duration(seconds: 2)) {
+      if (!state.isPlaying &&
+          state.isCompleted &&
+          _position >= _duration - const Duration(seconds: 2)) {
         _next();
       }
     }
@@ -150,15 +148,11 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
   Future<void> _openCurrent() async {
     final song = _currentSong;
     if (song.streamUrl == null || song.streamUrl!.isEmpty) {
-      // 获取音频流地址
       try {
         final resources =
             await EpisodeApi().getEpisodeResourcesRefs(song.id);
-        if (resources.isNotEmpty) {
-          song.streamUrl = resources.first.url;
-        }
+        if (resources.isNotEmpty) song.streamUrl = resources.first.url;
       } catch (_) {}
-      // 如果还是空，尝试 Subsonic API
       if ((song.streamUrl == null || song.streamUrl!.isEmpty)) {
         song.streamUrl = await SubsonicApi.getStreamUrl(song.id);
       }
@@ -179,6 +173,9 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
       _player.open(vlc.Media.file(File(url)), autoStart: true);
     }
 
+    // 加载歌词
+    _loadLyrics();
+
     _saveNowPlaying();
 
     if (mounted) {
@@ -187,17 +184,52 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
         _isPlaying = true;
         _position = Duration.zero;
         _duration = Duration.zero;
+        _loadLyricsDone = false;
       });
     }
+  }
+
+  /// 加载歌词（从附件资源或固定的 lrc 文件名匹配）
+  Future<void> _loadLyrics() async {
+    _lyrics = null;
+    _loadLyricsDone = false;
+    try {
+      final resources =
+          await EpisodeApi().getEpisodeResourcesRefs(_currentSong.id);
+      final lrcResource = resources.where((r) =>
+          r.name.endsWith('.lrc') ||
+          r.name.endsWith('.txt') ||
+          (r.tags != null && r.tags!.contains('lyrics'))).toList();
+
+      if (lrcResource.isNotEmpty) {
+        final url = lrcResource.first.url;
+        if (url.isNotEmpty) {
+          final dio = await DioClient.getDio();
+          final response = await dio.get(url,
+              options: Options(
+                responseType: ResponseType.plain,
+              ));
+          if (response.statusCode == 200 && response.data is String) {
+            final parsed = LyricsParser.parse(response.data as String);
+            if (mounted && parsed.lines.isNotEmpty) {
+              setState(() {
+                _lyrics = parsed;
+                _loadLyricsDone = true;
+              });
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _loadLyricsDone = true);
   }
 
   Future<void> _saveNowPlaying() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("now_playing_song", _currentSong.displayName);
-    await prefs.setString("now_playing_album",
-        widget.albumName ?? _currentSong.subjectId);
     await prefs.setString(
-        "now_playing_album_id", _currentSong.subjectId);
+        "now_playing_album", widget.albumName ?? _currentSong.subjectId);
+    await prefs.setString("now_playing_album_id", _currentSong.subjectId);
     await prefs.setString(
         "now_playing_cover", widget.albumCover ?? _currentSong.cover ?? "");
   }
@@ -212,16 +244,13 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
 
   void _prev() {
     if (_position.inSeconds > 3) {
-      // 超过3秒则重播当前
       _player.seek(Duration.zero);
       return;
     }
     _goToIndex(_getPrevIndex());
   }
 
-  void _next() {
-    _goToIndex(_getNextIndex());
-  }
+  void _next() => _goToIndex(_getNextIndex());
 
   int _getNextIndex() {
     switch (_mode) {
@@ -242,10 +271,9 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
 
   int _getPrevIndex() {
     final prev = _currentIndex - 1;
-    if (prev < 0) {
-      return _mode == _PlaybackMode.repeatAll ? _queueSize - 1 : 0;
-    }
-    return prev;
+    return prev < 0
+        ? (_mode == _PlaybackMode.repeatAll ? _queueSize - 1 : 0)
+        : prev;
   }
 
   void _goToIndex(int index) {
@@ -277,7 +305,243 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
     }
   }
 
-  String _modeTooltip() {
+  @override
+  Widget build(BuildContext context) {
+    final song = _currentSong;
+    final hasLyrics = _lyrics != null && _lyrics!.lines.isNotEmpty;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.albumName ?? "正在播放"),
+        actions: [
+          // 歌词切换
+          if (hasLyrics)
+            IconButton(
+              icon: Icon(
+                _showLyrics ? Icons.lyrics : Icons.lyrics_outlined,
+                color: _showLyrics ? Colors.blue : null,
+              ),
+              tooltip: _showLyrics ? "隐藏歌词" : "显示歌词",
+              onPressed: () {
+                setState(() => _showLyrics = !_showLyrics);
+                if (_showLyrics) _loadLyrics();
+              },
+            ),
+          if (_showLyrics)
+            IconButton(
+              icon: Icon(
+                _lyricsOrientation == LyricsOrientation.vertical
+                    ? Icons.view_column
+                    : Icons.view_carousel,
+              ),
+              tooltip: _lyricsOrientation == LyricsOrientation.vertical
+                  ? "横排歌词" : "竖排歌词",
+              onPressed: () {
+                setState(() {
+                  _lyricsOrientation =
+                      _lyricsOrientation == LyricsOrientation.vertical
+                          ? LyricsOrientation.horizontal
+                          : LyricsOrientation.vertical;
+                });
+              },
+            ),
+          IconButton(
+            icon: const Icon(Icons.queue_music),
+            tooltip: "播放队列",
+            onPressed: _showQueue,
+          ),
+        ],
+      ),
+      body: _showLyrics && hasLyrics
+          ? _buildWithLyrics()
+          : _buildPlayerContent(),
+    );
+  }
+
+  /// 带歌词的播放界面
+  Widget _buildWithLyrics() {
+    return Column(
+      children: [
+        // 上方：小封面 + 歌曲信息
+        if (_lyricsOrientation == LyricsOrientation.vertical)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: _buildCover(_currentSong),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(_currentSong.displayName,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
+                      Text(widget.albumName ?? "",
+                          style: TextStyle(color: Colors.grey[500], fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        // 歌词区域
+        Expanded(
+          child: _lyrics == null
+              ? const Center(child: CircularProgressIndicator())
+              : LyricsWidget(
+                  lyrics: _lyrics!,
+                  positionMs: _positionMs,
+                  orientation: _lyricsOrientation,
+                  textColor: Colors.white38,
+                  highlightColor: Colors.blue,
+                  sungColor: Colors.white,
+                  fontSize: 16,
+                ),
+        ),
+        // 控制栏
+        _buildPlayerControls(),
+        _buildChapterProgress(),
+      ],
+    );
+  }
+
+  /// 无歌词的播放界面
+  Widget _buildPlayerContent() {
+    final song = _currentSong;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(flex: 2),
+            _buildCover(song),
+            const SizedBox(height: 24),
+            Text(song.displayName,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 4),
+            Text(widget.albumName ?? "",
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                textAlign: TextAlign.center),
+            const Spacer(flex: 1),
+            _buildPlayerControls(),
+            _buildChapterProgress(),
+            const Spacer(flex: 1),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayerControls() {
+    return Column(
+      children: [
+        // 进度条
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: ProgressBar(
+            progress: _position,
+            total: _duration > Duration.zero ? _duration : null,
+            barHeight: 4,
+            thumbRadius: 8,
+            timeLabelLocation: TimeLabelLocation.sides,
+            timeLabelType: TimeLabelType.totalTime,
+            timeLabelTextStyle: const TextStyle(color: Colors.grey),
+            onSeek: (d) => _player.seek(d),
+          ),
+        ),
+        const SizedBox(height: 16),
+        // 控制按钮
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: Icon(_modeIcon()),
+              tooltip: _modeName(),
+              color: _mode == _PlaybackMode.normal ? null : Colors.blue,
+              iconSize: 24,
+              onPressed: _toggleMode,
+            ),
+            const SizedBox(width: 16),
+            IconButton(
+              icon: const Icon(Icons.skip_previous),
+              iconSize: 36,
+              onPressed: _prev,
+            ),
+            const SizedBox(width: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: Colors.white),
+                iconSize: 40,
+                onPressed: _playPause,
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.skip_next),
+              iconSize: 36,
+              onPressed: _next,
+            ),
+            const SizedBox(width: 16),
+            IconButton(
+              icon: const Icon(Icons.queue_music_outlined),
+              iconSize: 24,
+              onPressed: _showQueue,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildChapterProgress() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (_currentIndex > 0)
+            TextButton.icon(
+              onPressed: _prev,
+              icon: const Icon(Icons.skip_previous, size: 18),
+              label: Text("上一首",
+                  style: const TextStyle(fontSize: 13)),
+            )
+          else
+            const SizedBox(width: 80),
+          Text("${_currentIndex + 1} / ${_queueSize}",
+              style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          if (_currentIndex < _queueSize - 1)
+            TextButton.icon(
+              onPressed: _next,
+              icon: const Icon(Icons.skip_next, size: 18),
+              label: Text("下一首",
+                  style: const TextStyle(fontSize: 13)),
+            )
+          else
+            const SizedBox(width: 80),
+        ],
+      ),
+    );
+  }
+
+  String _modeName() {
     switch (_mode) {
       case _PlaybackMode.normal:
         return "顺序播放";
@@ -288,120 +552,6 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
       case _PlaybackMode.shuffle:
         return "随机播放";
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final song = _currentSong;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.albumName ?? "正在播放"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.queue_music),
-            tooltip: "播放队列",
-            onPressed: _showQueue,
-          ),
-        ],
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(flex: 2),
-              // 封面
-              _buildCover(song),
-              const SizedBox(height: 24),
-              // 标题
-              Text(
-                song.displayName,
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.albumName ?? "",
-                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              // 进度条
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: ProgressBar(
-                  progress: _position,
-                  total: _duration > Duration.zero ? _duration : null,
-                  barHeight: 4,
-                  thumbRadius: 8,
-                  timeLabelLocation: TimeLabelLocation.sides,
-                  timeLabelType: TimeLabelType.totalTime,
-                  timeLabelTextStyle: const TextStyle(color: Colors.grey),
-                  onSeek: (d) => _player.seek(d),
-                ),
-              ),
-              const SizedBox(height: 24),
-              // 控制按钮
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // 播放模式
-                  IconButton(
-                    icon: Icon(_modeIcon()),
-                    tooltip: _modeTooltip(),
-                    color: _mode == _PlaybackMode.normal ? null : Colors.blue,
-                    iconSize: 24,
-                    onPressed: _toggleMode,
-                  ),
-                  const SizedBox(width: 16),
-                  // 上一首
-                  IconButton(
-                    icon: const Icon(Icons.skip_previous),
-                    iconSize: 36,
-                    onPressed: _prev,
-                  ),
-                  const SizedBox(width: 8),
-                  // 播放/暂停
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                          _isPlaying ? Icons.pause : Icons.play_arrow,
-                          color: Colors.white),
-                      iconSize: 40,
-                      onPressed: _playPause,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // 下一首
-                  IconButton(
-                    icon: const Icon(Icons.skip_next),
-                    iconSize: 36,
-                    onPressed: _next,
-                  ),
-                  const SizedBox(width: 16),
-                  // 队列
-                  IconButton(
-                    icon: const Icon(Icons.queue_music_outlined),
-                    iconSize: 24,
-                    onPressed: _showQueue,
-                  ),
-                ],
-              ),
-              const Spacer(flex: 1),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildCover(_QueueSong song) {
@@ -444,7 +594,7 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
                       style: TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 16)),
                   const Spacer(),
-                  Text("${_queueSize} 首",
+                  Text("$_queueSize 首",
                       style: TextStyle(color: Colors.grey[500])),
                 ],
               ),
@@ -464,13 +614,12 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
                             color: isCurrent ? Colors.blue : Colors.grey)),
                     title: Text(q.displayName,
                         style: TextStyle(
-                            fontWeight:
-                                isCurrent ? FontWeight.bold : null)),
-                    subtitle: Text("${q.sequence}. ${q.subjectId}",
+                            fontWeight: isCurrent ? FontWeight.bold : null)),
+                    subtitle: Text("第 ${q.sequence} 首",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                     trailing: isCurrent
-                        ? Icon(Icons.play_arrow,
+                        ? const Icon(Icons.play_arrow,
                             color: Colors.blue, size: 20)
                         : null,
                     onTap: () {
@@ -488,9 +637,8 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
   }
 }
 
-// ===== 便捷函数：创建 NowPlayingPage 并 push =====
+// ===== 便捷函数 =====
 
-/// 从专辑数据创建播放页面并导航
 Future<void> pushNowPlaying(
     BuildContext context,
     List<Map<String, dynamic>> songs,
