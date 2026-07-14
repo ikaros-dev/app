@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ikaros/api/music/MusicApi.dart';
-import 'package:ikaros/api/subject/EpisodeApi.dart';
-import 'package:ikaros/api/subject/model/Episode.dart';
-import 'package:ikaros/api/subject/model/EpisodeResource.dart';
-import 'package:ikaros/subject/subject.dart';
+import 'package:ikaros/music/music_now_playing.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -229,14 +226,8 @@ class _MusicLibraryPageState extends State<MusicLibraryPage> {
             IconButton(
               icon: const Icon(Icons.play_arrow),
               onPressed: () {
-                if (_currentAlbumId != null && _currentAlbumId!.isNotEmpty) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => SubjectPage(id: _currentAlbumId!),
-                    ),
-                  );
-                }
+                // 打开正在播放页面（假设已有队列）
+                Toast.show(context, "$_currentSongName - 请在音乐库中选择专辑播放");
               },
             ),
             IconButton(
@@ -431,7 +422,7 @@ class _MusicAlbumDetailPageState extends State<MusicAlbumDetailPage> {
                     const SizedBox(width: 8),
                     OutlinedButton.icon(
                       onPressed:
-                          _songs.isNotEmpty ? () => _playAll() : null,
+                          _songs.isNotEmpty ? () => _playShuffled() : null,
                       icon: const Icon(Icons.shuffle),
                       label: const Text("随机播放"),
                     ),
@@ -447,35 +438,30 @@ class _MusicAlbumDetailPageState extends State<MusicAlbumDetailPage> {
 
   void _playSong(int index) {
     if (index >= _songs.length) return;
-    final song = _songs[index];
-    final songId = song["id"] as String? ?? "";
-    final name = song["nameCn"] as String? ?? song["name"] as String? ?? "";
-    final subjectId = song["subjectId"] as String? ?? "";
-
-    // 保存播放信息
-    final prefsKey = "now_playing_song";
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setString(prefsKey, name);
-      prefs.setString("now_playing_album", widget.albumName);
-      prefs.setString("now_playing_album_id", subjectId);
-      prefs.setString("now_playing_cover", widget.albumCover);
-    });
-
-    if (subjectId.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => SubjectPage(id: subjectId),
-        ),
-      );
-    } else {
-      Toast.show(context, "播放: $name");
-    }
+    pushNowPlaying(
+      context,
+      _songs,
+      startIndex: index,
+      albumName: widget.albumName,
+      albumCover: widget.albumCover,
+    );
   }
 
   void _playAll() {
     if (_songs.isEmpty) return;
     _playSong(0);
+  }
+
+  void _playShuffled() {
+    if (_songs.isEmpty) return;
+    final randomIndex = DateTime.now().millisecondsSinceEpoch % _songs.length;
+    pushNowPlaying(
+      context,
+      _songs,
+      startIndex: randomIndex,
+      albumName: widget.albumName,
+      albumCover: widget.albumCover,
+    );
   }
 }
 
