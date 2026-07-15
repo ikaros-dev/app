@@ -100,9 +100,6 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
     _player = vlc.Player(id: hashCode);
     _player.positionStream.listen(_onPositionChanged);
     _player.playbackStream.listen(_onPlaybackChanged);
-    _player.durationStream.listen((d) {
-      if (mounted) setState(() => _duration = d);
-    });
     _initShuffle();
     _openCurrent();
     _saveNowPlaying();
@@ -128,8 +125,8 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
   void _onPositionChanged(vlc.PositionState state) {
     if (mounted) {
       setState(() {
-        _position = state.position;
-        _duration = state.duration;
+        _position = state.position ?? Duration.zero;
+        _duration = state.duration ?? Duration.zero;
       });
     }
   }
@@ -452,7 +449,7 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: ProgressBar(
             progress: _position,
-            total: _duration > Duration.zero ? _duration : null,
+            total: _duration,
             barHeight: 4,
             thumbRadius: 8,
             timeLabelLocation: TimeLabelLocation.sides,
