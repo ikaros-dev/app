@@ -696,13 +696,6 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   }
 
   Widget _buildEpisodeSelectButton() {
-    // 漫画/小说/游戏等非视频类型不显示选集按钮
-    if (_subject?.type == SubjectType.COMIC ||
-        _subject?.type == SubjectType.NOVEL ||
-        _subject?.type == SubjectType.GAME ||
-        _subject?.type == SubjectType.OTHER) {
-      return const SizedBox.shrink();
-    }
     // 根据APP设置是否拆分剧集资源接口
     return OutlinedButton.icon(
       onPressed: () async {
