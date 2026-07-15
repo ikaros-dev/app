@@ -155,6 +155,7 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
   _ReadingMode _mode = _ReadingMode.page;
   bool _rightToLeft = false;
   bool _fitToWidth = true;
+  bool _isListMode = false;
   final PageController _pageController = PageController();
   int _currentPage = 0;
   int? _lastPageIndex;
@@ -277,7 +278,7 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
     final fraction = pos.maxScrollExtent > 0
         ? (pos.pixels / pos.maxScrollExtent * 100).clamp(0, 100)
         : 0.0;
-    _webtoonProgress = fraction;
+    _webtoonProgress = fraction.toDouble();
   }
 
   IconData _modeIcon() {
@@ -357,7 +358,7 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
               ),
             if (_mode == _ReadingMode.page)
               IconButton(
-                icon: Icon(_fitToWidth ? Icons.fit_screen : Icons.fit_page),
+                icon: Icon(_fitToWidth ? Icons.fit_screen : Icons.fullscreen),
                 tooltip: _fitToWidth ? "适应宽度" : "适应高度",
                 onPressed: () => setState(() => _fitToWidth = !_fitToWidth),
               ),
@@ -635,7 +636,7 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
               },
             ),
             ListTile(
-              leading: Icon(_fitToWidth ? Icons.fit_page : Icons.fit_screen,
+              leading: Icon(_fitToWidth ? Icons.fullscreen : Icons.fit_screen,
                   color: Colors.white70),
               title: Text(
                   _fitToWidth ? "切换到适应高度" : "切换到适应宽度",
