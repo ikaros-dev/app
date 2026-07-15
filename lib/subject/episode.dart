@@ -28,6 +28,7 @@ import 'package:ikaros/player/player_audio_desktop.dart';
 import 'package:ikaros/player/player_audio_mobile.dart';
 import 'package:ikaros/player/player_video_desktop.dart';
 import 'package:ikaros/player/player_video_mobile.dart';
+import 'package:ikaros/reader/comic_reader.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/number_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
@@ -329,9 +330,63 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
 
   Widget _buildMediaPlayer() {
     if (_subject == null) return const LinearProgressIndicator();
+    if (SubjectType.COMIC == _subject?.type) {
+      return _buildComicReaderButton();
+    }
+    if (SubjectType.NOVEL == _subject?.type) {
+      return _buildNovelReaderButton();
+    }
     return SubjectType.MUSIC == _subject?.type
         ? _buildAudioPlayer()
         : _buildVideoPlayer();
+  }
+
+  Widget _buildComicReaderButton() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ComicReaderPage(
+                  subjectId: widget.subjectId,
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.auto_stories, size: 28),
+          label: const Text("开始阅读漫画", style: TextStyle(fontSize: 18)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNovelReaderButton() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
+          onPressed: () {
+            // Novel reader will be added later
+            Toast.show(context, "小说阅读器开发中");
+          },
+          icon: const Icon(Icons.menu_book, size: 28),
+          label: const Text("开始阅读小说", style: TextStyle(fontSize: 18)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildAudioPlayer() {
