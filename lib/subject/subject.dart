@@ -21,6 +21,7 @@ import 'package:ikaros/api/subject/model/SubjectRelation.dart';
 import 'package:ikaros/component/subject/subject.dart';
 import 'package:ikaros/consts/subject_const.dart';
 import 'package:ikaros/layout.dart';
+import 'package:ikaros/reader/comic_reader.dart';
 import 'package:ikaros/utils/message_utils.dart';
 import 'package:ikaros/utils/screen_utils.dart';
 import 'package:ikaros/utils/url_utils.dart';
@@ -267,13 +268,11 @@ class _SubjectState extends State<SubjectPage> {
 
   Row _buildEpisodeAndCollectionButtonsRow() {
     SubjectType? type = _subject?.type;
-    bool allowType = true;
-    if (type == SubjectType.GAME ||
-        type == SubjectType.COMIC ||
-        type == SubjectType.NOVEL) {
-      // Toast.show(context, "当前类型[$type]不支持进入剧集页展示，请期待后续的新功能更新。");
-      allowType = false;
-    }
+    bool isComic = type == SubjectType.COMIC;
+    bool isNovel = type == SubjectType.NOVEL;
+    bool isGame = type == SubjectType.GAME;
+    bool isOther = type == SubjectType.OTHER;
+    bool allowType = !(isComic || isNovel || isGame || isOther);
     bool hasResource = false;
     for (var r in _episodeRecords) {
       if (r.resources.isNotEmpty) {
@@ -282,13 +281,34 @@ class _SubjectState extends State<SubjectPage> {
       }
     }
     bool toEpisodeBtnEnable = (hasResource && allowType);
+
+    // 漫画类型：显示"开始阅读"按钮
+    if (isComic) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(children: [_buildCollectionMenuAnchor()]),
+          Row(children: [
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => ComicReaderPage(
+                          subjectId: _subject?.id ?? "",
+                        )));
+              },
+              icon: const Icon(Icons.auto_stories, color: Colors.black),
+              label: const Text("开始阅读",
+                  style: TextStyle(color: Colors.black)),
+            ),
+          ]),
+        ],
+      );
+    }
+
     String displayTitle = "继续观看";
     if (!toEpisodeBtnEnable) {
       if (!hasResource) {
         displayTitle = "剧集无资源";
-      }
-      if (!allowType) {
-        displayTitle = "类型[${SubjectConst.typeCnMap[type?.name]}]不支持";
       }
     }
     return Row(
