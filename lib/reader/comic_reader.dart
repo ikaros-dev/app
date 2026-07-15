@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:archive/archive.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ikaros/api/attachment/AttachmentApi.dart';
@@ -10,6 +13,7 @@ import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/component/full_screen_Image.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 漫画阅读器主页
@@ -151,6 +155,7 @@ enum _ReadingMode { page, webtoon, list }
 
 class _ComicChapterPageState extends State<ComicChapterPage> {
   List<String> _pageUrls = [];
+  final List<bool> _isFilePage = [];
   bool _isLoading = true;
   _ReadingMode _mode = _ReadingMode.page;
   bool _rightToLeft = false;
@@ -188,26 +193,54 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
           await EpisodeApi().getEpisodeResourcesRefs(widget.chapter.id);
       resources.sort((a, b) => a.name.compareTo(b.name));
 
-      List<String> urls = [];
-      for (var res in resources) {
-        if (res.url.isNotEmpty) {
-          urls.add(res.url);
-        } else if (res.attachmentId.isNotEmpty) {
-          String readUrl =
-              await AttachmentApi().findReadUrlByAttachmentId(res.attachmentId);
-          if (readUrl.isNotEmpty) urls.add(readUrl);
+      _isFilePage.clear();
+
+      // 检测是否为压缩包附件（单附件 + 压缩包后缀）
+      if (resources.length == 1) {
+        var res = resources.first;
+        if (_isArchiveFile(res.name)) {
+          String archiveUrl = res.url.isNotEmpty
+              ? res.url
+              : await AttachmentApi()
+                  .findReadUrlByAttachmentId(res.attachmentId);
+          if (archiveUrl.isNotEmpty) {
+            String cacheKey = "${widget.subjectId}_${widget.chapter.id}";
+            var extracted = await _extractArchive(archiveUrl, cacheKey);
+            if (extracted != null && extracted.isNotEmpty) {
+              for (var path in extracted) {
+                _pageUrls.add(path);
+                _isFilePage.add(true);
+              }
+            }
+          }
         }
       }
-      _pageUrls = urls;
+
+      // 非压缩包：逐张图片
+      if (_pageUrls.isEmpty) {
+        for (var res in resources) {
+          if (res.url.isNotEmpty) {
+            _pageUrls.add(res.url);
+            _isFilePage.add(false);
+          } else if (res.attachmentId.isNotEmpty) {
+            String readUrl = await AttachmentApi()
+                .findReadUrlByAttachmentId(res.attachmentId);
+            if (readUrl.isNotEmpty) {
+              _pageUrls.add(readUrl);
+              _isFilePage.add(false);
+            }
+          }
+        }
+      }
 
       // 恢复上次阅读页
       final prefs = await SharedPreferences.getInstance();
       _lastPageIndex = prefs.getInt("${widget.subjectId}_${widget.chapter.id}_page");
-      if (_lastPageIndex != null && _lastPageIndex! < urls.length && _mode == _ReadingMode.page) {
+      if (_lastPageIndex != null && _lastPageIndex! < _pageUrls.length && _mode == _ReadingMode.page) {
         _currentPage = _lastPageIndex!;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_mode == _ReadingMode.page && _rightToLeft) {
-            _pageController.jumpToPage(urls.length - 1 - _lastPageIndex!);
+            _pageController.jumpToPage(_pageUrls.length - 1 - _lastPageIndex!);
           } else if (_mode == _ReadingMode.page) {
             _pageController.jumpToPage(_lastPageIndex!);
           }
@@ -217,6 +250,66 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
       if (mounted) Toast.show(context, "加载页面失败: $e");
     }
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  /// 判断是否为压缩包附件
+  bool _isArchiveFile(String name) {
+    var lower = name.toLowerCase();
+    return lower.endsWith('.zip') || lower.endsWith('.cbz')
+        || lower.endsWith('.rar') || lower.endsWith('.cbr');
+  }
+
+  /// 下载并解压压缩包，返回解压后的图片文件路径列表
+  Future<List<String>?> _extractArchive(String url, String cacheKey) async {
+    try {
+      var httpClient = HttpClient();
+      var request = await httpClient.getUrl(Uri.parse(url));
+      var response = await request.close();
+      var bytes = await consolidateHttpClientResponseBytes(response);
+
+      var tempDir = await getTemporaryDirectory();
+      var extractDir = Directory('${tempDir.path}/comic/$cacheKey');
+      if (extractDir.existsSync()) {
+        extractDir.deleteSync(recursive: true);
+      }
+      extractDir.createSync(recursive: true);
+
+      List<String> imageFiles = [];
+
+      try {
+        var archive = ZipDecoder().decodeBytes(bytes);
+        for (var file in archive) {
+          if (file.isFile) {
+            var name = file.name.toLowerCase();
+            if (name.endsWith('.jpg') || name.endsWith('.jpeg')
+                || name.endsWith('.png') || name.endsWith('.webp')
+                || name.endsWith('.bmp') || name.endsWith('.gif')) {
+              var outPath = '${extractDir.path}/${file.name}';
+              var outFile = File(outPath);
+              outFile.createSync(recursive: true);
+              outFile.writeAsBytesSync(file.content as List<int>);
+              imageFiles.add(outPath);
+            }
+          }
+        }
+      } catch (_) {
+        if (mounted) {
+          Toast.show(context, "压缩包格式暂不支持: $cacheKey");
+        }
+        return null;
+      }
+
+      imageFiles.sort();
+      if (imageFiles.isNotEmpty) {
+        if (kDebugMode) {
+          print("[Comic] extracted ${imageFiles.length} images from $cacheKey");
+        }
+        return imageFiles;
+      }
+    } catch (e) {
+      if (kDebugMode) print("[Comic] extract archive error: $e");
+    }
+    return null;
   }
 
   Future<void> _saveProgress(int page) async {
@@ -427,6 +520,7 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
                 return _ComicPageWidget(
                   url: _pageUrls[actualIndex],
                   fitToWidth: _fitToWidth,
+                  isFile: _isFilePage.isNotEmpty ? _isFilePage[actualIndex] : false,
                 );
               },
             ),
@@ -454,7 +548,8 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
               child: Column(
                 children: [
                   for (int i = 0; i < _pageUrls.length; i++)
-                    _ComicPageWidget(url: _pageUrls[i], fitToWidth: true),
+                    _ComicPageWidget(url: _pageUrls[i], fitToWidth: true,
+                        isFile: _isFilePage.isNotEmpty ? _isFilePage[i] : false),
                   // 到底提示
                   Container(
                     padding: const EdgeInsets.all(24),
@@ -540,7 +635,8 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
           itemBuilder: (context, index) {
             return _ComicPageWidget(
               url: _pageUrls[index],
-              fitToWidth: true, // 列表模式下始终适应宽度
+              fitToWidth: true,
+              isFile: _isFilePage.isNotEmpty ? _isFilePage[index] : false, // 列表模式下始终适应宽度
             );
           },
         ),
@@ -692,8 +788,12 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
 class _ComicPageWidget extends StatelessWidget {
   final String url;
   final bool fitToWidth;
+  final bool isFile;
 
-  const _ComicPageWidget({required this.url, required this.fitToWidth});
+  const _ComicPageWidget(
+      {required this.url,
+      required this.fitToWidth,
+      this.isFile = false});
 
   @override
   Widget build(BuildContext context) {
@@ -701,7 +801,21 @@ class _ComicPageWidget extends StatelessWidget {
       minScale: 0.5,
       maxScale: 4.0,
       child: Center(
-        child: Image.network(
+        child: isFile
+            ? Image.file(
+                File(url),
+                fit: fitToWidth ? BoxFit.contain : BoxFit.fitHeight,
+                width: fitToWidth ? double.infinity : null,
+                height: fitToWidth ? null : double.infinity,
+                errorBuilder: (_, __, ___) => const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                    Text("加载失败", style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              )
+            : Image.network(
           url,
           fit: fitToWidth ? BoxFit.contain : BoxFit.fitHeight,
           width: fitToWidth ? double.infinity : null,
