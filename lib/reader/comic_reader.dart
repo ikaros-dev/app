@@ -5,6 +5,7 @@ import 'package:archive/archive.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ikaros/api/auth/AuthApi.dart';
 import 'package:ikaros/api/attachment/AttachmentApi.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
 import 'package:ikaros/api/subject/SubjectApi.dart';
@@ -13,6 +14,7 @@ import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/api/subject/model/Subject.dart';
 import 'package:ikaros/component/full_screen_Image.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/url_utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -195,6 +197,11 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
 
       _isFilePage.clear();
 
+      // 获取 baseUrl 用于解析相对路径
+      String baseUrl = "";
+      var authParams = await AuthApi().getAuthParams();
+      if (authParams != null) baseUrl = authParams.baseUrl ?? "";
+
       // 检测是否为压缩包附件（单附件 + 压缩包后缀）
       if (resources.length == 1) {
         var res = resources.first;
@@ -203,6 +210,9 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
               ? res.url
               : await AttachmentApi()
                   .findReadUrlByAttachmentId(res.attachmentId);
+          if (archiveUrl.startsWith("/")) {
+            archiveUrl = UrlUtils.getCoverUrl(baseUrl, archiveUrl);
+          }
           if (archiveUrl.isNotEmpty) {
             String cacheKey = "${widget.subjectId}_${widget.chapter.id}";
             var extracted = await _extractArchive(archiveUrl, cacheKey);
@@ -220,12 +230,18 @@ class _ComicChapterPageState extends State<ComicChapterPage> {
       if (_pageUrls.isEmpty) {
         for (var res in resources) {
           if (res.url.isNotEmpty) {
-            _pageUrls.add(res.url);
+            var url = res.url.startsWith("/")
+                ? UrlUtils.getCoverUrl(baseUrl, res.url)
+                : res.url;
+            _pageUrls.add(url);
             _isFilePage.add(false);
           } else if (res.attachmentId.isNotEmpty) {
             String readUrl = await AttachmentApi()
                 .findReadUrlByAttachmentId(res.attachmentId);
             if (readUrl.isNotEmpty) {
+              if (readUrl.startsWith("/")) {
+                readUrl = UrlUtils.getCoverUrl(baseUrl, readUrl);
+              }
               _pageUrls.add(readUrl);
               _isFilePage.add(false);
             }
