@@ -343,35 +343,6 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
   }
 
   Widget _buildNovelReaderButton() {
-  Widget _buildComicReaderButton() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: SizedBox(
-        width: double.infinity,
-        height: 56,
-        child: ElevatedButton.icon(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => NovelReaderPage(
-                builder: (_) => ComicReaderPage(
-                  subjectId: widget.subjectId,
-                ),
-              ),
-            );
-          },
-          icon: const Icon(Icons.auto_stories, size: 28),
-          label: const Text("开始阅读漫画", style: TextStyle(fontSize: 18)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNovelReaderButton() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SizedBox(
@@ -384,6 +355,33 @@ class _SubjectEpisodesState extends State<SubjectEpisodesPage> {
           },
           icon: const Icon(Icons.menu_book, size: 28),
           label: const Text("开始阅读小说", style: TextStyle(fontSize: 18)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildComicReaderButton() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ComicReaderPage(
+                  subjectId: widget.subjectId,
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.auto_stories, size: 28),
+          label: const Text("开始阅读漫画", style: TextStyle(fontSize: 18)),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
           ),
