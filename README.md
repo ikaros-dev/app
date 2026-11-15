@@ -17,9 +17,7 @@ flutter packages pub run build_runner build
 
 # Build
 
-`Android Studio`最新版是JBR21，版本太高，
-建议去[Android Studio Archives](https://developer.android.google.cn/studio/archive)下载老版本的，
-推荐版本：`Android Studio Jellyfish | 2023.3.1 April 30, 2024`，
+使用的IDE是：`Android Studio`最新版
 
 git 子模块初始化：
 ```
