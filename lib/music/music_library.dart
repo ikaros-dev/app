@@ -82,12 +82,10 @@ class _MusicLibraryPageState extends State<MusicLibraryPage> {
         _page = 1;
         _albums.clear();
       }
-      var result = await _musicApi.listAlbums(page: _page, size: _size);
-      List<dynamic> items = result["items"] ?? [];
-      int total = result["total"] ?? 0;
+      final items = await _musicApi.listAlbums(page: _page, size: _size);
       setState(() {
-        _albums.addAll(items.cast<Map<String, dynamic>>());
-        _hasMore = _albums.length < total;
+        _albums.addAll(items);
+        _hasMore = items.length == _size;
         _page++;
         _isLoading = false;
       });
@@ -105,10 +103,9 @@ class _MusicLibraryPageState extends State<MusicLibraryPage> {
     }
     setState(() => _isLoading = true);
     try {
-      var result = await _musicApi.searchAlbums(keyword, 1, 50);
-      List<dynamic> items = result["items"] ?? [];
+      final items = await _musicApi.searchAlbums(keyword, 1, 50);
       setState(() {
-        _albums = items.cast<Map<String, dynamic>>();
+        _albums = items;
         _hasMore = false;
         _isLoading = false;
       });
