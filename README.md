@@ -54,41 +54,43 @@ flutter doctor -v
   <summary>环境详细信息</summary>
 
 ```text
-[√] Flutter (Channel stable, 3.44.2, on Microsoft Windows [版本 10.0.26200.8737], locale zh-CN) [341ms]
-    • Flutter version 3.44.2 on channel stable at C:\Applications\Flutter\flutter-3.44.2
+[√] Flutter (Channel stable, 3.50.0, on Microsoft Windows [Version 10.0.26300.9974], locale zh-CN) [331ms]
+    • Flutter version 3.50.0 on channel stable at C:\Applications\SDK\flutter
     • Upstream repository https://github.com/flutter/flutter.git
-    • Framework revision c9a6c48423 (4 weeks ago), 2026-06-10 15:52:41 -0700
-    • Engine revision 77e2e94772
-    • Dart version 3.12.2
-    • DevTools version 2.57.0
-    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, enable-swift-package-manager, omit-legacy-version-file, enable-lldb-debugging, enable-uiscene-migration
+    • Framework revision ab2912035e (6 days ago), 2026-11-09 08:50:21 -0800
+    • Engine revision 371f77202a
+    • Dart version 3.14.0
+    • DevTools version 2.61.0
+    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets,
+      enable-record-use, enable-swift-package-manager, omit-legacy-version-file, enable-lldb-debugging, enable-uiscene-migration
 
-[√] Windows Version (Windows 11 or higher, 25H2, 2009) [1,015ms]
+[√] Windows Version (Windows 11 or higher, 26H2, 2009) [688ms]
 
-[√] Android toolchain - develop for Android devices (Android SDK version 36.1.0) [2.6s]
+[√] Android toolchain - develop for Android devices (Android SDK version 36.0.0) [462ms]
     • Android SDK at C:\Users\chivehao\AppData\Local\Android\sdk
-    • Emulator version 36.6.11.0 (build_id 15507667) (CL:N/A)
-    • Platform android-36.1, build-tools 36.1.0
+    • Emulator version 37.2.13.0 (build_id 16740729) (CL:N/A)
+    • Platform android-37.0, build-tools 36.0.0
     • Java binary at: C:\Program Files\Android\Android Studio\jbr\bin\java
       This is the JDK bundled with the latest Android Studio installation on this machine.
       To manually set the JDK path, use: `flutter config --jdk-dir="path/to/jdk"`.
-    • Java version OpenJDK Runtime Environment (build 21.0.10+-14961533-b1163.108)
+    • Java version OpenJDK Runtime Environment (build 25.0.4+-16339643-b508.27)
     • All Android licenses accepted.
 
-[√] Chrome - develop for the web [93ms]
+[√] Chrome - develop for the web [91ms]
     • Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
 
-[√] Visual Studio - develop Windows apps (Visual Studio Community 2026 18.7.1) [92ms]
+[√] Visual Studio - develop Windows apps (Visual Studio Community 2026 18.12.0) [90ms]
     • Visual Studio at C:\Program Files\Microsoft Visual Studio\18\Community
-    • Visual Studio Community 2026 version 18.7.11911.148
+    • Visual Studio Community 2026 version 18.12.12405.243
     • Windows 10 SDK version 10.0.26100.0
 
-[√] Connected device (3 available) [298ms]
-    • Windows (desktop) • windows • windows-x64    • Microsoft Windows [版本 10.0.26200.8737]
-    • Chrome (web)      • chrome  • web-javascript • Google Chrome 150.0.7871.46
-    • Edge (web)        • edge    • web-javascript • Microsoft Edge 146.0.3856.97
+[√] Connected device (3 available) [407ms]
+    • Windows (desktop) • windows • windows-x64    • Microsoft Windows [Version 10.0.26300.9974]
+    • Chrome (web)      • chrome  • web-javascript • Google Chrome 157.0.8103.78
+    • Edge (web)        • edge    • web-javascript • Microsoft Edge 157.0.4341.42
 
-• No issues found!
+[√] Network resources [1,417ms]
+    • All expected network resources are available.
 ```
 
 
