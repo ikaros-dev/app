@@ -94,7 +94,30 @@ class MusicApi {
   }
 
   List<Map<String, dynamic>> _parseAlbumList(dynamic data) {
-    return _parseObjectList(data, "专辑").map((album) {
+    dynamic items = data;
+    if (data is Map) {
+      final nestedData = data["data"];
+      if (data["items"] is List) {
+        items = data["items"];
+      } else if (data["content"] is List) {
+        items = data["content"];
+      } else if (nestedData is List) {
+        items = nestedData;
+      } else if (nestedData is Map && nestedData["items"] is List) {
+        items = nestedData["items"];
+      }
+    }
+
+    if (items is! List) {
+      final keys = data is Map ? data.keys.join(", ") : "无";
+      final body = data.toString();
+      final excerpt = body.length > 2000 ? "${body.substring(0, 2000)}..." : body;
+      throw FormatException(
+        "专辑列表响应格式错误：类型=${data.runtimeType}，字段=[$keys]，响应=$excerpt",
+      );
+    }
+
+    return _parseObjectList(items, "专辑").map((album) {
       album["nameCn"] ??= album["name_cn"];
       album["songCount"] ??= album["song_count"];
       album["airTime"] ??= album["air_time"];
