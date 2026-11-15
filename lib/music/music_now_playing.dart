@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:dart_vlc/dart_vlc.dart' as vlc;
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:ikaros/api/attachment/AttachmentApi.dart';
 import 'package:ikaros/api/dio_client.dart';
 import 'package:ikaros/api/music/SubsonicApi.dart';
 import 'package:ikaros/api/subject/EpisodeApi.dart';
@@ -12,6 +12,7 @@ import 'package:ikaros/api/subject/model/EpisodeResource.dart';
 import 'package:ikaros/component/lyrics_widget.dart';
 import 'package:ikaros/utils/lyrics_parser.dart';
 import 'package:ikaros/utils/message_utils.dart';
+import 'package:ikaros/utils/url_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 播放模式
@@ -26,6 +27,7 @@ class _QueueSong {
   final String? cover;
   final int duration;
   final int sequence;
+  String? attachmentId;
   String? streamUrl;
 
   _QueueSong({
@@ -36,6 +38,7 @@ class _QueueSong {
     this.cover,
     this.duration = 0,
     this.sequence = 0,
+    this.attachmentId,
     this.streamUrl,
   });
 
@@ -48,6 +51,10 @@ class _QueueSong {
       cover: map["cover"] as String?,
       duration: map["duration"] as int? ?? 0,
       sequence: map["sequence"] as int? ?? 0,
+      attachmentId:
+          map["attachmentId"] as String? ?? map["attachment_id"] as String?,
+      streamUrl:
+          map["attachmentUrl"] as String? ?? map["attachment_url"] as String?,
     );
   }
 
@@ -144,31 +151,46 @@ class _NowPlayingPageState extends State<NowPlayingPage> {
 
   Future<void> _openCurrent() async {
     final song = _currentSong;
-    if (song.streamUrl == null || song.streamUrl!.isEmpty) {
+    var url = song.streamUrl;
+
+    if ((url == null || url.isEmpty || !url.startsWith("http")) &&
+        (song.attachmentId == null || song.attachmentId!.isEmpty)) {
       try {
-        final resources =
-            await EpisodeApi().getEpisodeResourcesRefs(song.id);
-        if (resources.isNotEmpty) song.streamUrl = resources.first.url;
+        final resources = await EpisodeApi().getEpisodeResourcesRefs(song.id);
+        if (resources.isNotEmpty) {
+          final resource = resources.first;
+          song.attachmentId = resource.attachmentId;
+          if (url == null || url.isEmpty) url = resource.url;
+        }
       } catch (_) {}
-      if ((song.streamUrl == null || song.streamUrl!.isEmpty)) {
-        song.streamUrl = await SubsonicApi.getStreamUrl(song.id);
+    }
+
+    if (url == null || url.isEmpty || !url.startsWith("http")) {
+      final attachmentId = song.attachmentId;
+      if (attachmentId != null && attachmentId.isNotEmpty) {
+        final readUrl =
+            await AttachmentApi().findReadUrlByAttachmentId(attachmentId);
+        if (readUrl.isNotEmpty) {
+          final dio = await DioClient.getDio();
+          url = UrlUtils.getCoverUrl(dio.options.baseUrl, readUrl);
+        }
       }
     }
 
-    final url = song.streamUrl;
-    if (url == null || url.isEmpty) {
+    if (url == null || url.isEmpty || !url.startsWith("http")) {
+      url = await SubsonicApi.getStreamUrl(song.id);
+    }
+
+    if (url.isEmpty) {
       if (mounted) Toast.show(context, "无法获取音频流: ${song.displayName}");
       return;
     }
 
+    song.streamUrl = url;
     if (url == _lastUrl) return;
     _lastUrl = url;
 
-    if (url.startsWith("http")) {
-      _player.open(vlc.Media.network(url), autoStart: true);
-    } else {
-      _player.open(vlc.Media.file(File(url)), autoStart: true);
-    }
+    _player.open(vlc.Media.network(url), autoStart: true);
 
     // 加载歌词
     _loadLyrics();
