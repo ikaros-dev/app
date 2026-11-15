@@ -17,7 +17,7 @@ class MusicLibraryPage extends StatefulWidget {
 class _MusicLibraryPageState extends State<MusicLibraryPage> {
   final MusicApi _musicApi = MusicApi();
   List<Map<String, dynamic>> _albums = [];
-  bool _isLoading = true;
+  bool _isLoading = false;
   bool _hasMore = true;
   int _page = 1;
   final int _size = 20;
@@ -92,8 +92,9 @@ class _MusicLibraryPageState extends State<MusicLibraryPage> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      if (mounted) Toast.show(context, "加载专辑失败: $e");
+      Toast.show(context, "加载专辑失败: $e");
     }
   }
 
@@ -112,7 +113,9 @@ class _MusicLibraryPageState extends State<MusicLibraryPage> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
+      Toast.show(context, "搜索专辑失败: $e");
     }
   }
 
@@ -340,7 +343,9 @@ class _MusicAlbumDetailPageState extends State<MusicAlbumDetailPage> {
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
+      Toast.show(context, "加载歌曲失败: $e");
     }
   }
 

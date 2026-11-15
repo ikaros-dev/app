@@ -8,52 +8,50 @@ class MusicApi {
   Future<Map<String, dynamic>> listAlbums(
       {int page = 1, int size = 20}) async {
     String apiUrl = "/api/v1/music/album/list";
-    try {
-      Dio dio = await DioClient.getDio();
-      var response =
-          await dio.get(apiUrl, queryParameters: {"page": page, "size": size});
-      if (response.statusCode != 200) {
-        return {"items": [], "total": 0};
-      }
-      return response.data is Map ? response.data as Map<String, dynamic> : {};
-    } catch (e) {
-      return {"items": [], "total": 0};
+    Dio dio = await DioClient.getDio();
+    final response =
+        await dio.get(apiUrl, queryParameters: {"page": page, "size": size});
+    if (response.statusCode != 200) {
+      throw Exception("查询专辑失败，HTTP ${response.statusCode}");
     }
+    if (response.data is! Map) {
+      throw const FormatException("专辑列表响应格式错误");
+    }
+    return Map<String, dynamic>.from(response.data as Map);
   }
 
   /// 查询专辑下的歌曲
   Future<List<Map<String, dynamic>>> listSongs(String albumId) async {
     String apiUrl = "/api/v1/music/album/$albumId/songs";
-    try {
-      Dio dio = await DioClient.getDio();
-      var response = await dio.get(apiUrl);
-      if (response.statusCode != 200) {
-        return [];
-      }
-      List<dynamic> list = response.data is List ? response.data as List : [];
-      return list.cast<Map<String, dynamic>>();
-    } catch (e) {
-      return [];
+    Dio dio = await DioClient.getDio();
+    final response = await dio.get(apiUrl);
+    if (response.statusCode != 200) {
+      throw Exception("查询歌曲失败，HTTP ${response.statusCode}");
     }
+    if (response.data is! List) {
+      throw const FormatException("歌曲列表响应格式错误");
+    }
+    return (response.data as List)
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList();
   }
 
   /// 搜索专辑
   Future<Map<String, dynamic>> searchAlbums(
       String keyword, int page, int size) async {
     String apiUrl = "/api/v1/music/album/search";
-    try {
-      Dio dio = await DioClient.getDio();
-      var response = await dio.get(apiUrl, queryParameters: {
-        "keyword": keyword,
-        "page": page,
-        "size": size,
-      });
-      if (response.statusCode != 200) {
-        return {"items": [], "total": 0};
-      }
-      return response.data is Map ? response.data as Map<String, dynamic> : {};
-    } catch (e) {
-      return {"items": [], "total": 0};
+    Dio dio = await DioClient.getDio();
+    final response = await dio.get(apiUrl, queryParameters: {
+      "keyword": keyword,
+      "page": page,
+      "size": size,
+    });
+    if (response.statusCode != 200) {
+      throw Exception("搜索专辑失败，HTTP ${response.statusCode}");
     }
+    if (response.data is! Map) {
+      throw const FormatException("专辑搜索响应格式错误");
+    }
+    return Map<String, dynamic>.from(response.data as Map);
   }
 }
