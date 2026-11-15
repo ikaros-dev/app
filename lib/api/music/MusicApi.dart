@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:ikaros/api/dio_client.dart';
 
 /// 音乐模块 API.
@@ -8,34 +9,44 @@ class MusicApi {
   Future<List<Map<String, dynamic>>> listAlbums(
       {int page = 1, int size = 20}) async {
     final apiUrl = "/api/v1/music/albums/$page/$size";
-    final dio = await DioClient.getDio();
-    final response = await dio.get(apiUrl);
-    if (response.statusCode != 200) {
-      throw Exception("查询专辑失败，HTTP ${response.statusCode}");
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(apiUrl);
+      if (response.statusCode != 200) {
+        throw Exception("查询专辑失败，HTTP ${response.statusCode}");
+      }
+      return _parseAlbumList(response.data);
+    } catch (error, stackTrace) {
+      _logRequestFailure("查询专辑", apiUrl, error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
     }
-    return _parseAlbumList(response.data);
   }
 
   /// 查询专辑下的歌曲
   Future<List<Map<String, dynamic>>> listSongs(String albumId) async {
     String apiUrl = "/api/v1/music/album/$albumId/songs";
-    Dio dio = await DioClient.getDio();
-    final response = await dio.get(apiUrl);
-    if (response.statusCode != 200) {
-      throw Exception("查询歌曲失败，HTTP ${response.statusCode}");
-    }
-    if (response.data is! List) {
-      throw const FormatException("歌曲列表响应格式错误");
-    }
-    final songs = _parseObjectList(response.data, "歌曲");
-    return songs.map((song) {
-      song["nameCn"] ??= song["name_cn"];
-      song["subjectId"] ??= song["subject_id"];
-      if (song["sequence"] is num) {
-        song["sequence"] = (song["sequence"] as num).toInt();
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(apiUrl);
+      if (response.statusCode != 200) {
+        throw Exception("查询歌曲失败，HTTP ${response.statusCode}");
       }
-      return song;
-    }).toList();
+      if (response.data is! List) {
+        throw const FormatException("歌曲列表响应格式错误");
+      }
+      final songs = _parseObjectList(response.data, "歌曲");
+      return songs.map((song) {
+        song["nameCn"] ??= song["name_cn"];
+        song["subjectId"] ??= song["subject_id"];
+        if (song["sequence"] is num) {
+          song["sequence"] = (song["sequence"] as num).toInt();
+        }
+        return song;
+      }).toList();
+    } catch (error, stackTrace) {
+      _logRequestFailure("查询歌曲", apiUrl, error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
+    }
   }
 
   /// 搜索专辑
@@ -43,12 +54,43 @@ class MusicApi {
       String keyword, int page, int size) async {
     final encodedKeyword = Uri.encodeComponent(keyword);
     final apiUrl = "/api/v1/music/search/$encodedKeyword/$page/$size";
-    final dio = await DioClient.getDio();
-    final response = await dio.get(apiUrl);
-    if (response.statusCode != 200) {
-      throw Exception("搜索专辑失败，HTTP ${response.statusCode}");
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(apiUrl);
+      if (response.statusCode != 200) {
+        throw Exception("搜索专辑失败，HTTP ${response.statusCode}");
+      }
+      return _parseAlbumList(response.data);
+    } catch (error, stackTrace) {
+      _logRequestFailure("搜索专辑", apiUrl, error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
     }
-    return _parseAlbumList(response.data);
+  }
+
+  void _logRequestFailure(
+    String operation,
+    String apiUrl,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    debugPrint("[MusicApi] $operation failed: $error");
+    if (error is DioException) {
+      debugPrint(
+        "[MusicApi] request: ${error.requestOptions.method} ${error.requestOptions.uri}",
+      );
+      final response = error.response;
+      if (response != null) {
+        debugPrint(
+          "[MusicApi] response: status=${response.statusCode}, data=${response.data}",
+        );
+      }
+      if (error.error != null) {
+        debugPrint("[MusicApi] underlying error: ${error.error}");
+      }
+    } else {
+      debugPrint("[MusicApi] endpoint: $apiUrl");
+    }
+    debugPrint("[MusicApi] stack trace:\n$stackTrace");
   }
 
   List<Map<String, dynamic>> _parseAlbumList(dynamic data) {
