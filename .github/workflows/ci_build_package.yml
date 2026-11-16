@@ -101,15 +101,15 @@ jobs:
           
           for f in *release*; do mv "$f" "${f/release/${{ github.ref_name }}}"; done
 
-#      - name: Upload Package To Cloudflare R2
-#        uses: ryand56/r2-upload-action@latest
-#        with:
-#          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
-#          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
-#          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-#          r2-bucket: ${{ secrets.R2_BUCKET }}
-#          source-dir: build/app/outputs/flutter-apk
-#          destination-dir: ./${{ github.ref_name }}
+      - name: Upload Package To Cloudflare R2
+        uses: ryand56/r2-upload-action@latest
+        with:
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET }}
+          source-dir: build/app/outputs/flutter-apk
+          destination-dir: ./${{ github.ref_name }}
 
 
   build_windows:
@@ -151,15 +151,15 @@ jobs:
           Move-Item -Path "output.zip" -Destination "output\\ikaros-windows-${{ github.ref_name }}.zip"
         shell: pwsh
 
-#      - name: Upload Package To Cloudflare R2
-#        uses: ryand56/r2-upload-action@latest
-#        with:
-#          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
-#          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
-#          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-#          r2-bucket: ${{ secrets.R2_BUCKET }}
-#          source-dir: output
-#          destination-dir: ./${{ github.ref_name }}
+      - name: Upload Package To Cloudflare R2
+        uses: ryand56/r2-upload-action@latest
+        with:
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET }}
+          source-dir: output
+          destination-dir: ./${{ github.ref_name }}
 
 
 #  build_macos:
