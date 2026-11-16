@@ -365,7 +365,7 @@ class _UserPageState extends State<UserPage> {
     for (var asset in assets) {
       if (asset['name'].contains(platform)) {
         String fileName = asset['name'];
-        return "https://pub-bf2151a8e446476eac3583b3e45d5cc8.r2.dev/$tagName/$fileName";
+        return "https://ikaros-r2.ikaros.run/$tagName/$fileName";
       }
     }
     return '';
